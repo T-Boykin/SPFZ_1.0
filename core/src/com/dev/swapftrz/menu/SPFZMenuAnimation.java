@@ -110,21 +110,26 @@ public class SPFZMenuAnimation
         SPFZ_MAct.PMENU_CTRL_POSY,
         SPFZ_MAct.NORM_DUR, null));
 
-    float delay = 0;
+    float sequenceDelay = 0;
     for (int i = 0; i < menuo2d.portMain5Buttons().length; i++)
     {
       Actions.addAction(portRoot.getChild(menuo2d.portMain5Buttons()[i]).getEntity(),
         Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.ZERO,
           SPFZ_MAct.PMENU_MAIN5_BY_POSY, SPFZ_MAct.PMENU_MAIN5_SCALEX,
-          SPFZ_MAct.PMENU_MAIN5_SCALEY, SPFZ_MAct.NORM_DUR + delay, null, null)));
+          SPFZ_MAct.PMENU_MAIN5_SCALEY, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR + sequenceDelay, null, null)));
 
-      delay += SPFZ_MAct.PMAIN5_SEQ;
+      sequenceDelay += SPFZ_MAct.PMAIN5_SEQ;
     }
   }
 
   public void showExitDialog() {
     Actions.addAction(portRoot.getChild(menuo2d.exitDialog()).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
-      SPFZ_MAct.PMENU_EXIT_DIALOG_Y, SPFZ_MAct.TWO_DUR, null));
+      SPFZ_MAct.PMENU_EXIT_DIALOG_Y, SPFZ_MAct.TWO_DUR, Interpolation.swing));
+  }
+
+  public void lowerExitDialog() {
+    Actions.addAction(portRoot.getChild(menuo2d.exitDialog()).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
+      -SPFZ_MAct.PMENU_EXIT_DIALOG_Y, SPFZ_MAct.TWO_DUR, Interpolation.swing));
   }
 
   /**
@@ -146,16 +151,32 @@ public class SPFZMenuAnimation
    * Scatter landscape UI buttons
    */
   public void landButtonsScatter() {
+    for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)
+    {
+      Actions.addAction(landRoot.getChild(menuo2d.landMain5Buttons()[i]).getEntity(),
+        Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LAND_MAIN5_SCATTER_X[i],
+          SPFZ_MAct.LAND_MAIN5_SCATTER_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
+          SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME, null, null)));
 
+    }
+
+    shrinkLandMain3Buttons();
   }
 
   /**
    * Bring landscape UI buttons in to the Main Center
    */
   public void landButtonsBringIn() {
-    moveToAndScaleO2dObjsDS_RZ(getLandRoot(), menuo2d.landMain3Buttons(), SPFZ_MAct.LAND_MAIN3_BUTTONS_X,
-      SPFZ_MAct.LAND_MAIN3_BUTTONS_Y, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.MAIN3_DUR, SPFZ_MAct.MAIN3_SEQ,
-      SPFZ_MAct.LAND_MAIN3_BUTTONS_SCL);
+    for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)
+    {
+      Actions.addAction(landRoot.getChild(menuo2d.landMain5Buttons()[i]).getEntity(),
+        Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LAND_MAIN5_BUTTONS_X[i],
+          SPFZ_MAct.LAND_MAIN5_BUTTONS_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
+          SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME, null, null)));
+
+    }
+
+    expandLandMain3Buttons();
   }
 
   // ACTIONDATA CUSTOM ACTIONS ---------------------------------- \\\\\\\\\\\\\\\
@@ -194,24 +215,72 @@ public class SPFZMenuAnimation
 
   //TRANSFORM ACTIONS
   public ScaleToData scaleO2dObj(float scaleX,
-                                 float scaleY,
+                                 float scaleY, float scaleResize,
                                  float duration, Interpolation interpolation) {
+    if (interpolation == null)
+      interpolation = Interpolation.fade;
+
     ScaleToData actionData = new ScaleToData(
       interpolation,
       duration,
-      scaleX,
-      scaleY
+      scaleX + scaleResize,
+      scaleY + scaleResize
     );
     actionData.logicClassName = ScaleToAction.class.getName();
     return actionData;
   }
 
-  //Call: Actions.addAction(landRoot.getChild(menuo2d.optDialog()).getEntity(),closeOptionsDialog())
+  public void openOptionsDialog() {
+    Actions.addAction(landRoot.getChild(menuo2d.optDialog()).getEntity(),
+      Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.LMENU_OPTDLG_BY_POSX, -SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
+        SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
+        Interpolation.linear)));
+  }
+
+  /**
+   * Expand the brightness, sound, and exit buttons
+   */
+  public void expandLandMain3Buttons() {
+    float sequenceDelay = 0;
+    String[] arrObjs = menuo2d.landMain3Buttons();
+
+    for (int i = 0; i < arrObjs.length; i++)
+    {
+      Actions.addAction(landRoot.getChild(arrObjs[i]).getEntity(),
+        Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LAND_MAIN3_BUTTONS_X[i],
+          SPFZ_MAct.LAND_MAIN3_BUTTONS_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
+          SPFZ_MAct.LAND_MAIN3_BUTTONS_SCL[i], SPFZ_MAct.MAIN3_DUR + sequenceDelay, null, null)));
+
+      sequenceDelay += SPFZ_MAct.MAIN3_SEQ;
+    }
+  }
+
+  /**
+   * Shrink the brightness, sound, and exit buttons
+   */
+  public void shrinkLandMain3Buttons() {
+    float sequenceDelay = 0;
+    String[] arrObjs = menuo2d.landMain3Buttons();
+
+    for (int i = 0; i < arrObjs.length; i++)
+    {
+      Actions.addAction(landRoot.getChild(arrObjs[i]).getEntity(),
+        Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LMENU_MAIN3_SHRINK_X[i], SPFZ_MAct.LMENU_MAIN3_SHRINKY,
+          SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.MAIN3_DUR + sequenceDelay, null, null)));
+
+      sequenceDelay += SPFZ_MAct.MAIN3_SEQ;
+    }
+  }
+
+  //TODO create functionality to disable buttons
+
+  /**
+   * Close the options dialog and disable buttons from dialog
+   */
   public void closeOptionsDialog() {
     Actions.addAction(landRoot.getChild(menuo2d.optDialog()).getEntity(),
-      Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.LMENU_OPTDLG_BY_POSX,
-        SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
-        SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
+      Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.LMENU_OPTDLG_BY_POSX, SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
+        SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
         Interpolation.linear)));
   }
 
@@ -247,17 +316,21 @@ public class SPFZMenuAnimation
   //COMBINED/CUSTOM ACTIONS
 
   /**
-   * Move and Scale Overlap2D Objects By specified values in delayed sequence
-   * less than 1 second should be ideal
+   * MoveTo and ScaleTo Overlap2D Object
+   * Interpolation is fade by default unless specified otherwise
    *
-   * @param toXVal    - to X value given
-   * @param toYVal    - to Y value given
-   * @param scaleXVal - scaleTo X Value
-   * @param scaleYVal - scaleTo Y Value
-   * @param duration  - time of action
+   * @param toXVal             - to X value given
+   * @param toYVal             - to Y value given
+   * @param scaleXVal          - scaleTo X Value
+   * @param scaleYVal          - scaleTo Y Value
+   * @param scaleResize        - resizing to add to both scaleX and scaleY
+   * @param duration           - time of action
+   * @param moveInterpolation  - interpolation to be set for movement
+   * @param scaleInterpolation - interpolation to be set for scaling
    */
   public ActionData[] moveToAndScaleO2dObj(float toXVal, float toYVal, float scaleXVal,
-                                           float scaleYVal, float duration, Interpolation moveInterpolation,
+                                           float scaleYVal, float scaleResize,
+                                           float duration, Interpolation moveInterpolation,
                                            Interpolation scaleInterpolation) {
     if (moveInterpolation == null)
       moveInterpolation = Interpolation.fade;
@@ -265,8 +338,8 @@ public class SPFZMenuAnimation
       moveInterpolation = Interpolation.fade;
 
     MoveToData moveActionData = new MoveToData(moveInterpolation, duration, toXVal, toYVal);
-    ScaleToData scaleActionData = new ScaleToData(scaleInterpolation, duration, scaleXVal,
-      scaleYVal);
+    ScaleToData scaleActionData = new ScaleToData(scaleInterpolation, duration, scaleXVal + scaleResize,
+      scaleYVal + scaleResize);
 
     return new ActionData[]{moveActionData, scaleActionData};
   }
@@ -279,10 +352,14 @@ public class SPFZMenuAnimation
    * @param byYVal    - to Y value given
    * @param scaleXVal - scaleTo X Value
    * @param scaleYVal - scaleTo Y Value
+   * @param scaleResize - additional resizing to add to both scaleX and scaleY
    * @param duration  - time of action
+   * @param moveInterpolation - interpolation to be set for movement
+   * @param scaleInterpolation - interpolation to be set for scaling
    */
   public ActionData[] moveByAndScaleO2dObj(float byXVal, float byYVal, float scaleXVal,
-                                           float scaleYVal, float duration, Interpolation moveInterpolation,
+                                           float scaleYVal, float scaleResize,
+                                           float duration, Interpolation moveInterpolation,
                                            Interpolation scaleInterpolation) {
     if (moveInterpolation == null)
       moveInterpolation = Interpolation.fade;
@@ -290,65 +367,15 @@ public class SPFZMenuAnimation
       moveInterpolation = Interpolation.fade;
 
     MoveByData moveActionData = new MoveByData(moveInterpolation, duration, byXVal, byYVal);
-    ScaleToData scaleActionData = new ScaleToData(scaleInterpolation, duration, scaleXVal,
-      scaleYVal);
+    ScaleToData scaleActionData = new ScaleToData(scaleInterpolation, duration, scaleXVal + scaleResize,
+      scaleYVal + scaleResize);
 
     return new ActionData[]{moveActionData, scaleActionData};
   }
 
-  /**
-   * Move and Scale Overlap2D Objects To specified values in delayed sequence and arrays
-   * less than 1 second should be ideal
-   * 1 is considered original size for scaling
-   *
-   * @param rootIW         - root SceneLoader Wrpper
-   * @param stringObjs     - menu objects
-   * @param toXVals
-   * @param toYVals
-   * @param scaleXVal      - scaleTo X Value
-   * @param scaleYVal      - scaleTo Y Value
-   * @param duration       - time of action
-   * @param timeSeparation - set intervals of animation timeSeparation apart
-   * @param scaleResizes
-   */
-  public void moveToAndScaleO2dObjsDS_RZ(ItemWrapper rootIW, String stringObjs[], float toXVals[], float toYVals[],
-                                         float scaleXVal, float scaleYVal, float duration, float timeSeparation,
-                                         float scaleResizes[]) {
-    float sepDuration = duration;
-
-    for (int i = 0; i < stringObjs.length; i++)
-    {
-      Actions.addAction(rootIW.getChild(stringObjs[i]).getEntity(),
-        Actions.parallel(Actions.scaleTo(scaleXVal + scaleResizes[i], scaleYVal + scaleResizes[i], duration), Actions.moveTo(toXVals[i], toYVals[i], sepDuration)));
-      sepDuration += timeSeparation;
-    }
-  }
-
-  /**
-   * Move and Scale Overlap2D Object To specified values specified delay and scale resize
-   * -less than 1 second ideal for delay
-   * -1 is considered original size for scaling
-   *
-   * @param rootIW         - root SceneLoader Wrpper
-   * @param stringObj      - menu object
-   * @param byXVal         - by X value given
-   * @param byYVal         - by Y value given
-   * @param scaleXVal      - scaleTo X Value
-   * @param scaleYVal      - scaleTo Y Value
-   * @param duration       - time of action
-   * @param timeSeparation - set intervals of animation timeSeparation apart
-   * @param scaleResize
-   */
-  public void moveByAndScaleO2dObjDS_RZ(ItemWrapper rootIW, String stringObj, float byXVal,
-                                        float byYVal,
-                                        float scaleXVal, float scaleYVal, float duration, float timeSeparation, float scaleResize) {
-    Actions.addAction(rootIW.getChild(stringObj).getEntity(),
-      Actions.parallel(Actions.scaleTo(scaleXVal + scaleResize, scaleYVal + scaleResize, duration + timeSeparation),
-        Actions.moveBy(byXVal, byYVal, duration + timeSeparation)));
-  }
-
   public void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
-    Actions.addAction(rootIW.getChild(menuo2d.menuFader()).getEntity(), Actions.sequence(Actions.fadeOut(SPFZ_MAct.FADE_DUR), Actions.run(run)));
+    Actions.addAction(rootIW.getChild(menuo2d.menuFader()).getEntity(), Actions.sequence(Actions.fadeOut(SPFZ_MAct.FADE_DUR),
+      Actions.run(run)));
   }
 
   //CUSTOM RUNNABLES
@@ -357,10 +384,10 @@ public class SPFZMenuAnimation
    * Move all main menu landscape buttons into position, fadeout the black screen
    * create zoom in zoom out effect with buttons
    *
-   * @return
+   * @return - RunnableAction for land animation
    */
   public Runnable landAnimationRunnable() {
-    Runnable runnable = () -> {
+    return () -> {
       //Assign action to each of the Main 5 main menu buttons
       for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)
       {
@@ -371,9 +398,7 @@ public class SPFZMenuAnimation
 
       landButtonsBringIn();
       moveToAndScaleO2dObj(SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
-        SPFZ_MAct.OPTION_MOVE_TIME, null, null);
+        SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME, null, null);
     };
-
-    return runnable;
   }
 }

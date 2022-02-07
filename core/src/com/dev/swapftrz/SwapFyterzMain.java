@@ -471,38 +471,10 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
 	public void buttonsapt()
 	{
-		Actions.addAction(root.getChild("larcbutton").getEntity(), Actions.moveBy(0, 200, OPT_TIME, Interpolation.linear));
-
-		Actions.addAction(root.getChild("lvsbutton").getEntity(),
-			Actions.moveBy(-250, 250, OPT_TIME, Interpolation.linear));
-
-		Actions.addAction(root.getChild("ltrnbutton").getEntity(),
-			Actions.moveBy(250, 250, OPT_TIME, Interpolation.linear));
-
-		Actions.addAction(root.getChild("loptbutton").getEntity(),
-			Actions.moveBy(200, -200, OPT_TIME, Interpolation.linear));
-
-		Actions.addAction(root.getChild("lhlpbutton").getEntity(),
-			Actions.moveBy(-200, -200, OPT_TIME, Interpolation.linear));
 	}
 
 	public void buttonssqz()
 	{
-		Actions.addAction(root.getChild("larcbutton").getEntity(),
-
-			Actions.moveBy(0, -200, OPT_TIME, Interpolation.linear));
-		Actions.addAction(root.getChild("lvsbutton").getEntity(),
-
-			Actions.moveBy(250, -250, OPT_TIME, Interpolation.linear));
-		Actions.addAction(root.getChild("ltrnbutton").getEntity(),
-
-			Actions.moveBy(-250, -250, OPT_TIME, Interpolation.linear));
-		Actions.addAction(root.getChild("loptbutton").getEntity(),
-
-			Actions.moveBy(-200, 200, OPT_TIME, Interpolation.linear));
-		Actions.addAction(root.getChild("lhlpbutton").getEntity(),
-
-			Actions.moveBy(200, 200, OPT_TIME, Interpolation.linear));
 	}
 
 	public void bringscreen()
@@ -562,47 +534,15 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 		}
 		else
 		{
-			Actions.addAction(root.getChild("larcbutton").getEntity(),
-				Actions.moveBy(0, 200, OPT_TIME, Interpolation.linear));
-
-			Actions.addAction(root.getChild("lvsbutton").getEntity(),
-				Actions.moveBy(-250, 250, OPT_TIME, Interpolation.linear));
-
-			Actions.addAction(root.getChild("ltrnbutton").getEntity(),
-				Actions.moveBy(250, 250, OPT_TIME, Interpolation.linear));
-
-			Actions.addAction(root.getChild("loptbutton").getEntity(),
-				Actions.moveBy(200, -200, OPT_TIME, Interpolation.linear));
-
-			Actions.addAction(root.getChild("lhlpbutton").getEntity(),
-				Actions.moveBy(-200, -200, OPT_TIME, Interpolation.linear));
-
 			if (!dialog)
 			{
-				Actions.addAction(root.getChild("optdialog").getEntity(),
-					Actions.parallel(Actions.scaleTo(SCALE_UP, SCALE_UP, OPT_TIME),
-						Actions.moveBy(-268f, -171f, OPT_TIME, Interpolation.linear)));
+				//open dialog
 			}
-			Actions.addAction(root.getChild("soundbutton").getEntity(),
-				Actions.sequence(
-					Actions.parallel(Actions.moveTo(33f, 366f, .6f), Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .6f)),
-					Actions.parallel(Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .3f))));
-
-			Actions.addAction(root.getChild("brightbutton").getEntity(),
-				Actions.sequence(
-					Actions.parallel(Actions.moveTo(103f, 366f, .7f), Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .7f)),
-					Actions.parallel(Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .4f))));
-
-			Actions.addAction(root.getChild("exitbutton").getEntity(),
-				Actions.sequence(
-					Actions.parallel(Actions.moveTo(606f, 366f, .8f), Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .8f)),
-					Actions.parallel(Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .5f))));
+			//shrink buttons
 
 			// push the exit dialog box up for confirmation
 			if (!optionsup && dialog)
 			{
-				Actions.addAction(root.getChild("exitdialog").getEntity(),
-					Actions.sequence(Actions.moveBy(0, 400f, 1f, Interpolation.swing)));
 			}
 		}
 	}
@@ -644,8 +584,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
 			if (!optionsup)
 			{
-				/*Actions.addAction(root.getChild("exitdialog").getEntity(),
-					Actions.sequence(Actions.moveBy(0, 570f, 2f, Interpolation.swing)));*/
+				//lowerExitDialog()
 			}
 		}
 		else
@@ -653,26 +592,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 			if (!dialog)
 			{
 			}
-			Actions.addAction(root.getChild("soundbutton").getEntity(),
-				Actions.sequence(
-					Actions.parallel(Actions.moveTo(3f, 340f, .6f), Actions.scaleTo(SCALE_UP + .2f, SCALE_UP + .2f, .6f)),
-					Actions.parallel(Actions.scaleTo(SCALE_UP, SCALE_UP, .3f))));
-
-			Actions.addAction(root.getChild("brightbutton").getEntity(),
-				Actions.sequence(
-					Actions.parallel(Actions.moveTo(74f, 340f, .7f), Actions.scaleTo(SCALE_UP + .1f, SCALE_UP + .1f, .7f)),
-					Actions.parallel(Actions.scaleTo(SCALE_UP, SCALE_UP, .4f))));
-
-			Actions.addAction(root.getChild("exitbutton").getEntity(),
-				Actions.sequence(
-					Actions.parallel(Actions.moveTo(572f, 333f, .8f), Actions.scaleTo(SCALE_UP + .2f, SCALE_UP + .2f, .8f)),
-					Actions.parallel(Actions.scaleTo(SCALE_UP, SCALE_UP, .5f))));
+			//expand buttons
 
 			// push the exit dialog back down
 			if (!optionsup && dialog)
 			{
-				Actions.addAction(root.getChild("exitdialog").getEntity(),
-					Actions.sequence(Actions.moveBy(0, -400f, .5f, Interpolation.swing)));
+				//lowerExitDialog()
 			}
 		}
 
