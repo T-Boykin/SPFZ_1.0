@@ -22,6 +22,7 @@ class SPFZMenuO2DMenuObjects
       "soundbutton", "exitbutton", "yes", "no", "thirtytime", "sixtytime", "ninetytime", "slidebright",
       "slidesound", "revert"};
 
+
   public SPFZMenuO2DMenuObjects() {
 
   }
