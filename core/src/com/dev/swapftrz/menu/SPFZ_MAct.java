@@ -7,7 +7,6 @@ class SPFZ_MAct
 {
   public static final float ZERO = 0.0f,
     OPTION_MOVE_TIME = .7f,
-    LMENU_MAIN3_SPD = .6f,
     PAUSE_BUTTON_SPEED = .15f,
     STAGE_MULTIPLIER = 1.75f,
     NORMAL_SCALE = 1f,

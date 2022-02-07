@@ -110,15 +110,15 @@ public class SPFZMenuAnimation
         SPFZ_MAct.PMENU_CTRL_POSY,
         SPFZ_MAct.NORM_DUR, null));
 
-    float delay = 0;
+    float sequenceDelay = 0;
     for (int i = 0; i < menuo2d.portMain5Buttons().length; i++)
     {
       Actions.addAction(portRoot.getChild(menuo2d.portMain5Buttons()[i]).getEntity(),
         Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.ZERO,
           SPFZ_MAct.PMENU_MAIN5_BY_POSY, SPFZ_MAct.PMENU_MAIN5_SCALEX,
-          SPFZ_MAct.PMENU_MAIN5_SCALEY, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR + delay, null, null)));
+          SPFZ_MAct.PMENU_MAIN5_SCALEY, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR + sequenceDelay, null, null)));
 
-      delay += SPFZ_MAct.PMAIN5_SEQ;
+      sequenceDelay += SPFZ_MAct.PMAIN5_SEQ;
     }
   }
 
@@ -151,8 +151,6 @@ public class SPFZMenuAnimation
    * Scatter landscape UI buttons
    */
   public void landButtonsScatter() {
-    float delay = 0;
-
     for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)
     {
       Actions.addAction(landRoot.getChild(menuo2d.landMain5Buttons()[i]).getEntity(),
@@ -160,7 +158,6 @@ public class SPFZMenuAnimation
           SPFZ_MAct.LAND_MAIN5_SCATTER_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
           SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME, null, null)));
 
-      delay += SPFZ_MAct.MAIN3_SEQ;
     }
 
     shrinkLandMain3Buttons();
@@ -170,8 +167,6 @@ public class SPFZMenuAnimation
    * Bring landscape UI buttons in to the Main Center
    */
   public void landButtonsBringIn() {
-    float delay = 0;
-
     for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)
     {
       Actions.addAction(landRoot.getChild(menuo2d.landMain5Buttons()[i]).getEntity(),
@@ -179,10 +174,7 @@ public class SPFZMenuAnimation
           SPFZ_MAct.LAND_MAIN5_BUTTONS_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
           SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME, null, null)));
 
-      delay += SPFZ_MAct.MAIN3_SEQ;
     }
-
-    delay = 0;
 
     expandLandMain3Buttons();
   }
@@ -249,7 +241,7 @@ public class SPFZMenuAnimation
    * Expand the brightness, sound, and exit buttons
    */
   public void expandLandMain3Buttons() {
-    float delay = 0;
+    float sequenceDelay = 0;
     String[] arrObjs = menuo2d.landMain3Buttons();
 
     for (int i = 0; i < arrObjs.length; i++)
@@ -257,9 +249,9 @@ public class SPFZMenuAnimation
       Actions.addAction(landRoot.getChild(arrObjs[i]).getEntity(),
         Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LAND_MAIN3_BUTTONS_X[i],
           SPFZ_MAct.LAND_MAIN3_BUTTONS_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
-          SPFZ_MAct.LAND_MAIN3_BUTTONS_SCL[i], SPFZ_MAct.MAIN3_DUR + delay, null, null)));
+          SPFZ_MAct.LAND_MAIN3_BUTTONS_SCL[i], SPFZ_MAct.MAIN3_DUR + sequenceDelay, null, null)));
 
-      delay += SPFZ_MAct.MAIN3_SEQ;
+      sequenceDelay += SPFZ_MAct.MAIN3_SEQ;
     }
   }
 
@@ -267,16 +259,16 @@ public class SPFZMenuAnimation
    * Shrink the brightness, sound, and exit buttons
    */
   public void shrinkLandMain3Buttons() {
-    float delay = 0;
+    float sequenceDelay = 0;
     String[] arrObjs = menuo2d.landMain3Buttons();
 
     for (int i = 0; i < arrObjs.length; i++)
     {
       Actions.addAction(landRoot.getChild(arrObjs[i]).getEntity(),
         Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LMENU_MAIN3_SHRINK_X[i], SPFZ_MAct.LMENU_MAIN3_SHRINKY,
-          SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.LMENU_MAIN3_SPD + delay, null, null)));
+          SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.MAIN3_DUR + sequenceDelay, null, null)));
 
-      delay += SPFZ_MAct.LMENU_MAIN3_SPD;
+      sequenceDelay += SPFZ_MAct.MAIN3_SEQ;
     }
   }
 
