@@ -4449,12 +4449,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 												if (!exit)
 												{
 													buttonsdown();
-													Actions.addAction(root.getChild("pods").getEntity(),
-														Actions.sequence(
-															Actions.parallel(Actions.scaleTo(SCALE_UP * 15f, SCALE_UP * 15f, 1f),
-																Actions.moveTo(-3800f, -3000f, 1f)),
-															Actions.parallel(Actions.scaleTo(SCALE_DOWN, SCALE_DOWN, .0001f),
-																Actions.moveTo(320f, 200f, .0001f))));
+													//pods fly out
 												}
 												exit = true;
 												// exit code
@@ -4843,8 +4838,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 										else
 										{
 											buttonsup();
-											Actions.addAction(root.getChild("pods").getEntity(),
-												Actions.parallel(Actions.scaleTo(SCALE_UP, SCALE_UP, 1f), Actions.moveTo(0, 0, 1f)));
+											//pods bring toward screen
 											dialog = false;
 											exit = false;
 
@@ -5165,16 +5159,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 										optionsup = true;
 										buttonsup();
 
-										Actions.addAction(root.getChild("mnuscnbutton").getEntity(),
-											Actions.sequence(Actions.delay(1.5f), Actions.parallel(Actions.scaleBy(2.5551f, 0, OPT_TIME),
-												Actions.moveBy(-113f, 0f, OPT_TIME, Interpolation.linear))));
-										Actions.addAction(root.getChild("ingamebutton").getEntity(),
-											Actions.sequence(Actions.delay(1.5f), Actions.parallel(Actions.scaleBy(2.5551f, 0, OPT_TIME),
-												Actions.moveBy(-119f, 0f, OPT_TIME, Interpolation.linear))));
-
-										Actions.addAction(root.getChild("hlpbackbutton").getEntity(),
-											Actions.sequence(Actions.delay(1.5f), Actions.parallel(Actions.scaleBy(.5f, 0f, OPT_TIME),
-												Actions.moveBy(-29f, 0f, OPT_TIME, Interpolation.linear))));
+										//OPEN HELP OPTIONS
 									}
 								}
 

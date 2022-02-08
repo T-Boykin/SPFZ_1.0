@@ -5,22 +5,30 @@ package com.dev.swapftrz.menu;
  */
 class SPFZMenuO2DMenuObjects
 {
-  private static final String pods = "pods", menuFader = "transition", pauseFader = "fader",
-    exitDialog = "exitdialog", optDialog = "optdialog",
+  private static final String
+    //Portrait view Menu Objects
+    pods = "pods",
+    menuFader = "transition",
+    pauseFader = "fader",
+    exitDialog = "exitdialog",
+    optDialog = "optdialog",
+    ctrlboard = "controlboard",
+    menu_screen_helpbutton = "mnuscnbutton",
+    ingame_helpbutton = "ingamebutton",
+    help_backbutton = "hlpbackbutton";
 
-  //Portrait view Menu Objects
-    ctrlboard = "controlboard";
   private static final String[] continueLandComponents = {"ttcimage", "swypefrmbtm", "swypefrmtop"},
     continuePortComponents = {"animcircle", "introcircle", "ttcimage"},
     landMain5Buttons = {"larcbutton", "lvsbutton", "ltrnbutton", "loptbutton", "lhlpbutton"},
     landMain3Buttons = {"soundbutton", "brightbutton", "exitbutton"},
+    helpOptions = {menu_screen_helpbutton, ingame_helpbutton, help_backbutton},
     landMainMenuButtons = {},
-    portMain5Buttons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton"},
 
   //Portrait view Menu Objects
-    portMainMenuButtons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton", "brightnessbtn",
-      "soundbutton", "exitbutton", "yes", "no", "thirtytime", "sixtytime", "ninetytime", "slidebright",
-      "slidesound", "revert"};
+  portMainMenuButtons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton", "brightnessbtn",
+    "soundbutton", "exitbutton", "yes", "no", "thirtytime", "sixtytime", "ninetytime", "slidebright",
+    "slidesound", "revert"},
+    portMain5Buttons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton"};
 
 
   public SPFZMenuO2DMenuObjects() {
@@ -40,23 +48,23 @@ class SPFZMenuO2DMenuObjects
     return pods;
   }
 
-  public String menuFader()
-  {
+  public String menuFader() {
     return menuFader;
   }
 
-  public String pauseFader()
-  {
+  public String pauseFader() {
     return pauseFader;
   }
 
-  public String[] landMain3Buttons()
-  {
+  public String[] helpOptions() {
+    return helpOptions;
+  }
+
+  public String[] landMain3Buttons() {
     return landMain3Buttons;
   }
 
-  public String[] landMain5Buttons()
-  {
+  public String[] landMain5Buttons() {
     return landMain5Buttons;
   }
 
