@@ -6,16 +6,24 @@ package com.dev.swapftrz.menu;
 class SPFZMenuO2DMenuObjects
 {
   private static final String
+
+    //Shared menu objects
+
     //Portrait view Menu Objects
     pods = "pods",
     menuFader = "transition",
     pauseFader = "fader",
     exitDialog = "exitdialog",
-    optDialog = "optdialog",
+    optionsScreen = "optionscreen",
     ctrlboard = "controlboard",
     menu_screen_helpbutton = "mnuscnbutton",
     ingame_helpbutton = "ingamebutton",
-    help_backbutton = "hlpbackbutton";
+    help_backbutton = "hlpbackbutton",
+    charSelHelp = "charselhelp",
+    pauseHelp = "pausehelp",
+
+  //Landscape view Menu Objects
+  optDialog = "optdialog";
 
   private static final String[] continueLandComponents = {"ttcimage", "swypefrmbtm", "swypefrmtop"},
     continuePortComponents = {"animcircle", "introcircle", "ttcimage"},
@@ -28,7 +36,9 @@ class SPFZMenuO2DMenuObjects
   portMainMenuButtons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton", "brightnessbtn",
     "soundbutton", "exitbutton", "yes", "no", "thirtytime", "sixtytime", "ninetytime", "slidebright",
     "slidesound", "revert"},
-    portMain5Buttons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton"};
+    portMain5Buttons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton"},
+    portMenuScreenImages = {charSelHelp, pauseHelp};
+  ;
 
 
   public SPFZMenuO2DMenuObjects() {
@@ -80,12 +90,27 @@ class SPFZMenuO2DMenuObjects
     return portMain5Buttons;
   }
 
-  public String[] portMainMenuButtons()
-  {
+  public String[] portMainMenuButtons() {
     return portMainMenuButtons;
   }
 
-  public String exitDialog() { return exitDialog; }
+  public String exitDialog() {
+    return exitDialog;
+  }
 
-  public String optDialog() { return optDialog; }
+  public String optDialog() {
+    return optDialog;
+  }
+
+  public String optionsScreen() {
+    return optionsScreen;
+  }
+
+  public String menuScreenHelpButton() {
+    return menu_screen_helpbutton;
+  }
+
+  public String[] portMenuScreenImages() {
+    return portMenuScreenImages;
+  }
 }

@@ -14,6 +14,8 @@ import com.uwsoft.editor.renderer.systems.action.data.ScaleToData;
 import com.uwsoft.editor.renderer.systems.action.logic.ScaleToAction;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
 
+//TODO Find a way to take in information coming in from components and use them within defined actions
+
 /**
  * Class handles the bulk of animations for the menu screens
  */
@@ -135,6 +137,19 @@ public class SPFZMenuAnimation
           SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME, null, null)));
   }
 
+  public void openMenuScreenScreens() {
+    for (int i = 0; i < menuo2d.portMenuScreenImages().length; i++)
+      Actions.addAction(portRoot.getChild(menuo2d.portMenuScreenImages()[i]).getEntity(),
+        scaleO2dObj(SPFZ_MAct.PMENU_MNUSCN_SCNSX, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME * .33f, null));
+  }
+
+  public void closeMenuScreenScreens() {
+    for (int i = 0; i < menuo2d.portMenuScreenImages().length; i++)
+      Actions.addAction(portRoot.getChild(menuo2d.portMenuScreenImages()[i]).getEntity(),
+        scaleO2dObj(-SPFZ_MAct.PMENU_MNUSCN_SCNSX, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME * .33f, null));
+  }
+
+
   public void showExitDialog() {
     Actions.addAction(portRoot.getChild(menuo2d.exitDialog()).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
       SPFZ_MAct.PMENU_EXIT_DIALOG_Y, SPFZ_MAct.TWO_DUR, Interpolation.swing));
@@ -214,7 +229,7 @@ public class SPFZMenuAnimation
    * @param duration      - time of action
    * @param interpolation - tween operator
    */
-  public ActionData moveO2dObjTo(float toXVal, float toYVal, float duration, Interpolation interpolation) {
+  private ActionData moveO2dObjTo(float toXVal, float toYVal, float duration, Interpolation interpolation) {
     if (interpolation == null)
       interpolation = Interpolation.fade;
 
@@ -231,7 +246,7 @@ public class SPFZMenuAnimation
    * @param duration      - time of action
    * @param interpolation - tween operator
    */
-  public MoveByData moveO2dObjBy(float byXVal, float byYVal, float duration, Interpolation interpolation) {
+  private MoveByData moveO2dObjBy(float byXVal, float byYVal, float duration, Interpolation interpolation) {
     MoveByData actionData = new MoveByData(interpolation, duration, byXVal, byYVal);
     actionData.logicClassName = MoveByAction.class.getName();
 
@@ -239,9 +254,9 @@ public class SPFZMenuAnimation
   }
 
   //TRANSFORM ACTIONS
-  public ScaleToData scaleO2dObj(float scaleX,
-                                 float scaleY, float scaleResize,
-                                 float duration, Interpolation interpolation) {
+  private ScaleToData scaleO2dObj(float scaleX,
+                                  float scaleY, float scaleResize,
+                                  float duration, Interpolation interpolation) {
     if (interpolation == null)
       interpolation = Interpolation.fade;
 
@@ -255,7 +270,21 @@ public class SPFZMenuAnimation
     return actionData;
   }
 
-  public void openOptionsDialog() {
+  private void openOptionsPort() {
+    Actions.addAction(portRoot.getChild(menuo2d.optionsScreen()).getEntity(),
+      Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.PMENU_OPTSCN_POSX,
+        SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
+        Interpolation.linear, Interpolation.linear)));
+  }
+
+  private void closeOptionsPort() {
+    Actions.addAction(portRoot.getChild(menuo2d.optionsScreen()).getEntity(),
+      Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.PMENU_OPTSCN_POSX,
+        SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
+        Interpolation.linear, Interpolation.linear)));
+  }
+
+  private void openOptionsLand() {
     Actions.addAction(landRoot.getChild(menuo2d.optDialog()).getEntity(),
       Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.LMENU_OPTDLG_BY_POSX, -SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
         SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
@@ -265,7 +294,7 @@ public class SPFZMenuAnimation
   /**
    * Expand the brightness, sound, and exit buttons
    */
-  public void expandLandMain3Buttons() {
+  private void expandLandMain3Buttons() {
     float sequenceDelay = 0;
     String[] arrObjs = menuo2d.landMain3Buttons();
 
@@ -283,7 +312,7 @@ public class SPFZMenuAnimation
   /**
    * Shrink the brightness, sound, and exit buttons
    */
-  public void shrinkLandMain3Buttons() {
+  private void shrinkLandMain3Buttons() {
     float sequenceDelay = 0;
     String[] arrObjs = menuo2d.landMain3Buttons();
 
@@ -311,29 +340,29 @@ public class SPFZMenuAnimation
 
   //TRANSPARENCY/REMOVAL ACTIONS
 
-  public void rmvO2dObject(SPFZSceneLoader ssl, ItemWrapper rootIW, String stringObj) {
+  private void rmvO2dObject(SPFZSceneLoader ssl, ItemWrapper rootIW, String stringObj) {
     ssl.getEngine().removeEntity(rootIW.getChild(stringObj).getEntity());
   }
 
-  public void rmvO2dObjects(SPFZSceneLoader ssl, ItemWrapper rootIW, String[] stringObjs) {
+  private void rmvO2dObjects(SPFZSceneLoader ssl, ItemWrapper rootIW, String[] stringObjs) {
     for (String stringObj : stringObjs)
       ssl.getEngine().removeEntity(rootIW.getChild(stringObj).getEntity());
   }
 
-  public void hideO2dObject(ItemWrapper rootIW, String stringObj) {
+  private void hideO2dObject(ItemWrapper rootIW, String stringObj) {
     Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
   }
 
-  public void hideO2dObjects(ItemWrapper rootIW, String[] stringObjs) {
+  private void hideO2dObjects(ItemWrapper rootIW, String[] stringObjs) {
     for (String stringObj : stringObjs)
       Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
   }
 
-  public void fadeO2dObject(ItemWrapper rootIW, String stringObj) {
+  private void fadeO2dObject(ItemWrapper rootIW, String stringObj) {
     Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(SPFZ_MAct.FADE_DUR));
   }
 
-  public void fadeO2dObjects(ItemWrapper rootIW, String[] stringObjs) {
+  private void fadeO2dObjects(ItemWrapper rootIW, String[] stringObjs) {
     for (String stringObj : stringObjs)
       Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
   }
@@ -353,10 +382,10 @@ public class SPFZMenuAnimation
    * @param moveInterpolation  - interpolation to be set for movement
    * @param scaleInterpolation - interpolation to be set for scaling
    */
-  public ActionData[] moveToAndScaleO2dObj(float toXVal, float toYVal, float scaleXVal,
-                                           float scaleYVal, float scaleResize,
-                                           float duration, Interpolation moveInterpolation,
-                                           Interpolation scaleInterpolation) {
+  private ActionData[] moveToAndScaleO2dObj(float toXVal, float toYVal, float scaleXVal,
+                                            float scaleYVal, float scaleResize,
+                                            float duration, Interpolation moveInterpolation,
+                                            Interpolation scaleInterpolation) {
     if (moveInterpolation == null)
       moveInterpolation = Interpolation.fade;
     if (scaleInterpolation == null)
@@ -382,10 +411,10 @@ public class SPFZMenuAnimation
    * @param moveInterpolation - interpolation to be set for movement
    * @param scaleInterpolation - interpolation to be set for scaling
    */
-  public ActionData[] moveByAndScaleO2dObj(float byXVal, float byYVal, float scaleXVal,
-                                           float scaleYVal, float scaleResize,
-                                           float duration, Interpolation moveInterpolation,
-                                           Interpolation scaleInterpolation) {
+  private ActionData[] moveByAndScaleO2dObj(float byXVal, float byYVal, float scaleXVal,
+                                            float scaleYVal, float scaleResize,
+                                            float duration, Interpolation moveInterpolation,
+                                            Interpolation scaleInterpolation) {
     if (moveInterpolation == null)
       moveInterpolation = Interpolation.fade;
     if (scaleInterpolation == null)
@@ -398,7 +427,7 @@ public class SPFZMenuAnimation
     return new ActionData[]{moveActionData, scaleActionData};
   }
 
-  public void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
+  private void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
     Actions.addAction(rootIW.getChild(menuo2d.menuFader()).getEntity(), Actions.sequence(Actions.fadeOut(SPFZ_MAct.FADE_DUR),
       Actions.run(run)));
   }
@@ -411,7 +440,7 @@ public class SPFZMenuAnimation
    *
    * @return - RunnableAction for land animation
    */
-  public Runnable landAnimationRunnable() {
+  private Runnable landAnimationRunnable() {
     return () -> {
       //Assign action to each of the Main 5 main menu buttons
       for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)

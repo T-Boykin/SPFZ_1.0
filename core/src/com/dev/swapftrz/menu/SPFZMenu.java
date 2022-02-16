@@ -4,37 +4,55 @@ import com.dev.swapftrz.resource.SPFZResourceManager;
 
 public class SPFZMenu
 {
-  private boolean isTraining;
   private static final SPFZMenuAction menu_action = new SPFZMenuAction();
-  private static final SPFZMenuSound menu_sound = new SPFZMenuSound();
   private static final SPFZMenuO2DMenuObjects menu_o2d = new SPFZMenuO2DMenuObjects();
-  private SPFZResourceManager resManager;
-  private SPFZMenuAnimation menu_animation = new SPFZMenuAnimation(resManager.getPortraitSL(), resManager.getLandscapeSL(), menu_o2d);
+
+  private boolean isTraining;
+  private final SPFZResourceManager resManager;
+  private final SPFZMenuSound menu_sound;
+  private final SPFZMenuAnimation menu_animation;
 
   public SPFZMenu(SPFZResourceManager resManager) {
+
     this.resManager = resManager;
+    menu_animation = new SPFZMenuAnimation(resManager.getPortraitSL(), resManager.getLandscapeSL(), menu_o2d);
+    menu_sound = new SPFZMenuSound(resManager);
   }
 
   public SPFZMenuAction menuAct() {
     return menu_action;
   }
 
+  /**
+   * Method directs the UI to the Arcade Select screen
+   */
   public void arcadeCharacterSelect() {
 
   }
 
+  /**
+   * Method directs the UI to the Character Select screen
+   */
   public void vsCharacterSelect() {
-
   }
 
+  /**
+   * Method directs the UI to the Stage Select screen
+   */
   public void stageSelect() {
 
   }
 
+  /**
+   * Method directs the UI to the Credits Section
+   */
   public void enterCredits() {
 
   }
 
+  /**
+   * Method directs the UI back to the Main Menu screen
+   */
   public void exitCredits() {
 
   }
@@ -60,7 +78,7 @@ public class SPFZMenu
   }
 
   public String getMenuOrientation() {
-    resManager.getCurrentOrientation();
+    return resManager.getCurrentOrientation();
   }
 
   public boolean isTraining()

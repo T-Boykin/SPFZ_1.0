@@ -1,14 +1,17 @@
 package com.dev.swapftrz.menu;
 
+import com.dev.swapftrz.resource.SPFZResourceManager;
+
 /**
  * Class plays the Swap Fyterz Menu sounds
  */
 public class SPFZMenuSound
 {
+  private final SPFZResourceManager resourceManager;
   private float gameVolume;
 
-  public SPFZMenuSound() {
-
+  public SPFZMenuSound(SPFZResourceManager resourceManager) {
+    this.resourceManager = resourceManager;
   }
 
   public void playMainMenuMusic() {
@@ -16,7 +19,7 @@ public class SPFZMenuSound
   }
 
   public void stopMainMenuMusic() {
-    if(SPFZMenuSoundPack.mainMenuMusic().isPlaying())
+    if (SPFZMenuSoundPack.mainMenuMusic().isPlaying())
       SPFZMenuSoundPack.mainMenuMusic().stop();
   }
 
