@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 
+//TODO consider using a properties file for sound location storage
 /**
  * Class contains the sound file locations
  */
