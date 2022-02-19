@@ -6,7 +6,7 @@ package com.dev.swapftrz.menu;
 public class SPFZMenuAction
 {
 
-  public SPFZMenuAction () {
+  public SPFZMenuAction() {
 
   }
   //UI component BUTTON FUNCTIONALITY

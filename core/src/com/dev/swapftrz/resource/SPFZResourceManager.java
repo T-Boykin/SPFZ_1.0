@@ -40,6 +40,7 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   // public boolean setup;
   // public int init = 0;
   private static final String packResolutionName = "orig";
+  private static final String preferencesFile = "spfzfile";
   private String currentScene;
   // public String particleEffectsPath = "particles";
 
@@ -694,4 +695,7 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return projectVO;
   }
 
+  public String preferencesFile() {
+    return preferencesFile;
+  }
 }

@@ -4,17 +4,19 @@ import com.dev.swapftrz.resource.SPFZResourceManager;
 
 public class SPFZMenu
 {
-  private static final SPFZMenuAction menu_action = new SPFZMenuAction();
-  private static final SPFZMenuO2DMenuObjects menu_o2d = new SPFZMenuO2DMenuObjects();
+  private final SPFZMenuO2DMenuObjects menu_o2d;
+  private final SPFZResourceManager resManager;
+  private final SPFZMenuAction menu_action;
+  private final SPFZMenuAnimation menu_animation;
+  private final SPFZMenuSound menu_sound;
 
   private boolean isTraining;
-  private final SPFZResourceManager resManager;
-  private final SPFZMenuSound menu_sound;
-  private final SPFZMenuAnimation menu_animation;
 
   public SPFZMenu(SPFZResourceManager resManager) {
 
     this.resManager = resManager;
+    menu_o2d = new SPFZMenuO2DMenuObjects();
+    menu_action = new SPFZMenuAction();
     menu_animation = new SPFZMenuAnimation(resManager.getPortraitSL(), resManager.getLandscapeSL(), menu_o2d);
     menu_sound = new SPFZMenuSound(resManager);
   }
