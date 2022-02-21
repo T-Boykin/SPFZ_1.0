@@ -16,13 +16,9 @@ public class SPFZMenu
 
     this.resManager = resManager;
     menu_o2d = new SPFZMenuO2DMenuObjects();
-    menu_action = new SPFZMenuAction();
-    menu_animation = new SPFZMenuAnimation(resManager.getPortraitSL(), resManager.getLandscapeSL(), menu_o2d);
+    menu_animation = new SPFZMenuAnimation(resManager.getPortraitSSL(), resManager.getLandscapeSSL(), menu_o2d);
     menu_sound = new SPFZMenuSound(resManager);
-  }
-
-  public SPFZMenuAction menuAct() {
-    return menu_action;
+    menu_action = new SPFZMenuAction(resManager, menu_o2d, menu_animation, menu_sound);
   }
 
   /**

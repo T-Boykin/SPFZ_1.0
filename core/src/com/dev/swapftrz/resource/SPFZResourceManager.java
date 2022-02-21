@@ -22,6 +22,7 @@ import com.uwsoft.editor.renderer.data.SpriteAnimationVO;
 import com.uwsoft.editor.renderer.resources.FontSizePair;
 import com.uwsoft.editor.renderer.resources.IResourceLoader;
 import com.uwsoft.editor.renderer.resources.IResourceRetriever;
+import com.uwsoft.editor.renderer.utils.ItemWrapper;
 import com.uwsoft.editor.renderer.utils.MySkin;
 
 import java.io.File;
@@ -41,6 +42,9 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   // public int init = 0;
   private static final String packResolutionName = "orig";
   private static final String preferencesFile = "spfzfile";
+  public static final String LANDSCAPE = "landscape";
+  public static final String PORTRAIT = "portrait";
+
   private String currentScene;
   // public String particleEffectsPath = "particles";
 
@@ -66,9 +70,10 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   protected HashMap<String, FileHandle> skeletonJSON = new HashMap<>();
   protected HashMap<String, TextureAtlas> spriteAnimations = new HashMap<>();
   protected HashMap<FontSizePair, BitmapFont> bitmapFonts = new HashMap<>();
-  protected SPFZSceneLoader portraitSL;
-  protected SPFZSceneLoader landscapeSL;
-  protected SPFZSceneLoader stagePauseSL;
+  protected SPFZSceneLoader portraitSSL;
+  protected SPFZSceneLoader landscapeSSL;
+  protected SPFZSceneLoader stagePauseSSL;
+  protected ItemWrapper rootWrapper;
   private SPFZMenuCamera spfzMCamera;
   private SPFZStageCamera spfzSCamera;
 
@@ -92,8 +97,8 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   public SPFZResourceManager(SwapFyterzMain appMain) {
     projectVO.pixelToWorld = 3;
     this.appMain = appMain;
-    portraitSL = new SPFZSceneLoader(this, appMain);
-    landscapeSL = new SPFZSceneLoader(this, appMain);
+    portraitSSL = new SPFZSceneLoader(this, appMain);
+    landscapeSSL = new SPFZSceneLoader(this, appMain);
     //stagePauseSL = new SPFZSceneLoader(this, appMain);
     setWorkingResolution(packResolutionName);
   }
@@ -645,16 +650,32 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     // }
   }
 
-  public SPFZSceneLoader getPortraitSL() {
-    return portraitSL;
+  public SPFZSceneLoader getPortraitSSL() {
+    return portraitSSL;
   }
 
-  public SPFZSceneLoader getLandscapeSL() {
-    return landscapeSL;
+  public SPFZSceneLoader getLandscapeSSL() {
+    return landscapeSSL;
   }
 
-  public SPFZSceneLoader getStagePauseSL() {
-    return stagePauseSL;
+  public SPFZSceneLoader getStagePauseSSL() {
+    return stagePauseSSL;
+  }
+
+  public SPFZSceneLoader getCurrentSSL() {
+    if (orientation.equals(PORTRAIT))
+      return portraitSSL;
+    else
+      //TODO will need to add stage check logic here
+      return landscapeSSL;
+  }
+
+  public void setRootWrapper(ItemWrapper rootWrapper) {
+    this.rootWrapper = new ItemWrapper(getCurrentSSL().getRoot());
+  }
+
+  public ItemWrapper rootWrapper() {
+    return rootWrapper;
   }
 
   public void setCurrentScene(String scene) {
@@ -665,9 +686,13 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return currentScene;
   }
 
-  public void setCurrentOrientation(String orientation) {
-    if (!orientation.equals(this.orientation))
-      this.orientation = orientation;
+  public void setCurrentOrientation() {
+    int rotation = Gdx.input.getRotation();
+
+    if ((rotation == 90 || rotation == 270) && !orientation.equals(LANDSCAPE))
+      orientation = LANDSCAPE;
+    else if (!orientation.equals(PORTRAIT))
+      orientation = PORTRAIT;
   }
 
   public String getCurrentOrientation() {

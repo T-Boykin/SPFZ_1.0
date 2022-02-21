@@ -35,7 +35,6 @@ import com.uwsoft.editor.renderer.physics.PhysicsBodyLoader;
 import com.uwsoft.editor.renderer.resources.IResourceRetriever;
 import com.uwsoft.editor.renderer.resources.ResourceManager;
 import com.uwsoft.editor.renderer.scripts.IScript;
-import com.uwsoft.editor.renderer.systems.ButtonSystem;
 import com.uwsoft.editor.renderer.systems.CompositeSystem;
 import com.uwsoft.editor.renderer.systems.LabelSystem;
 import com.uwsoft.editor.renderer.systems.LayerSystem;
@@ -231,6 +230,7 @@ public class SPFZSceneLoader
 
     // ParticleSystem particleSystem = new ParticleSystem();
     SPFZParticleSystem particleSystem = new SPFZParticleSystem();
+
     LightSystem lightSystem = new LightSystem();
     SpriteAnimationSystem animationSystem = new SpriteAnimationSystem();
     LayerSystem layerSystem = new LayerSystem();
@@ -255,6 +255,7 @@ public class SPFZSceneLoader
     engine.addSystem(scriptSystem);
     engine.addSystem(actionSystem);
     engine.addSystem(renderer);
+    engine.addSystem(new SPFZButtonSystem());
     // engine.addSystem(boundboxsystem);
     // engine.addSystem(cullingsystem);
 
@@ -266,7 +267,6 @@ public class SPFZSceneLoader
      */
 
     // additional
-    engine.addSystem(new ButtonSystem());
 
     addEntityRemoveListener();
   }
@@ -293,12 +293,10 @@ public class SPFZSceneLoader
         // call init for a system
         ScriptComponent scriptComponent = entity.getComponent(ScriptComponent.class);
 
-        if (getMainRM().currScene().equals("stagescene") && scriptComponent != null)
+        if (getMainRM().currentScene().equals("stagescene") && scriptComponent != null)
         {
           for (IScript script : scriptComponent.scripts)
-          {
             script.init(entity);
-          }
         }
       }
 

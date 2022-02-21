@@ -5,40 +5,51 @@ package com.dev.swapftrz.menu;
  */
 class SPFZMenuO2DMenuObjects
 {
-  private static final String
+  public static final String
 
     //Shared menu objects
 
     //Portrait view Menu Objects
-    pods = "pods",
-    menuFader = "transition",
-    pauseFader = "fader",
-    exitDialog = "exitdialog",
-    optionsScreen = "optionscreen",
-    ctrlboard = "controlboard",
-    menu_screen_helpbutton = "mnuscnbutton",
-    ingame_helpbutton = "ingamebutton",
-    help_backbutton = "hlpbackbutton",
-    charSelHelp = "charselhelp",
-    pauseHelp = "pausehelp",
+    PODS = "pods",
+    MENUFADER = "transition",
+    PAUSEFADER = "fader",
+    P_ARCBUTTON = "arcbutton",
+    P_VSBUTTON = "vsbutton",
+    P_TRNBUTTON = "trnbutton",
+    P_OPTBUTTON = "optbutton",
+    P_HLPBUTTON = "hlpbutton",
+    EXITDIALOG = "exitdialog",
+    OPTIONSCREEN = "optionscreen",
+    CTRLBOARD = "controlboard",
+    MENU_SCREEN_HELPBUTTON = "mnuscnbutton",
+    IN_GAME_HELPBUTTON = "ingamebutton",
+    HELP_BACKBUTTON = "hlpbackbutton",
+    CHARSELHELP = "charselhelp",
+    PAUSEHELP = "pausehelp",
 
   //Landscape view Menu Objects
-  optDialog = "optdialog";
+  L_ARCBUTTON = "larcbutton",
+    L_VSBUTTON = "lvsbutton",
+    L_TRNBUTTON = "ltrnbutton",
+    L_OPTBUTTON = "loptbutton",
+    L_HLPBUTTON = "lhlpbutton",
+    L_SOUNDBTN = "soundbutton",
+    L_BRIGHTBTN = "brightbutton",
+    L_EXITBTN = "exitbutton",
+    OPTDIALOG = "optdialog",
+    TTCIMAGE = "ttcimage",
+    SWYPEFRMBTM = "swypefrmbtm",
+    SWYPEFRMTOP = "swypefrmtop";
 
-  private static final String[] continueLandComponents = {"ttcimage", "swypefrmbtm", "swypefrmtop"},
+  private static final String[]
     continuePortComponents = {"animcircle", "introcircle", "ttcimage"},
-    landMain5Buttons = {"larcbutton", "lvsbutton", "ltrnbutton", "loptbutton", "lhlpbutton"},
-    landMain3Buttons = {"soundbutton", "brightbutton", "exitbutton"},
-    helpOptions = {menu_screen_helpbutton, ingame_helpbutton, help_backbutton},
     landMainMenuButtons = {},
 
   //Portrait view Menu Objects
   portMainMenuButtons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton", "brightnessbtn",
     "soundbutton", "exitbutton", "yes", "no", "thirtytime", "sixtytime", "ninetytime", "slidebright",
     "slidesound", "revert"},
-    portMain5Buttons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton"},
-    portMenuScreenImages = {charSelHelp, pauseHelp};
-  ;
+    portMain5Buttons = {"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton"};
 
 
   public SPFZMenuO2DMenuObjects() {
@@ -46,44 +57,29 @@ class SPFZMenuO2DMenuObjects
   }
 
   public String[] continueLandComponents() {
-    return continueLandComponents;
+    return new String[]{TTCIMAGE, SWYPEFRMBTM, SWYPEFRMTOP};
   }
 
   public String[] continuePortComponents() {
     return continuePortComponents;
   }
 
-  public String pods()
-  {
-    return pods;
-  }
-
-  public String menuFader() {
-    return menuFader;
-  }
-
-  public String pauseFader() {
-    return pauseFader;
-  }
-
   public String[] helpOptions() {
-    return helpOptions;
+    return new String[]{MENU_SCREEN_HELPBUTTON, IN_GAME_HELPBUTTON, HELP_BACKBUTTON};
   }
 
   public String[] landMain3Buttons() {
-    return landMain3Buttons;
+    return new String[]{L_SOUNDBTN, L_BRIGHTBTN, L_EXITBTN};
   }
 
   public String[] landMain5Buttons() {
-    return landMain5Buttons;
+    return new String[]{L_ARCBUTTON, L_VSBUTTON, L_TRNBUTTON, L_OPTBUTTON, L_HLPBUTTON};
   }
 
   public String[] landMainMenuButtons()
   {
     return landMainMenuButtons;
   }
-
-  public String controlBoard() { return ctrlboard; }
 
   public String[] portMain5Buttons()
   {
@@ -94,23 +90,7 @@ class SPFZMenuO2DMenuObjects
     return portMainMenuButtons;
   }
 
-  public String exitDialog() {
-    return exitDialog;
-  }
-
-  public String optDialog() {
-    return optDialog;
-  }
-
-  public String optionsScreen() {
-    return optionsScreen;
-  }
-
-  public String menuScreenHelpButton() {
-    return menu_screen_helpbutton;
-  }
-
   public String[] portMenuScreenImages() {
-    return portMenuScreenImages;
+    return new String[]{CHARSELHELP, PAUSEHELP};
   }
 }

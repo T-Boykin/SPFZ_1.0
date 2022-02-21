@@ -106,7 +106,7 @@ public class SPFZMenuAnimation
    * 2. MoveBy and ScaleTo on Main portrait 5 Main Menu buttons in delay sequence
    */
   public void portButtonsToMainCenter() {
-    Actions.addAction(portRoot.getChild(menuo2d.controlBoard()).getEntity(),
+    Actions.addAction(portRoot.getChild(menuo2d.CTRLBOARD).getEntity(),
       moveO2dObjBy(SPFZ_MAct.ZERO,
         SPFZ_MAct.PMENU_CTRL_POSY,
         SPFZ_MAct.NORM_DUR, null));
@@ -151,22 +151,22 @@ public class SPFZMenuAnimation
 
 
   public void showExitDialog() {
-    Actions.addAction(portRoot.getChild(menuo2d.exitDialog()).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
+    Actions.addAction(portRoot.getChild(menuo2d.EXITDIALOG).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
       SPFZ_MAct.PMENU_EXIT_DIALOG_Y, SPFZ_MAct.TWO_DUR, Interpolation.swing));
   }
 
   public void lowerExitDialog() {
-    Actions.addAction(portRoot.getChild(menuo2d.exitDialog()).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
+    Actions.addAction(portRoot.getChild(menuo2d.EXITDIALOG).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
       -SPFZ_MAct.PMENU_EXIT_DIALOG_Y, SPFZ_MAct.TWO_DUR, Interpolation.swing));
   }
 
   public void podsTowardsScreen() {
-    Actions.addAction((portRoot.getChild(menuo2d.pods())).getEntity(), Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.ZERO,
+    Actions.addAction((portRoot.getChild(menuo2d.PODS)).getEntity(), Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.ZERO,
       SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, null, null)));
   }
 
   public void podsFlyOut() {
-    Actions.addAction((portRoot.getChild(menuo2d.pods())).getEntity(),
+    Actions.addAction((portRoot.getChild(menuo2d.PODS)).getEntity(),
       Actions.sequence(Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LMENU_PODS_FLY_XY, SPFZ_MAct.LMENU_PODS_FLY_XY,
         SPFZ_MAct.NORMAL_SCALE * SPFZ_MAct.LMENU_PODS_FLY, SPFZ_MAct.NORMAL_SCALE * SPFZ_MAct.LMENU_PODS_FLY,
         SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, null, null)),
@@ -178,7 +178,7 @@ public class SPFZMenuAnimation
    * Push portrait UI buttons Below the Main Center
    */
   public void portButtonsBelowMain() {
-    Actions.addAction(portRoot.getChild(menuo2d.controlBoard()).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
+    Actions.addAction(portRoot.getChild(menuo2d.CTRLBOARD).getEntity(), moveO2dObjBy(SPFZ_MAct.ZERO,
       -SPFZ_MAct.PMENU_CTRL_POSY, SPFZ_MAct.NORM_DUR, null));
   }
 
@@ -271,21 +271,21 @@ public class SPFZMenuAnimation
   }
 
   private void openOptionsPort() {
-    Actions.addAction(portRoot.getChild(menuo2d.optionsScreen()).getEntity(),
+    Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
       Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.PMENU_OPTSCN_POSX,
         SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
         Interpolation.linear, Interpolation.linear)));
   }
 
   private void closeOptionsPort() {
-    Actions.addAction(portRoot.getChild(menuo2d.optionsScreen()).getEntity(),
+    Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
       Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.PMENU_OPTSCN_POSX,
         SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
         Interpolation.linear, Interpolation.linear)));
   }
 
   private void openOptionsLand() {
-    Actions.addAction(landRoot.getChild(menuo2d.optDialog()).getEntity(),
+    Actions.addAction(landRoot.getChild(menuo2d.OPTDIALOG).getEntity(),
       Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.LMENU_OPTDLG_BY_POSX, -SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
         SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
         Interpolation.linear)));
@@ -332,7 +332,7 @@ public class SPFZMenuAnimation
    * Close the options dialog and disable buttons from dialog
    */
   public void closeOptionsDialog() {
-    Actions.addAction(landRoot.getChild(menuo2d.optDialog()).getEntity(),
+    Actions.addAction(landRoot.getChild(menuo2d.OPTDIALOG).getEntity(),
       Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.LMENU_OPTDLG_BY_POSX, SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
         SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
         Interpolation.linear)));
@@ -428,7 +428,7 @@ public class SPFZMenuAnimation
   }
 
   private void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
-    Actions.addAction(rootIW.getChild(menuo2d.menuFader()).getEntity(), Actions.sequence(Actions.fadeOut(SPFZ_MAct.FADE_DUR),
+    Actions.addAction(rootIW.getChild(menuo2d.OPTIONSCREEN).getEntity(), Actions.sequence(Actions.fadeOut(SPFZ_MAct.FADE_DUR),
       Actions.run(run)));
   }
 
