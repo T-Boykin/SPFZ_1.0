@@ -2,17 +2,24 @@ package com.dev.swapftrz.menu;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.scenes.scene2d.actions.AlphaAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
 import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.systems.action.Actions;
 import com.uwsoft.editor.renderer.systems.action.data.ActionData;
+import com.uwsoft.editor.renderer.systems.action.data.AlphaData;
+import com.uwsoft.editor.renderer.systems.action.data.DelayData;
 import com.uwsoft.editor.renderer.systems.action.data.MoveByData;
 import com.uwsoft.editor.renderer.systems.action.data.MoveToData;
 import com.uwsoft.editor.renderer.systems.action.data.ScaleToData;
+import com.uwsoft.editor.renderer.systems.action.logic.DelayAction;
 import com.uwsoft.editor.renderer.systems.action.logic.ScaleToAction;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
+
+import java.util.Arrays;
 
 //TODO Find a way to take in information coming in from components and use them within defined actions
 
@@ -23,16 +30,19 @@ public class SPFZMenuAnimation
 {
   private final SPFZSceneLoader portrait, landscape;
   private final SPFZMenuO2DMenuObjects menuo2d;
+  private final SPFZMenu spfzmenu;
   private final ComponentMapper<ActionComponent> ac = ComponentMapper.getFor(ActionComponent.class);
   private final ComponentMapper<TransformComponent> tc = ComponentMapper.getFor(TransformComponent.class);
   private ItemWrapper portRoot, landRoot;
   private ActionComponent action;
   private TransformComponent transAction;
 
-  public SPFZMenuAnimation(SPFZSceneLoader portrait, SPFZSceneLoader landscape, SPFZMenuO2DMenuObjects menuo2d) {
+  public SPFZMenuAnimation(SPFZMenu spfzmenu, SPFZSceneLoader portrait, SPFZSceneLoader landscape,
+                           SPFZMenuO2DMenuObjects menuo2d) {
     this.portrait = portrait;
     this.landscape = landscape;
     this.menuo2d = menuo2d;
+    this.spfzmenu = spfzmenu;
   }
 
   public ActionComponent ActRoot() {
@@ -106,20 +116,22 @@ public class SPFZMenuAnimation
    * 2. MoveBy and ScaleTo on Main portrait 5 Main Menu buttons in delay sequence
    */
   public void portButtonsToMainCenter() {
+    float sequenceDelay = 0, addDelay = SPFZ_MAct.PMAIN5_SEQ;
+    float main5posY = SPFZ_MAct.PMENU_MAIN5_BY_POSY, scaleX = SPFZ_MAct.PMENU_MAIN5_SCALEX,
+      scaleY = SPFZ_MAct.PMENU_MAIN5_SCALEY, duration = SPFZ_MAct.NORM_DUR;
+
     Actions.addAction(portRoot.getChild(menuo2d.CTRLBOARD).getEntity(),
       moveO2dObjBy(SPFZ_MAct.ZERO,
         SPFZ_MAct.PMENU_CTRL_POSY,
         SPFZ_MAct.NORM_DUR, null));
 
-    float sequenceDelay = 0;
     for (int i = 0; i < menuo2d.portMain5Buttons().length; i++)
     {
       Actions.addAction(portRoot.getChild(menuo2d.portMain5Buttons()[i]).getEntity(),
-        Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.ZERO,
-          SPFZ_MAct.PMENU_MAIN5_BY_POSY, SPFZ_MAct.PMENU_MAIN5_SCALEX,
-          SPFZ_MAct.PMENU_MAIN5_SCALEY, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR + sequenceDelay, null, null)));
+        Actions.parallel(moveByAndScaleO2dObj(0, main5posY, scaleX, scaleY, 0,
+          duration + sequenceDelay, null, null)));
 
-      sequenceDelay += SPFZ_MAct.PMAIN5_SEQ;
+      sequenceDelay += addDelay;
     }
   }
 
@@ -165,13 +177,29 @@ public class SPFZMenuAnimation
       SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, null, null)));
   }
 
-  public void podsFlyOut() {
+  public void landPodsFlyOut() {
     Actions.addAction((portRoot.getChild(menuo2d.PODS)).getEntity(),
       Actions.sequence(Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LMENU_PODS_FLY_XY, SPFZ_MAct.LMENU_PODS_FLY_XY,
         SPFZ_MAct.NORMAL_SCALE * SPFZ_MAct.LMENU_PODS_FLY, SPFZ_MAct.NORMAL_SCALE * SPFZ_MAct.LMENU_PODS_FLY,
         SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, null, null)),
         Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LANDWIDTH_PORTHEIGHT * .5f, SPFZ_MAct.LANDHEIGHT_PORTWIDTH * .5f, SPFZ_MAct.ZERO,
           SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, null, null))));
+  }
+
+  public void portFlyPods() {
+    //get the sceneSelection integer
+    int scene = spfzmenu.portScene();
+    String[] pods = Arrays.copyOfRange(menuo2d.portPods(), scene - 1, menuo2d.portPods().length - 1);
+    float[][] podXY = SPFZ_MAct.portPodsXY()[scene];
+    float sequenceDelay = 0, addDelay = SPFZ_MAct.POD_SEQ, duration = SPFZ_MAct.POD_DUR;
+
+    for (int i = 0; i < pods.length; i++)
+    {
+      Actions.addAction(portRoot.getChild(pods[i]).getEntity(), moveO2dObjTo(podXY[i][0], podXY[i][1],
+        duration + sequenceDelay, Interpolation.linear));
+
+      sequenceDelay += addDelay;
+    }
   }
 
   /**
@@ -270,6 +298,43 @@ public class SPFZMenuAnimation
     return actionData;
   }
 
+  /**
+   * Action flashes the object passed, essentially fading it in and out
+   *
+   * @param repititions - number of times object should fade in and out
+   * @param duration    - time action should be performed
+   * @param slowDown    - reptitions slow down overtime if set to true
+   * @param speedUp     - repititions speed up overtime if set to true
+   */
+  private AlphaData[] flashO2dObject(float repititions, float duration,
+                                     boolean slowDown, boolean speedUp) {
+    float actionDuration = duration / repititions;
+    boolean setFadeIn = false;
+    AlphaData[] fadeActions = {};
+
+    for (int i = 0; i < repititions; i++)
+    {
+      if (speedUp && !slowDown)
+        actionDuration /= actionDuration;
+
+      if (slowDown && !speedUp)
+        actionDuration *= actionDuration;
+
+      if (setFadeIn)
+      {
+        fadeActions[i] = fadeInO2dObject(actionDuration, null);
+        setFadeIn = false;
+      }
+      else
+      {
+        fadeActions[i] = fadeOutO2dObject(actionDuration, null);
+        setFadeIn = true;
+      }
+    }
+
+    return fadeActions;
+  }
+
   private void openOptionsPort() {
     Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
       Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.PMENU_OPTSCN_POSX,
@@ -295,7 +360,7 @@ public class SPFZMenuAnimation
    * Expand the brightness, sound, and exit buttons
    */
   private void expandLandMain3Buttons() {
-    float sequenceDelay = 0;
+    float sequenceDelay = 0, addDelay = SPFZ_MAct.MAIN3_SEQ;
     String[] arrObjs = menuo2d.landMain3Buttons();
 
     for (int i = 0; i < arrObjs.length; i++)
@@ -305,7 +370,7 @@ public class SPFZMenuAnimation
           SPFZ_MAct.LAND_MAIN3_BUTTONS_Y[i], SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
           SPFZ_MAct.LAND_MAIN3_BUTTONS_SCL[i], SPFZ_MAct.MAIN3_DUR + sequenceDelay, null, null)));
 
-      sequenceDelay += SPFZ_MAct.MAIN3_SEQ;
+      sequenceDelay += addDelay;
     }
   }
 
@@ -313,7 +378,7 @@ public class SPFZMenuAnimation
    * Shrink the brightness, sound, and exit buttons
    */
   private void shrinkLandMain3Buttons() {
-    float sequenceDelay = 0;
+    float sequenceDelay = 0, addDelay = SPFZ_MAct.MAIN3_SEQ;
     String[] arrObjs = menuo2d.landMain3Buttons();
 
     for (int i = 0; i < arrObjs.length; i++)
@@ -322,7 +387,7 @@ public class SPFZMenuAnimation
         Actions.parallel(moveToAndScaleO2dObj(SPFZ_MAct.LMENU_MAIN3_SHRINK_X[i], SPFZ_MAct.LMENU_MAIN3_SHRINKY,
           SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.MAIN3_DUR + sequenceDelay, null, null)));
 
-      sequenceDelay += SPFZ_MAct.MAIN3_SEQ;
+      sequenceDelay += addDelay;
     }
   }
 
@@ -358,13 +423,34 @@ public class SPFZMenuAnimation
       Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
   }
 
-  private void fadeO2dObject(ItemWrapper rootIW, String stringObj) {
-    Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(SPFZ_MAct.FADE_DUR));
+  private AlphaData fadeOutO2dObject(float duration, Interpolation interpolation) {
+
+    if (interpolation == null)
+      interpolation = Interpolation.linear;
+
+    AlphaData alphaData = new AlphaData(interpolation, duration, 0);
+    alphaData.logicClassName = AlphaAction.class.getName();
+
+    return alphaData;
   }
 
-  private void fadeO2dObjects(ItemWrapper rootIW, String[] stringObjs) {
-    for (String stringObj : stringObjs)
-      Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
+  private AlphaData fadeInO2dObject(float duration, Interpolation interpolation) {
+
+    if (interpolation == null)
+      interpolation = Interpolation.linear;
+
+    AlphaData alphaData = new AlphaData(interpolation, duration, 1);
+    alphaData.logicClassName = AlphaAction.class.getName();
+
+    return alphaData;
+  }
+
+  private DelayData delayO2dObject(float duration) {
+    DelayData delayData = new DelayData(
+      duration
+    );
+    delayData.logicClassName = DelayAction.class.getName();
+    return delayData;
   }
 
   //COMBINED/CUSTOM ACTIONS
@@ -394,8 +480,10 @@ public class SPFZMenuAnimation
     MoveToData moveActionData = new MoveToData(moveInterpolation, duration, toXVal, toYVal);
     ScaleToData scaleActionData = new ScaleToData(scaleInterpolation, duration, scaleXVal + scaleResize,
       scaleYVal + scaleResize);
+    moveActionData.logicClassName = MoveToAction.class.getName();
+    scaleActionData.logicClassName = ScaleToAction.class.getName();
 
-    return new ActionData[]{moveActionData, scaleActionData};
+    return new ActionData[]{moveActionData, scaleActionData };
   }
 
   /**
@@ -423,16 +511,81 @@ public class SPFZMenuAnimation
     MoveByData moveActionData = new MoveByData(moveInterpolation, duration, byXVal, byYVal);
     ScaleToData scaleActionData = new ScaleToData(scaleInterpolation, duration, scaleXVal + scaleResize,
       scaleYVal + scaleResize);
+    moveActionData.logicClassName = MoveByAction.class.getName();
+    scaleActionData.logicClassName = ScaleToAction.class.getName();
 
     return new ActionData[]{moveActionData, scaleActionData};
   }
 
-  private void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
-    Actions.addAction(rootIW.getChild(menuo2d.OPTIONSCREEN).getEntity(), Actions.sequence(Actions.fadeOut(SPFZ_MAct.FADE_DUR),
+  private void faderInPlusAction(ItemWrapper rootIW, Runnable run) {
+    Actions.addAction(rootIW.getChild(menuo2d.fader()).getEntity(), Actions.sequence(fadeInO2dObject(SPFZ_MAct.FADE_DUR, null),
       Actions.run(run)));
   }
 
-  //CUSTOM RUNNABLES
+  private void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
+    Actions.addAction(rootIW.getChild(menuo2d.fader()).getEntity(), Actions.sequence(fadeOutO2dObject(SPFZ_MAct.FADE_DUR, null),
+      Actions.run(run)));
+  }
+
+  //CUSTOM ANIMATION RUNNABLES
+
+  /**
+   * Game introduction Animation
+   * <p>
+   * 1. Tap to continue is hidden
+   * 2. Blackout is hidden to show 1st circle and Main Menu music starts at the same time
+   * 3.
+   */
+  private Runnable spfzIntroduction() {
+    Runnable runnable, startRunnable, soundRunnable,
+      animCircleRunnable, introCircleRunnable, flashTTCRunnable;
+    float delay1 = 1.5f, fade = SPFZ_MAct.FADE_DUR, delay2 = delay1 + fade,
+      delay3 = delay1 + delay2 + fade;
+
+    startRunnable = () -> {
+      Actions.addAction(getPortRoot().getChild(menuo2d.ttcImage()).getEntity(),
+        fadeOutO2dObject(0, null));
+    };
+
+    soundRunnable = () -> {
+      Actions.addAction(getPortRoot().getChild(menuo2d.fader()).getEntity(),
+        Actions.parallel(fadeOutO2dObject(0, null), Actions.run(spfzmenu.sound().playMainMenuLoopMusic())));
+
+    };
+
+    animCircleRunnable = () -> {
+      ActionData[] actionData = moveByAndScaleO2dObj(0, 0, SPFZ_MAct.PMENU_ANIMCIRCLE_SCL, SPFZ_MAct.PMENU_ANIMCIRCLE_SCL, 0,
+        SPFZ_MAct.ANIMCIRCLE_DUR, null, null);
+
+      Actions.addAction(getPortRoot().getChild(menuo2d.animCircle()).getEntity(),
+        Actions.sequence(delayO2dObject(delay1), Actions.parallel(actionData[0], actionData[1],
+          fadeOutO2dObject(SPFZ_MAct.FADE_DUR, null))));
+    };
+
+    introCircleRunnable = () -> {
+      ActionData[] actionData = moveByAndScaleO2dObj(0, 0, SPFZ_MAct.PMENU_INTROCIRCLE_SCL,
+        SPFZ_MAct.PMENU_INTROCIRCLE_SCL, 0, SPFZ_MAct.INTROCIRCLE_DUR, null, null);
+
+      Actions.addAction(getPortRoot().getChild(menuo2d.animCircle()).getEntity(),
+        Actions.sequence(delayO2dObject(delay2), Actions.parallel(actionData[0], actionData[1])));
+    };
+
+    flashTTCRunnable = () -> {
+      Actions.addAction(getPortRoot().getChild(menuo2d.ttcImage()).getEntity(),
+        Actions.sequence(delayO2dObject(delay3),
+          Actions.sequence(flashO2dObject(SPFZ_MAct.TTC_REPS, SPFZ_MAct.TTC_DUR, false, false))));
+    };
+
+    runnable = () -> {
+      for (Runnable run : Arrays.asList(startRunnable, soundRunnable, animCircleRunnable,
+        introCircleRunnable, flashTTCRunnable))
+      {
+        run.run();
+      }
+    };
+
+    return runnable;
+  }
 
   /**
    * Move all main menu landscape buttons into position, fadeout the black screen

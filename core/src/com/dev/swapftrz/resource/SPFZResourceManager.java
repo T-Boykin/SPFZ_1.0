@@ -1,6 +1,8 @@
 package com.dev.swapftrz.resource;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
@@ -10,7 +12,6 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Json;
-import com.dev.swapftrz.SwapFyterzMain;
 import com.dev.swapftrz.menu.SPFZMenuCamera;
 import com.dev.swapftrz.stage.SPFZStageCamera;
 import com.uwsoft.editor.renderer.data.CompositeItemVO;
@@ -31,20 +32,26 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 {
 
   protected float resMultiplier;
+  private final SPFZDBOperations dbOperations;
   private AssetManager assetManager = new AssetManager();
   // public boolean setup;
   // public int init = 0;
   private static final String packResolutionName = "orig";
   private static final String preferencesFile = "spfzfile";
+  public final byte ANDROID = 0, DESKTOP = 1, IOS = 2;
   public static final String LANDSCAPE = "landscape";
   public static final String PORTRAIT = "portrait";
 
+  //private final AndroidInterfaceLIBGDX android;
+
+  private int appDevice;
   private String currentScene;
   // public String particleEffectsPath = "particles";
 
@@ -85,7 +92,6 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   List<String> particlenames;
   List<String> fontpairs;
   // private final Pool<ParticleEffect>
-  SwapFyterzMain appMain;
 
   // String fontpath;
   // String fontimagepath;
@@ -94,13 +100,14 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   // String invalidfnt2 = "Aha";
   // String invalidfnt3 = "LCD";
 
-  public SPFZResourceManager(SwapFyterzMain appMain) {
+  public SPFZResourceManager() {
     projectVO.pixelToWorld = 3;
-    this.appMain = appMain;
-    portraitSSL = new SPFZSceneLoader(this, appMain);
-    landscapeSSL = new SPFZSceneLoader(this, appMain);
+    portraitSSL = new SPFZSceneLoader(this);
+    landscapeSSL = new SPFZSceneLoader(this);
     //stagePauseSL = new SPFZSceneLoader(this, appMain);
+    setAppDevice();
     setWorkingResolution(packResolutionName);
+    dbOperations = new SPFZDBOperations(this);
   }
 
   public void dispose() {
@@ -722,5 +729,68 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 
   public String preferencesFile() {
     return preferencesFile;
+  }
+
+  public int appDevice() {
+    return appDevice;
+  }
+
+  public void setAppDevice() {
+    switch (Gdx.app.getType())
+    {
+      case Android:
+        appDevice = ANDROID;
+        Gdx.input.setCatchBackKey(true);
+        Gdx.input.setCatchMenuKey(true);
+        Gdx.app.setLogLevel(Application.LOG_DEBUG);
+        break;
+      case iOS:
+        appDevice = IOS;
+        break;
+      case Desktop:
+        appDevice = DESKTOP;
+        break;
+      default:
+        break;
+    }
+  }
+
+  public float[] getOptionsSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return new float[]{spfzprefs.getFloat("brightness"), spfzprefs.getFloat("sound")};
+  }
+
+  public float getBrightSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("brightness");
+  }
+
+  public float getSoundSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("sound");
+  }
+
+  public void saveBrightSettings(float brightness) {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    spfzprefs.putFloat("brightness", brightness);
+    spfzprefs.flush();
+  }
+
+  public void saveSoundSettings(float sound) {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    spfzprefs.putFloat("sound", sound);
+    spfzprefs.flush();
+  }
+
+  public void saveSoundSettings(Map<String, String> settings) {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    spfzprefs.put(settings);
+    spfzprefs.flush();
   }
 }

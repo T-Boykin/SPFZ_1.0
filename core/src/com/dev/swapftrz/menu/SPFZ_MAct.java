@@ -26,11 +26,17 @@ class SPFZ_MAct
     MAIN3_DUR = .5f,
     NORM_DUR = 1f,
     TWO_DUR = 2f,
+    POD_DUR = .7f,
+    ANIMCIRCLE_DUR = .7f,
+    INTROCIRCLE_DUR = 2.2f,
+    TTC_DUR = 3f,
 
   /* DELAY SEQUENCE TIMES */
 
   MAIN3_SEQ = .1f,
     PMAIN5_SEQ = .2f,
+    POD_SEQ = .2f,
+
   /* SCALE RESIZING */
   PMENU_MAIN5_SCALEX = 1.8f,
     PMENU_MAIN5_SCALEY = 2f,
@@ -40,6 +46,8 @@ class SPFZ_MAct
     PMENU_HOPTS_MS_IG_SCL = 2.5f,
     PMENU_HOPTS_BCK_SCL = .5f,
     PMENU_MNUSCN_SCNSX = 3.3f,
+    PMENU_ANIMCIRCLE_SCL = 6f,
+    PMENU_INTROCIRCLE_SCL = 40f,
 
   /* MAIN MENU NORMAL POSITIONING */
 
@@ -51,6 +59,29 @@ class SPFZ_MAct
     PMENU_HOPTS_IG_POSX = 119f,
     PMENU_HOPTS_BCK_POSTX = 29f,
     PMENU_OPTSCN_POSX = 143f,
+    PMENU_POD_TR_Y = 340f,
+    PMENU_POD_BR_X1 = 25f,
+    PMENU_POD_BR_Y1 = 21f,
+    PMENU_POD_TL_X1 = 266f,
+    PMENU_POD_TL_Y1 = 354f,
+    PMENU_POD_B_X1 = 270f,
+    PMENU_POD_B_Y1 = 120f,
+    PMENU_POD_BR_X2 = 71f,
+    PMENU_POD_BR_Y2 = 19f,
+    PMENU_POD_TL_X2 = 307f,
+    PMENU_POD_TL_Y2 = 390f,
+    PMENU_POD_B_X2 = 292f,
+    PMENU_POD_B_Y2 = 164f,
+    PMENU_POD_TL_X3 = 295f,
+    PMENU_POD_TL_Y3 = 413f,
+    PMENU_POD_B_X3 = 231f,
+    PMENU_POD_B_Y3 = 161f,
+    PMENU_POD_B_X4 = 202f,
+    PMENU_POD_B_Y4 = 8f,
+    PMENU_INTROCIRCLE_Y = 2400f,
+
+  /* REPETITIONS */
+  TTC_REPS = 10f,
 
 
   /* LANDSCAPE */
@@ -95,5 +126,17 @@ class SPFZ_MAct
     LAND_MAIN3_BUTTONS_SCL = {LSO_EXIT_BTN_SCL, LBRIGHT_BTN_SCL, LSO_EXIT_BTN_SCL};
 
   public SPFZ_MAct() {
+  }
+
+  public static float[][][] portPodsXY() {
+
+    //Array structure to animate pods:
+
+    //Array{Scene{pod}}
+
+    return new float[][][]{{{ZERO, PMENU_POD_TR_Y}, {-PMENU_POD_BR_X1, PMENU_POD_BR_Y1}, {PMENU_POD_TL_X1, PMENU_POD_TL_Y1},
+      {PMENU_POD_B_X1, PMENU_POD_B_Y1}}, {{-PMENU_POD_BR_X2, -PMENU_POD_BR_Y2}, {PMENU_POD_TL_X2, PMENU_POD_TL_Y2},
+      {PMENU_POD_B_X2, PMENU_POD_B_Y2}}, {{PMENU_POD_TL_X3, PMENU_POD_TL_Y3}, {PMENU_POD_B_X3, PMENU_POD_B_Y3}},
+      {{PMENU_POD_B_X4, PMENU_POD_B_Y4}}};
   }
 }

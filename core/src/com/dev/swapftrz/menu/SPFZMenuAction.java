@@ -38,6 +38,8 @@ public class SPFZMenuAction
 
   public void processHelpButton() {
     setProcessing();
+    menu_sound.playConfirmSound();
+
   }
 
   public void processOptionsButton() {
@@ -108,5 +110,11 @@ public class SPFZMenuAction
 
   public void setProcessing() {
     resManager.getCurrentSSL().engine.getSystem(SPFZButtonSystem.class).setProcessing(true);
+  }
+
+  //ACTION RUNNABLES
+
+  public void goToCharacterSelect() {
+
   }
 }

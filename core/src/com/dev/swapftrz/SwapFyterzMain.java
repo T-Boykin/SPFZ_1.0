@@ -70,7 +70,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
 
-public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor, GestureListener, java.sql.Driver
+public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor, GestureListener
 {
   public enum State
   {
@@ -80,23 +80,17 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     ERROR
   }
 
-  private static final byte ANDROID = 0, DESKTOP = 1, IOS = 2;
-  private final SPFZResourceManager resourceManager = new SPFZResourceManager(this);
-  private AndroidInterfaceLIBGDX android;
-  //Device based on byte received
-  // interface allows for the application to utilize the Android System
-  // Settings, etc. Must be setup within custom interface
-
-  private final SPFZMenu spfzmenu = new SPFZMenu(resourceManager);
+  private final SPFZResourceManager resourceManager;
+  private final AndroidInterfaceLIBGDX android;
+  private final SPFZMenu spfzmenu;
 
   boolean init, isArcade, mode, uicomplete, dialog, charpicked, mute, stageconfirmed, transition, flingup, flingdown,
     inhelp, mnuscn, exit, paused, pmenuloaded, setupstage, optionsup, gamestart, deselect, longclear, partstartone,
     partstarttwo, partstartthree, partstartfour, partstartfive, partstartsix, adjustbright, adjustsound, frmresume,
     stageset, fromss, restart, istraining, moveright, credpress, isloading, strt1, strt2, charfound, inact, slowtime,
-    pickedup, stoprender;
+    pickedup;
 
-  byte selecttype, charname;
-  BufferedImage bufferedImage;
+  byte selecttype;
   ComponentMapper<TransformComponent> tc = ComponentMapper.getFor(TransformComponent.class);
   ComponentMapper<SPFZParticleComponent> pc = ComponentMapper.getFor(SPFZParticleComponent.class);
   ComponentMapper<ActionComponent> ac = ComponentMapper.getFor(ActionComponent.class);
@@ -104,7 +98,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   //ComponentMapper<BoundingBoxComponent> boundingBox = ComponentMapper.getFor(BoundingBoxComponent.class);
   ComponentMapper<MainItemComponent> mc = ComponentMapper.getFor(MainItemComponent.class);
 
-  CompositeItemVO player1char1, player1char2, player1char3, player2char1, player2char2, player2char3;
+  //CompositeItemVO player1char1, player1char2, player1char3, player2char1, player2char2, player2char3;
 
   //Driver driver;
 
@@ -117,7 +111,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     startingduration;
   FPSLogger logger;
 
-  int runningby, savebright, stageTime, savescene, pmenuopt, rcount, scenesel, level, paragraph, gWidth,
+  int savebright, stageTime, savescene, pmenuopt, rcount, scenesel, level, paragraph, gWidth,
     gHeight, INTRO = 0, randsecs = 10;
 
   GestureDetector gd;
@@ -140,7 +134,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   //ShaderProgram shaderProgram;
 
-  String prevScene, landscene, view, selectedStage, brightstr, soundstr, p1char1, p1char2,
+  String prevScene, view, selectedStage, p1char1, p1char2,
     p1char3, p2char1, p2char2, p2char3, character, storyline, displaytext;
 
   // String[] opponents = { "spriteball", "spriteballred", "spriteballblack",
@@ -172,7 +166,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   TintComponent restarttint = new TintComponent();
 
-  TransformComponent transform;
+  //TransformComponent transform;
 
   Viewport viewportland, viewportport;
 
@@ -181,14 +175,19 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     termov = new Vector3(160f, 700f, 0), treymov = new Vector3(480f, 700f, 0), migmov = new Vector3(160f, 500f, 0),
     mikmov = new Vector3(480f, 500f, 0), credmov = new Vector3(320f, 600f, 0), move = new Vector3(0, 0, 0);
 
-  // Default Constructor
+  // Default Constructor - mainly for Desktop setup
   public SwapFyterzMain() {
+    resourceManager = new SPFZResourceManager();
+    spfzmenu = new SPFZMenu(resourceManager);
+    android = null;
   }
 
   //Constructor set to receive the custom interfacing for Android System
   //Utilization
-  public SwapFyterzMain(AndroidInterfaceLIBGDX tools) {
+  public SwapFyterzMain(AndroidInterfaceLIBGDX tools, SPFZResourceManager resManager) {
+    resourceManager = resManager;
     android = tools;
+    spfzmenu = new SPFZMenu(resourceManager, android);
   }
 
   //revamped
@@ -201,7 +200,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     if (view == "portrait")
     {
       buttonsup();
-      flypods();
+      //flypods();
+      //portFlyPods()
     }
     else
     {
@@ -257,17 +257,17 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       if (resourceManager.getManager().update())
       {
         isloading = false;
-        if (runningby == ANDROID)
+        if (resourceManager.appDevice() == resourceManager.ANDROID)
         {
-          android.toast("Arcade textures loaded");
+          //android.toast("Arcade textures loaded");
         }
         else
         {
           System.out.print("Arcade textures loaded" + "\n");
         }
-        if (runningby == ANDROID)
+        if (resourceManager.appDevice() == resourceManager.ANDROID)
         {
-          android.lockOrientation(mode, view);
+          //android.lockOrientation(mode, view);
 
         }
 
@@ -280,8 +280,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
         update(view).loadScene(resourceManager.currentScene(), viewportland);
         root = new ItemWrapper(update(view).getRoot());
-        transform = tc.get(root.getEntity());
-        action = ac.get(root.getEntity());
+        //transform = tc.get(root.getEntity());
+        //action = ac.get(root.getEntity());
         setSettings();
         level++;
         // load the 1st texture that will appear on the default layer
@@ -932,7 +932,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
             {
               if (charsselected.get(i) != null && charentities.get(i) != null && deselect)
               {
-                desel.play(1.0f);
+                //desel.play(1.0f);
+
                 charsselected.set(i, null);
                 charcomposites.set(i, null);
 
@@ -1026,8 +1027,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
     if (INTRO == 2)
     {
-      transform = tc.get(root.getEntity());
-      action = ac.get(root.getEntity());
+      //transform = tc.get(root.getEntity());
+      //action = ac.get(root.getEntity());
 
       for (int i = 0; i < 4; i++)
       {
@@ -1140,41 +1141,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   }
 
-  public void closebtns(String view) {
-    ParallelData lb1 = null, lb2 = null, lb3 = null, lb4 = null, lb5 = null;
-    String btn1, btn2, btn3, btn4, btn5;
-
-    if (view == "portrait")
-    {
-      btn1 = "arcbutton";
-      btn2 = "vsbutton";
-      btn3 = "trnbutton";
-      btn4 = "optbutton";
-      btn5 = "helpbutton";
-    }
-    else
-    {
-      btn1 = "larcbutton";
-      btn2 = "lvsbutton";
-      btn3 = "ltrnbutton";
-      btn4 = "loptbutton";
-      btn5 = "lhlpbutton";
-    }
-
-    lb1 = createactions(root.getChild(btn1).getEntity());
-    lb2 = createactions(root.getChild(btn2).getEntity());
-    lb3 = createactions(root.getChild(btn3).getEntity());
-    lb4 = createactions(root.getChild(btn4).getEntity());
-    lb5 = createactions(root.getChild(btn5).getEntity());
-
-
-    Actions.addAction(root.getChild(btn1).getEntity(), Actions.sequence(Actions.delay(.01f), lb1));
-    Actions.addAction(root.getChild(btn2).getEntity(), Actions.sequence(Actions.delay(.02f), lb2));
-    Actions.addAction(root.getChild(btn3).getEntity(), Actions.sequence(Actions.delay(.03f), lb3));
-    Actions.addAction(root.getChild(btn4).getEntity(), Actions.sequence(Actions.delay(.04f), lb4));
-    Actions.addAction(root.getChild(btn5).getEntity(), Actions.sequence(Actions.delay(.05f), lb5));
-  }
-
   /**
    * DisplayAD will process ads when necessary based on parameters received(process called while "running")
    * scene - current screen within SWAP FYTERZ
@@ -1188,7 +1154,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   public void displayAD(String scene, long lastgen, int seconds) {
     Random randtime = new Random();
 
-    if (runningby == ANDROID)
+    if (resourceManager.appDevice() == resourceManager.ANDROID)
     {
       final int AD_GEN_MAX = 15;
       final int AD_GEN_MIX = 10;
@@ -1202,7 +1168,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
             //check if AD not generated, if not, generate AD
 
-            android.NEW_SPFZ_AD("banner");
+            //android.NEW_SPFZ_AD("banner");
             adtime = System.currentTimeMillis();
             randsecs = (randtime.nextInt(AD_GEN_MAX - AD_GEN_MIX) + 1) + AD_GEN_MAX;
 
@@ -1213,7 +1179,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
             //check if AD not generated, if not, generate AD
 
-            android.NEW_SPFZ_AD("banner");
+            //android.NEW_SPFZ_AD("banner");
             adtime = System.currentTimeMillis();
             randsecs = (randtime.nextInt(AD_GEN_MAX - AD_GEN_MIX) + 1) + AD_GEN_MAX;
 
@@ -1224,13 +1190,13 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
             switch (level)
             {
               case 2:
-                android.NEW_SPFZ_AD("inter");
+                //android.NEW_SPFZ_AD("inter");
                 break;
               case 4:
-                android.NEW_SPFZ_AD("inter");
+                //android.NEW_SPFZ_AD("inter");
                 break;
               case 99:
-                android.NEW_SPFZ_AD("interv");
+                //android.NEW_SPFZ_AD("interv");
                 break;
             }
             break;
@@ -1349,58 +1315,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   @Override
   public void create() {
-    // During initialization, figure out how we are running this application
-    switch (Gdx.app.getType())
-    {
-      case Android:
-        runningby = ANDROID;
-        Gdx.input.setCatchBackKey(true);
-        Gdx.input.setCatchMenuKey(true);
-        Gdx.app.setLogLevel(Application.LOG_DEBUG);
-        break;
-      case Desktop:
-        runningby = DESKTOP;
-        break;
-      default:
-        break;
-    }
-    // Setup connection to SPFZ database
-    String url;
 
-    if (runningby == ANDROID)
-    {
-      url = "jdbc:sqlite:/data/data/com.spfz.alpha/android/assets/charinfo/spfz.sqlite";
-    }
-    else if (runningby == DESKTOP)
-    {
-      url = "jdbc:sqlite:S:/SPFZPROJBACKUP/spfzalpha/android/assets/charinfo/spfz.sqlite";
-    }
-    else
-    {
-      url = "N/A";
-    }
-
-    //DriverManager.registerDriver(driver);
-    Connection c = null;
-    try
-    {
-      Class.forName("org.sqlite.JDBC");
-      c = DriverManager.getConnection(url, "", "");
-      /*Class.forName("org.postgresql.Driver");
-      c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/spfz",
-      "postgres", "!nma0118prawn");*/
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-      System.err.println(e.getClass().getName() + ": " + e.getMessage());
-      System.exit(0);
-    }
-    finally
-    {
-      System.out.println("1st open successful");
-      init();
-    }
 
   }
 
@@ -1693,120 +1608,16 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   }
 
   public void flypods() {
-    scenesel++;
     if (view == "portrait")
     {
       if (!gamestart)
       {
-        switch (scenesel)
-        {
-          case 1:
-
-            Actions.addAction(root.getChild("toprightspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(0f, 340f, .8f, Interpolation.fade)));
-            Actions.addAction(root.getChild("bottomrightspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(-25f, 21, 1.1f, Interpolation.fade)));
-            Actions.addAction(root.getChild("topleftspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(266f, 354f, 1.4f, Interpolation.fade)));
-            Actions.addAction(root.getChild("bottomspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(270f, 120f, 1.7f, Interpolation.fade)));
-
-            break;
-          case 2:
-            Actions.addAction(root.getChild("bottomrightspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(-71f, -19, 1.4f, Interpolation.fade)));
-            Actions.addAction(root.getChild("topleftspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(307f, 390f, 1.7f, Interpolation.fade)));
-            Actions.addAction(root.getChild("bottomspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(292f, 164, 2f, Interpolation.fade)));
-            break;
-          case 3:
-            Actions.addAction(root.getChild("topleftspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(295f, 413f, 1.7f, Interpolation.fade)));
-            Actions.addAction(root.getChild("bottomspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(231f, 161f, 2f, Interpolation.fade)));
-            break;
-          case 4:
-            Actions.addAction(root.getChild("bottomspfz").getEntity(),
-              Actions.sequence(Actions.moveTo(202f, 8f, 2f, Interpolation.fade)));
-            break;
-          default:
-            break;
-
-        }
+        //portFlyPods
       }
       else
       {
-        switch (scenesel)
-        {
-          case 1:
-            Actions.addAction(fader, Actions.sequence(Actions.delay(.5f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-            {
-
-              @Override
-              public void run() {
-
-                Actions.addAction(root.getChild("toprightspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(-127f, 340f, 2f, Interpolation.fade)));
-                Actions.addAction(root.getChild("bottomrightspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(-10f, 60f, 2.3f, Interpolation.fade)));
-                Actions.addAction(root.getChild("topleftspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(330f, 400f, 2.6f, Interpolation.fade)));
-                Actions.addAction(root.getChild("bottomspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(300f, 95f, 2.9f, Interpolation.fade)));
-
-              }
-            })));
-
-            break;
-          case 2:
-            Actions.addAction(fader, Actions.sequence(Actions.delay(.5f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-            {
-
-              @Override
-              public void run() {
-
-                Actions.addAction(root.getChild("bottomrightspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(-71f, -19, 3f, Interpolation.fade)));
-                Actions.addAction(root.getChild("topleftspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(307f, 390f, 3.3f, Interpolation.fade)));
-                Actions.addAction(root.getChild("bottomspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(292f, 164, 3.6f, Interpolation.fade)));
-
-              }
-            })));
-            break;
-          case 3:
-            Actions.addAction(fader, Actions.sequence(Actions.delay(.5f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-            {
-              @Override
-              public void run() {
-
-                Actions.addAction(root.getChild("topleftspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(295f, 413f, 3f, Interpolation.fade)));
-                Actions.addAction(root.getChild("bottomspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(231f, 161f, 3.3f, Interpolation.fade)));
-
-              }
-            })));
-            break;
-          case 4:
-            Actions.addAction(fader, Actions.sequence(Actions.delay(.5f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-            {
-              @Override
-              public void run() {
-                Actions.addAction(root.getChild("bottomspfz").getEntity(),
-                  Actions.sequence(Actions.moveTo(2f, 8f, 3f, Interpolation.fade)));
-              }
-            })));
-            break;
-          default:
-            break;
-
-        }
+        //fade with portFlyPods
       }
-
-
     }
   }
 
@@ -1899,12 +1710,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   public void init() {
 
-    logger = new FPSLogger();
+    //logger = new FPSLogger();
     //GLProfiler.enable();
 
     byte AFTER_INTRO = 8;
-    short WORLD_WIDTH = 640;
-    short WORLD_HEIGHT = 400;
+    //short WORLD_WIDTH = 640;
+    //short WORLD_HEIGHT = 400;
     gWidth = Gdx.graphics.getWidth();
     gHeight = Gdx.graphics.getHeight();
     storyline = null;
@@ -1912,13 +1723,13 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     switch (Gdx.app.getType())
     {
       case Android:
-        runningby = ANDROID;
+        resourceManager.appDevice() = ANDROID;
         Gdx.input.setCatchBackKey(true);
         Gdx.input.setCatchMenuKey(true);
         Gdx.app.setLogLevel(Application.LOG_DEBUG);
         break;
       case Desktop:
-        runningby = DESKTOP;
+        resourceManager.appDevice() = DESKTOP;
         break;
       default:
         break;
@@ -1926,7 +1737,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
     state = SPFZState.RUNNING;
 
-    //if (runningby == ANDROID)
+    //if (resourceManager.appDevice() == resourceManager.ANDROID)
     //{
     // On initial install. Create the spfzfile by writing values.
 
@@ -1935,7 +1746,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     // Initializations
     init = true;
 
-    if (mainmenu.getVolume() > 0f)
+    if (//mainmenu.getVolume() > 0f)
     {
       mute = true;
     }
@@ -1943,9 +1754,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     // set screen for inputs and set the starting point for the main menu
     // screen
     // music and start music
-    mainmenu.setPosition(AFTER_INTRO);
-
-    resourceManager.getManager() = new AssetManager();
+    //mainmenu.setPosition(AFTER_INTRO);
     resourceManager.setManager(resourceManager.getManager());
     // initialize the resource manager
 
@@ -1955,8 +1764,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
     //resourceManager = new SPFZResourceManager(this);
     // initialize viewports
-    viewportland = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT);
-    viewportport = new StretchViewport(WORLD_HEIGHT, WORLD_WIDTH);
+    //viewportland = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT);
+    //viewportport = new StretchViewport(WORLD_HEIGHT, WORLD_WIDTH);
     //resourceManager.currentScene() = "landscene";
 
     //port = new SPFZSceneLoader(resourceManager, this, "", "");
@@ -2142,11 +1951,15 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
    * method contains the intro animation
    */
   public void Intro() {
-    // mainmenu.play();
+    // //mainmenu.play();
+    //Animation process:
+    /* 1. on intro,
+     * 2. fader will
+     */
     String[] cdtcomponents = {"ttcimage", "swypefrmbtm", "swypefrmtop"};
-    if (resourceManager.currentScene() == "sceneone" && init == true)
+    if (resourceManager.currentScene().equals("sceneone") && init)
     {
-      Actions.addAction(root.getChild("ttcimage").getEntity(), Actions.fadeOut(0f));
+     /* //Actions.addAction(root.getChild("ttcimage").getEntity(), Actions.fadeOut(0f));
 
       // screen transition
       Actions.addAction(fader,
@@ -2155,7 +1968,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
           @Override
           public void run() {
-            mainmenu.play();
+            //mainmenu.play();
           }
         })), Actions.run(new Runnable()
         {
@@ -2182,10 +1995,10 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
         })));
 
 
-      init = false;
+      init = false;*/
     }
 
-    if (resourceManager.currentScene() == "landscene" && init == true)
+    if (resourceManager.currentScene() == "landscene" && init)
     {
 
       for (int i = 0; i < cdtcomponents.length; i++)
@@ -2193,7 +2006,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
         Actions.addAction(root.getChild(cdtcomponents[i]).getEntity(), Actions.fadeOut(0f));
       }
 
-      // mainmenu.play();
+      // //mainmenu.play();
 
       // screen transition
       Actions.addAction(fader,
@@ -2202,7 +2015,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
           @Override
           public void run() {
-            mainmenu.play();
+            //mainmenu.play();
           }
         })), Actions.run(new Runnable()
         {
@@ -2356,8 +2169,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   public void pauseoptions() {
 
     pauseroot = new ItemWrapper(pause.getRoot());
-    transform = tc.get(pauseroot.getEntity());
-    action = ac.get(pauseroot.getEntity());
+    //transform = tc.get(pauseroot.getEntity());
+    //action = ac.get(pauseroot.getEntity());
 
     pause.addComponentsByTagName("button", SPFZButtonComponent.class);
 
@@ -2529,7 +2342,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                       @Override
                       public void run() {
-                        stoprender = true;
+                        //stoprender = true;
                         Gdx.gl.glClearColor(0, 0, 0, 1);
                         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
                         restartmatch();
@@ -2543,7 +2356,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                       @Override
                       public void run() {
-                        stoprender = true;
+                        //stoprender = true;
                         Gdx.gl.glClearColor(0, 0, 0, 1);
                         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
                         toCharSel();
@@ -2691,10 +2504,10 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     else
     {
 
-      if (!stoprender && !stage.gameover)
+     /* if (!stoprender && !stage.gameover)
       {
         renderss();
-      }
+      }*/
 
       if (restart && !isArcade)
       {
@@ -3232,12 +3045,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     update(view).loadScene("stagescene", viewportland);
 
     root = new ItemWrapper(update(view).getRoot());
-    transform = tc.get(root.getEntity());
-    action = ac.get(root.getEntity());
+    //transform = tc.get(root.getEntity());
+    //action = ac.get(root.getEntity());
 
     setupstage();
 
-    stage = new SPFZStage(update(view).getRm(), viewportland.getCamera(), selectedStage, runningby, bounds, characters,
+    stage = new SPFZStage(update(view).getRm(), viewportland.getCamera(), selectedStage, resourceManager.appDevice(), bounds, characters,
       SwapFyterzMain.this, istraining);
   }
 
@@ -3304,9 +3117,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       //{
 
       displayAD(resourceManager.currentScene(), adtime, randsecs);
-      if (runningby == ANDROID && Gdx.input.isTouched())
+      if (resourceManager.appDevice() == resourceManager.ANDROID && Gdx.input.isTouched())
       {
-        android.hideAD();
+        //android.hideAD();
       }
 
       //}
@@ -3359,9 +3172,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     }
 
     // loop main menu music
-    // if (mainmenu.getPosition() > ENDOFMAIN)
+    // if (//mainmenu.getPosition() > ENDOFMAIN)
     // {
-    // mainmenu.setPosition(LOOP_MUSIC);
+    // //mainmenu.setPosition(LOOP_MUSIC);
     // }
 
     // > ------------------- HANDLE INITIALIZATION PROCESS
@@ -3652,9 +3465,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     adtime = System.currentTimeMillis();
     sectime = System.currentTimeMillis();
     // When coming back to the main menu, unlock the orientation
-    if (runningby == ANDROID)
+    if (resourceManager.appDevice() == resourceManager.ANDROID)
     {
-      android.lockOrientation(false, view);
+      //android.lockOrientation(false, view);
     }
     // setup the buttons for the portrait view
     if (h > w)
@@ -3673,7 +3486,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   public void setSettings() {
     readOut("spfzfile");
-    mainmenu.setVolume(soundamount);
+    //mainmenu.setVolume(soundamount);
     adjustBrightness(brightamount);
   }
 
@@ -3773,7 +3586,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     Preferences spfzpref = Gdx.app.getPreferences("spfzfile");
     if (!spfzpref.getBoolean("initialize"))
     {
-      writeOut("1.0\n255");
+      //saveSettings in ResourceManager
       setrdtime(99);
     }
     setSettings();
@@ -3785,8 +3598,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
     view = "landscape";
 
-    transform = tc.get(root.getEntity());
-    action = ac.get(root.getEntity());
+    //transform = tc.get(root.getEntity());
+    //action = ac.get(root.getEntity());
 
     // Intro Animation only starts up once
     if (INTRO == 0)
@@ -3804,10 +3617,10 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
         if (!gamestart)
         {
-          if (mainmenu.getPosition() < RIFT)
-          {
-            mainmenu.setPosition(RIFT);
-          }
+          //if (//mainmenu.getPosition() < RIFT)
+          //{
+          //mainmenu.setPosition(RIFT);
+          // }
 
           for (int i = 0; i < cdtcomponents.length; i++)
           {
@@ -3833,12 +3646,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
           Actions.addAction(root.getChild("ttcimage").getEntity(), Actions.fadeOut(0f));
 
-          if (mainmenu.getPosition() < RIFT)
-          {
-            mainmenu.setPosition(RIFT);
+          //if (//mainmenu.getPosition() < RIFT)
+          //{
+          //mainmenu.setPosition(RIFT);
 
-            update(view).getEngine().removeEntity(root.getChild("ttcimage").getEntity());
-          }
+          //  update(view).getEngine().removeEntity(root.getChild("ttcimage").getEntity());
+          //}
 
           // If this boolean is set, setup the main menu.
           if (uicomplete == true)
@@ -3868,10 +3681,10 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                       //{
                       // if (!flingup && !flingdown && !transition)
                       // {
-                      portbtns.play(1.0f);
+                      //portbtns.play(1.0f);
                       transition = true;
 
-                      closebtns(view);
+                      //closebtns(view);
 
                       Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
                       {
@@ -3881,9 +3694,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                           isArcade = true;
                           mode = true;
 
-                          if (runningby == ANDROID)
+                          if (resourceManager.appDevice() == resourceManager.ANDROID)
                           {
-                            android.lockOrientation(true, view);
+                            //android.lockOrientation(true, view);
 
                           }
 
@@ -3933,8 +3746,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                       {
                         if (!flingup && !flingdown && !transition)
                         {
-                          portbtns.play(1.0f);
-                          closebtns(view);
+                          //portbtns.play(1.0f);
                           transition = true;
                           Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
                           {
@@ -3945,9 +3757,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                               isArcade = false;
                               mode = true;
 
-                              if (runningby == ANDROID)
+                              if (resourceManager.appDevice() == resourceManager.ANDROID)
                               {
-                                android.lockOrientation(true, view);
+                                //android.lockOrientation(true, view);
 
                               }
 
@@ -4000,8 +3812,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                         if (!flingup && !flingdown && !transition)
                         {
-                          portbtns.play(1.0f);
-                          closebtns(view);
+                          //portbtns.play(1.0f);
                           transition = true;
                           Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
                           {
@@ -4014,9 +3825,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                               root.getEntity().removeAll();
 
-                              if (runningby == ANDROID)
+                              if (resourceManager.appDevice() == resourceManager.ANDROID)
                               {
-                                android.lockOrientation(true, view);
+                                //android.lockOrientation(true, view);
 
                               }
                               //resourceManager.currentScene() = "charselscene";
@@ -4062,7 +3873,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                       if (!flingup && !flingdown && !transition)
                       {
-                        if (runningby == ANDROID)
+                        if (resourceManager.appDevice() == resourceManager.ANDROID)
                         {
 
                         }
@@ -4103,9 +3914,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                         optionsup = true;
 
-                        if (runningby == ANDROID)
+                        if (resourceManager.appDevice() == resourceManager.ANDROID)
                         {
-                          android.lockOrientation(true, view);
+                          //android.lockOrientation(true, view);
                         }
 
                         readOut(FILE_NAME);
@@ -4151,13 +3962,13 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                       buttonsup();
 
                       optionsup = false;
-                      if (runningby == ANDROID)
+                      if (resourceManager.appDevice() == resourceManager.ANDROID)
                       {
-                        android.lockOrientation(false, view);
+                        //android.lockOrientation(false, view);
                       }
                       if (tmpsound != soundamount || tmpbright != brightamount)
                       {
-                        writeOut(Float.toString(soundamount) + "\n" + Float.toString(brightamount));
+                        //saveSettings in ResourceManager
                       }
                       else
                       {
@@ -4194,7 +4005,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                     {
                       if (!flingup && !flingdown && !transition)
                       {
-                        //if (runningby == ANDROID)
+                        //if (resourceManager.appDevice() == resourceManager.ANDROID)
                         // {
 
                         brightamount += 51;
@@ -4206,7 +4017,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                         {
                           brightamount = 51;
                         }
-                        writeOut(Float.toString(soundamount) + "\n" + Float.toString(brightamount));
+                        //saveSettings in ResourceManager
                         adjustBrightness(brightamount);
 
                       }
@@ -4240,20 +4051,20 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                       {
                         if (mute)
                         {
-                          mainmenu.setVolume(0f);
-                          //if (runningby == ANDROID)
+                          ////mainmenu.setVolume(0f);
+                          //if (resourceManager.appDevice() == resourceManager.ANDROID)
                           //
-                          writeOut(Float.toString(mainmenu.getVolume()) + "\n" + Float.toString(brightamount));
+                          //saveSound in ResourceManager
 
                           // }
                           mute = false;
                         }
                         else
                         {
-                          mainmenu.setVolume(1f);
-                          //if (runningby == ANDROID)
+                          ////mainmenu.setVolume(1f);
+                          //if (resourceManager.appDevice() == resourceManager.ANDROID)
                           //{
-                          writeOut(Float.toString(mainmenu.getVolume()) + "\n" + Float.toString(brightamount));
+                          //saveSound in ResourceManager
                           //}
                           mute = true;
                         }
@@ -4684,15 +4495,15 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     view = "portrait";
 
     // Retriever the components needed to trigger Actions
-    transform = tc.get(root.getEntity());
-    action = ac.get(root.getEntity());
+    //transform = tc.get(root.getEntity());
+    //action = ac.get(root.getEntity());
 
     fader = root.getChild("transition").getEntity();
 
     Preferences spfzpref = Gdx.app.getPreferences("spfzfile");
     if (spfzpref.getBoolean("initialize") == false)
     {
-      writeOut("1.0\n255");
+      //writeOut("1.0\n255");save Settings in ResourceManager
       setrdtime(99);
     }
     setSettings();
@@ -4718,10 +4529,10 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
         if (!gamestart)
         {
-          if (mainmenu.getPosition() < RIFT)
-          {
-            mainmenu.setPosition(RIFT);
-          }
+          //if (//mainmenu.getPosition() < RIFT)
+          //{
+          //mainmenu.setPosition(RIFT);
+          //}
 
           Actions.addAction(root.getChild("ttcimage").getEntity(), Actions.fadeOut(0f));
           update(view).getEngine().removeEntity(root.getChild("animcircle").getEntity());
@@ -4748,12 +4559,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
             Actions.addAction(root.getChild("ttcimage").getEntity(), Actions.fadeOut(0f));
 
           }
-          if (mainmenu.getPosition() < RIFT)
-          {
-            mainmenu.setPosition(RIFT);
+          //if (//mainmenu.getPosition() < RIFT)
+          //{
+          //mainmenu.setPosition(RIFT);
 
-            update(view).getEngine().removeEntity(root.getChild("ttcimage").getEntity());
-          }
+          //  update(view).getEngine().removeEntity(root.getChild("ttcimage").getEntity());
+          //}
 
           // If this boolean is set, setup the main menu.
           if (uicomplete == true)
@@ -4784,12 +4595,11 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   {
                     if (concheck(resourceManager.currentScene()))
                     {
-                      closebtns(view);
                       //resourceManager.currentScene() = "arcadeselscn";
                       prevScene = "arcadeselscn";
                       isArcade = true;
                       mode = true;
-                      portbtns.play(1.0f);
+                      //portbtns.play(1.0f);
                       Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
                       {
 
@@ -4798,9 +4608,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                           view = "landscape";
                           selecttype = 0;
 
-                          if (runningby == ANDROID)
+                          if (resourceManager.appDevice() == resourceManager.ANDROID)
                           {
-                            android.lockOrientation(true, view);
+                            //android.lockOrientation(true, view);
                           }
 
                         }
@@ -4840,8 +4650,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                     {
                       isArcade = false;
                       mode = true;
-                      portbtns.play(1.0f);
-                      closebtns(view);
+                      //portbtns.play(1.0f);
                       Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
                       {
 
@@ -4853,9 +4662,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                           selecttype = 0;
                           // resourceManager.unloadGame();
                           // resourceManager.initsix();
-                          if (runningby == ANDROID)
+                          if (resourceManager.appDevice() == resourceManager.ANDROID)
                           {
-                            android.lockOrientation(true, view);
+                            //android.lockOrientation(true, view);
                           }
 
                         }
@@ -4894,8 +4703,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                     {
                       isArcade = false;
                       mode = true;
-                      portbtns.play(1.0f);
-                      closebtns(view);
+                      //portbtns.play(1.0f);
                       Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
                       {
 
@@ -4909,9 +4717,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                           // resourceManager.unloadGame();
                           // resourceManager.initsix();
 
-                          if (runningby == ANDROID)
+                          if (resourceManager.appDevice() == resourceManager.ANDROID)
                           {
-                            android.lockOrientation(true, view);
+                            //android.lockOrientation(true, view);
                           }
 
                         }
@@ -4944,7 +4752,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   }
                   else
                   {
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
 
                     }
@@ -4981,19 +4789,19 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   }
                   else
                   {
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
 
                     }
                     optionsup = true;
-                    portbtns.play(1.0f);
+                    //portbtns.play(1.0f);
                     buttonsup();
 
                     //openOptionsScreen
 
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
-                      android.lockOrientation(true, view);
+                      //android.lockOrientation(true, view);
                     }
 
                     readOut(FILE_NAME);
@@ -5027,13 +4835,13 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   }
                   else
                   {
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
 
                     }
                     inhelp = true;
                     mnuscn = true;
-                    portbtns.play(1.0f);
+                    //portbtns.play(1.0f);
 
                     //closeHelpOptions()
                     //openMenuScreenScreens()
@@ -5064,15 +4872,15 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   }
                   else
                   {
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
 
                     }
                     inhelp = true;
                     mnuscn = false;
-                    portbtns.play(1.0f);
+                    //portbtns.play(1.0f);
 
-                    Actions.addAction(root.getChild("mnuscnbutton").getEntity(),
+                    /*Actions.addAction(root.getChild("mnuscnbutton").getEntity(),
                       Actions.sequence(Actions.parallel(Actions.scaleBy(.5f, 2f, OPT_TIME / 8),
                         Actions.parallel(Actions.scaleBy(-3.0551f, -2f, OPT_TIME / 6),
                           Actions.moveBy(113f, 0f, OPT_TIME / 6, Interpolation.linear)))));
@@ -5082,7 +4890,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                         Actions.parallel(Actions.scaleBy(-3.0551f, -2f, OPT_TIME / 6),
                           Actions.moveBy(119f, 0f, OPT_TIME / 6, Interpolation.linear)))));
                     Actions.addAction(root.getChild("ingamehelp").getEntity(), Actions.sequence(Actions.delay(.5f),
-                      Actions.parallel(Actions.scaleBy(1.8f, 0f, OPT_TIME / 3))));
+                      Actions.parallel(Actions.scaleBy(1.8f, 0f, OPT_TIME / 3))));*/
                   }
                 }
 
@@ -5109,33 +4917,33 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   }
                   else
                   {
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
 
                     }
 
                     if (inhelp)
                     {
-                      Actions.addAction(root.getChild("mnuscnbutton").getEntity(),
+                      /*Actions.addAction(root.getChild("mnuscnbutton").getEntity(),
                         Actions.sequence(Actions.delay(.5f),
                           Actions.parallel(Actions.scaleBy(2.5551f, 0, OPT_TIME / 8),
                             Actions.moveBy(-113f, 0f, OPT_TIME / 8, Interpolation.linear))));
                       Actions.addAction(root.getChild("ingamebutton").getEntity(),
                         Actions.sequence(Actions.delay(.5f),
                           Actions.parallel(Actions.scaleBy(2.5551f, 0, OPT_TIME / 8),
-                            Actions.moveBy(-119f, 0f, OPT_TIME / 8, Interpolation.linear))));
+                            Actions.moveBy(-119f, 0f, OPT_TIME / 8, Interpolation.linear))));*/
 
                       if (mnuscn)
                       {
-                        Actions.addAction(root.getChild("charselhelp").getEntity(),
+                        /*Actions.addAction(root.getChild("charselhelp").getEntity(),
                           Actions.sequence(Actions.parallel(Actions.scaleBy(-3.3f, 0f, OPT_TIME / 3))));
                         Actions.addAction(root.getChild("pausehelp").getEntity(),
-                          Actions.sequence(Actions.parallel(Actions.scaleBy(-3.3f, 0f, OPT_TIME / 3))));
+                          Actions.sequence(Actions.parallel(Actions.scaleBy(-3.3f, 0f, OPT_TIME / 3))));*/
                       }
                       else
                       {
-                        Actions.addAction(root.getChild("ingamehelp").getEntity(),
-                          Actions.sequence(Actions.parallel(Actions.scaleBy(-1.8f, 0f, OPT_TIME / 3))));
+                        /*Actions.addAction(root.getChild("ingamehelp").getEntity(),
+                          Actions.sequence(Actions.parallel(Actions.scaleBy(-1.8f, 0f, OPT_TIME / 3))));*/
                       }
                       inhelp = false;
                     }
@@ -5346,9 +5154,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                     optionsup = false;
 
-                    if (runningby == ANDROID)
+                    if (resourceManager.appDevice() == resourceManager.ANDROID)
                     {
-                      android.lockOrientation(false, view);
+                      //android.lockOrientation(false, view);
                     }
                     if (tmpsound != soundamount || tmpbright != brightamount)
                     {
@@ -5389,7 +5197,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
                   else
                   {
 
-                    //if (runningby == ANDROID)
+                    //if (resourceManager.appDevice() == resourceManager.ANDROID)
                     //{
                     brightamount += 51;
                     if (brightamount >= 255)
@@ -5427,12 +5235,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
                   if (mute)
                   {
-                    mainmenu.setVolume(0f);
+                    //mainmenu.setVolume(0f);
                     mute = false;
                   }
                   else
                   {
-                    mainmenu.setVolume(1f);
+                    //mainmenu.setVolume(1f);
                     mute = true;
                   }
                 }
@@ -5551,7 +5359,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     short WORLD_WIDTH = 640;
     short WORLD_HEIGHT = 400;
     String stagepath = "stages/" + selectedStage + ".png";
-    stoprender = false;
+    //stoprender = false;
     texWidth = (WORLD_WIDTH * STAGE_MULT) * resourceManager.projectVO().pixelToWorld;
     texHeight = (WORLD_HEIGHT * 2) * resourceManager.projectVO().pixelToWorld;
 
@@ -5671,7 +5479,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     short HALF_WORLDH = 200;
     short HALF_WORLDW = 320;
 
-    if (runningby == DESKTOP)
+    if (resourceManager.appDevice() == resourceManager.DESKTOP)
     {
       stage.controls();
     }
@@ -5753,20 +5561,19 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   }
 
-  public void writeOut(final String values) {
+  /*public void writeOut(final String values) {
     String FILE_NAME = "spfzfile";
 
     Preferences spfzpref = Gdx.app.getPreferences(FILE_NAME);
     spfzpref.putString("settings", values);
 
-    if (spfzpref.getBoolean("initialize") == false)
-    {
-      spfzpref.putBoolean("initialize", true);
-    }
+    //if (!spfzpref.getBoolean("initialize"))
+    //  spfzpref.putBoolean("initialize", true);
+
 
     spfzpref.flush();
 
-  }
+  }*/
 
   /**
    * Method contains the stages to select from
@@ -6059,8 +5866,8 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       // Call the stage to setup controls and pass the
       // camera;
       root = new ItemWrapper(update(view).getRoot());
-      transform = tc.get(root.getEntity());
-      action = ac.get(root.getEntity());
+      //transform = tc.get(root.getEntity());
+      //action = ac.get(root.getEntity());
 
       setupstage();
 
@@ -6071,7 +5878,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
         stageTime = spfzpref.getInteger("time");
       }
 
-      stage = new SPFZStage(update(view).getRm(), viewportland.getCamera(), selectedStage, runningby, bounds,
+      stage = new SPFZStage(update(view).getRm(), viewportland.getCamera(), selectedStage, resourceManager.appDevice(), bounds,
         characters, SwapFyterzMain.this, istraining);
     }
   }
@@ -6136,9 +5943,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     // isArcade = false;
     mode = true;
 
-    if (runningby == ANDROID)
+    if (resourceManager.appDevice() == resourceManager.ANDROID)
     {
-      android.lockOrientation(true, view);
+      //android.lockOrientation(true, view);
     }
 
     if (isArcade)
@@ -6343,7 +6150,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
           if (soundamount >= 0f && soundamount <= MAX_VOL)
           {
-            mainmenu.setVolume(soundamount);
+            //mainmenu.setVolume(soundamount);
           }
         }
 
@@ -6518,8 +6325,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     {
       return land;
     }
-
-
   }
 
   @Override
@@ -6528,43 +6333,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     return false;
   }
 
-  @Override
-  public Connection connect(String s, Properties properties) throws SQLException {
-    return null;
-  }
-
-  @Override
-  public boolean acceptsURL(String s) throws SQLException {
-    return false;
-  }
-
-  @Override
-  public DriverPropertyInfo[] getPropertyInfo(String s, Properties properties) throws SQLException {
-    return new DriverPropertyInfo[0];
-  }
-
-  @Override
-  public int getMajorVersion() {
-    return 0;
-  }
-
-  @Override
-  public int getMinorVersion() {
-    return 0;
-  }
-
-  @Override
-  public boolean jdbcCompliant() {
-    return false;
-  }
-
-  @Override
-  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-    return null;
-  }
-
-  /*returns the resource manager for other portions of applications*/
-  public SPFZResourceManager resMgr() {
+  public SPFZResourceManager resourceManager() {
     return resourceManager;
   }
 }

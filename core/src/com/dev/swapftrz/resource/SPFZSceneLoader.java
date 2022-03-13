@@ -91,8 +91,7 @@ public class SPFZSceneLoader
     initSceneLoader();
   }
 
-  public SPFZSceneLoader(SPFZResourceManager rm, SwapFyterzMain app)
-  {
+  public SPFZSceneLoader(SPFZResourceManager rm) {
     resMan = rm;
   }
 
