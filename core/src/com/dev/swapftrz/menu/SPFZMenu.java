@@ -89,6 +89,10 @@ public class SPFZMenu
 
   }
 
+  public void back() {
+
+  }
+
   public boolean isPortrait() {
     return resManager.getCurrentOrientation().equals("portrait");
   }

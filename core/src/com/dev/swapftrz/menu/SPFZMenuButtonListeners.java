@@ -79,6 +79,59 @@ public class SPFZMenuButtonListeners
     }
   };
 
+  private final SPFZButtonComponent.ButtonListener brightButtonListener = new SPFZButtonComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+
+    }
+
+    @Override
+    public void touchDown() {
+
+    }
+
+    @Override
+    public void clicked() {
+
+    }
+  };
+
+  private final SPFZButtonComponent.ButtonListener soundButtonListener = new SPFZButtonComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+
+    }
+
+    @Override
+    public void touchDown() {
+
+    }
+
+    @Override
+    public void clicked() {
+
+    }
+  };
+
+  private final SPFZButtonComponent.ButtonListener exitButtonListener = new SPFZButtonComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+
+    }
+
+    @Override
+    public void touchDown() {
+
+    }
+
+    @Override
+    public void clicked() {
+
+    }
+  };
 
   //Clicked calls within listeners
   public SPFZButtonComponent.ButtonListener arcadeButtonListener() {
@@ -95,5 +148,17 @@ public class SPFZMenuButtonListeners
 
   public SPFZButtonComponent.ButtonListener helpButtonListener() {
     return helpButtonListener;
+  }
+
+  public SPFZButtonComponent.ButtonListener brightButtonListener() {
+    return brightButtonListener;
+  }
+
+  public SPFZButtonComponent.ButtonListener soundButtonListener() {
+    return soundButtonListener;
+  }
+
+  public SPFZButtonComponent.ButtonListener exitButtonListener() {
+    return exitButtonListener;
   }
 }

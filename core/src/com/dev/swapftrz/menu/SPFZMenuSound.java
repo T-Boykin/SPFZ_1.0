@@ -17,8 +17,6 @@ public class SPFZMenuSound
     gameVolume = 1.0f;
   }
 
-  //TODO need to create a Main Music file and a Main Music Looping file
-
   /**
    * Plays the main menu music
    */

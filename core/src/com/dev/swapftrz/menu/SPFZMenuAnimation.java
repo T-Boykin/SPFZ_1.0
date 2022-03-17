@@ -391,8 +391,6 @@ public class SPFZMenuAnimation
     }
   }
 
-  //TODO create functionality to disable buttons
-
   /**
    * Close the options dialog and disable buttons from dialog
    */
@@ -539,6 +537,7 @@ public class SPFZMenuAnimation
   private Runnable spfzIntroduction() {
     Runnable runnable, startRunnable, soundRunnable,
       animCircleRunnable, introCircleRunnable, flashTTCRunnable;
+    //TODO this needs to be handled better
     float delay1 = 1.5f, fade = SPFZ_MAct.FADE_DUR, delay2 = delay1 + fade,
       delay3 = delay1 + delay2 + fade;
 

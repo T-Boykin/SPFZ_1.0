@@ -39,7 +39,6 @@ public class SPFZMenuAction
   public void processHelpButton() {
     setProcessing();
     menu_sound.playConfirmSound();
-
   }
 
   public void processOptionsButton() {
@@ -52,6 +51,18 @@ public class SPFZMenuAction
 
   public void processBrightnessButton() {
 
+  }
+
+  public void processExitButton() {
+    setProcessing();
+  }
+
+  public void processYesConfirmButton() {
+
+  }
+
+  public void processNoConfirmButton() {
+    setProcessing();
   }
 
   public void moveBrightnessSlider() {
