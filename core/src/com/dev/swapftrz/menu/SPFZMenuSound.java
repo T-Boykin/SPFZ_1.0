@@ -17,29 +17,39 @@ public class SPFZMenuSound
     gameVolume = 1.0f;
   }
 
-  //TODO need to create a Main Music file and a Main Music Looping file
-
   /**
    * Plays the main menu music
    */
-  public void playMainMenuMusic() {
-    if (soundPack.mainMenuMusic().getVolume() != gameVolume)
-      soundPack.mainMenuMusic().setVolume(gameVolume);
+  public Runnable playMainMenuMusic() {
+    Runnable runnable = () -> {
+      if (soundPack.mainMenuMusic().getVolume() != gameVolume)
+        soundPack.mainMenuMusic().setVolume(gameVolume);
 
-    soundPack.mainMenuMusic().play();
+      soundPack.mainMenuMusic().play();
+    };
+
+    return runnable;
   }
 
-  public void playMainMenuLoopMusic() {
-    if (soundPack.mainMenuMusic().getVolume() != gameVolume)
-      soundPack.mainMenuMusic().setVolume(gameVolume);
+  public Runnable playMainMenuLoopMusic() {
+    Runnable runnable = () -> {
+      if (soundPack.mainMenuMusic().getVolume() != gameVolume)
+        soundPack.mainMenuMusic().setVolume(gameVolume);
 
-    soundPack.mainMenuMusic().setLooping(true);
-    soundPack.mainMenuMusic().play();
+      soundPack.mainMenuMusic().setLooping(true);
+      soundPack.mainMenuMusic().play();
+    };
+
+    return runnable;
   }
 
-  public void stopMainMenuMusic() {
-    if (soundPack.mainMenuMusic().isPlaying())
-      soundPack.mainMenuMusic().stop();
+  public Runnable stopMainMenuMusic() {
+    Runnable runnable = () -> {
+      if (soundPack.mainMenuMusic().isPlaying())
+        soundPack.mainMenuMusic().stop();
+    };
+
+    return runnable;
   }
 
   public void playDeselectSound() {

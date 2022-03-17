@@ -25,7 +25,7 @@ public interface AndroidInterfaceLIBGDX
 	void setorientation(final String orient);
 	
 	void writeFile(final String s, boolean a);
-	
+
 	String readFile(final String File);
 
 	void videocall();
@@ -36,6 +36,6 @@ public interface AndroidInterfaceLIBGDX
 
 	int visible();
 
-	boolean loaded();
-	
+	void loaded();
+
 }
