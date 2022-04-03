@@ -361,7 +361,7 @@ public class SPFZMenuAnimation
    */
   private void expandLandMain3Buttons() {
     float sequenceDelay = 0, addDelay = SPFZ_MAct.MAIN3_SEQ;
-    String[] arrObjs = menuo2d.landMain3Buttons();
+    String[] arrObjs = menuo2d.main3Buttons();
 
     for (int i = 0; i < arrObjs.length; i++)
     {
@@ -379,7 +379,7 @@ public class SPFZMenuAnimation
    */
   private void shrinkLandMain3Buttons() {
     float sequenceDelay = 0, addDelay = SPFZ_MAct.MAIN3_SEQ;
-    String[] arrObjs = menuo2d.landMain3Buttons();
+    String[] arrObjs = menuo2d.main3Buttons();
 
     for (int i = 0; i < arrObjs.length; i++)
     {

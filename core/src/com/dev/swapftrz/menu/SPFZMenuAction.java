@@ -28,6 +28,49 @@ public class SPFZMenuAction
   }
   //UI component BUTTON FUNCTIONALITY
 
+  public void setMainMenuButtonComponents() {
+    resManager.getCurrentSSL().addComponentsByTagName(MENU_BUTTON_TAG, SPFZButtonComponent.class);
+  }
+
+  public void setMainMenuButtonListeners() {
+    SPFZButtonComponent.ButtonListener[] main3ButtonListeners = menu_listeners.main3ButtonListeners();
+    SPFZButtonComponent.ButtonListener[] main5ButtonListeners = menu_listeners.main5ButtonListeners();
+    String[] main3Buttons = menu_o2d.main3Buttons();
+    String[] main5Buttons = resManager.getCurrentOrientation().equals(resManager.PORTRAIT)
+      ? menu_o2d.portMain5Buttons() : menu_o2d.landMain5Buttons();
+
+    if (resManager.getCurrentOrientation().equals(resManager.PORTRAIT))
+    {
+      for (int i = 0; i < main3Buttons.length; i++)
+        resManager.rootWrapper().getChild(menu_o2d.CTRLBOARD).getChild(menu_o2d.main3Buttons()[i]).getEntity()
+          .getComponent(SPFZButtonComponent.class).addListener(main3ButtonListeners[i]);
+    }
+    else
+    {
+      for (int i = 0; i < main3Buttons.length; i++)
+        resManager.rootWrapper().getChild(main3Buttons[i]).getEntity()
+          .getComponent(SPFZButtonComponent.class).addListener(main3ButtonListeners[i]);
+    }
+
+    for (int i = 0; i < main5Buttons.length; i++)
+      resManager.rootWrapper().getChild(main5Buttons[i]).getEntity()
+        .getComponent(SPFZButtonComponent.class).addListener(main5ButtonListeners[i]);
+
+  }
+
+  public SPFZSceneLoader currentSSL() {
+    return resManager.getCurrentSSL();
+  }
+
+  public void setProcessing() {
+    resManager.getCurrentSSL().engine.getSystem(SPFZButtonSystem.class).setProcessing(true);
+  }
+
+  //ACTION RUNNABLES
+
+  public void goToCharacterSelect() {
+  }
+
   public void processArcadeButton() {
     setProcessing();
   }
@@ -46,11 +89,21 @@ public class SPFZMenuAction
   }
 
   public void processSoundButton() {
-
   }
 
   public void processBrightnessButton() {
-
+    /*//get amount from properties file int brightamount = 0;
+    brightamount += 51;
+    if (brightamount >= 255)
+    {
+      brightamount = 51;
+    }
+    else if (brightamount < 51)
+    {
+      brightamount = 51;
+    }*/
+    //saveSettings in ResourceManager
+    //adjustBrightness(brightamount);
   }
 
   public void processExitButton() {
@@ -58,74 +111,58 @@ public class SPFZMenuAction
   }
 
   public void processYesConfirmButton() {
-
   }
 
   public void processNoConfirmButton() {
     setProcessing();
   }
 
-  public void moveBrightnessSlider() {
-
+  public void processMnuScnButton() {
   }
 
-  public void moveSoundSlider() {
-
+  public void processInGameButton() {
   }
 
-  public void setMainMenuButtonComponents() {
-    resManager.getCurrentSSL().addComponentsByTagName(MENU_BUTTON_TAG, SPFZButtonComponent.class);
+  public void processHlpBackButton() {
   }
 
-  public void setMainMenuButtonListeners() {
-    if (resManager.getCurrentOrientation().equals(resManager.PORTRAIT))
-    {
-      resManager.rootWrapper().getChild(menu_o2d.P_ARCBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.arcadeButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.P_VSBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.versusTrainingButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.P_TRNBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.versusTrainingButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.P_OPTBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.optionsButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.P_HLPBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.helpButtonListener());
-
-    }
-    else
-    {
-      resManager.rootWrapper().getChild(menu_o2d.L_ARCBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.arcadeButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.L_VSBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.versusTrainingButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.L_TRNBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.versusTrainingButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.L_OPTBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.optionsButtonListener());
-
-      resManager.rootWrapper().getChild(menu_o2d.L_HLPBUTTON).getEntity().getComponent(SPFZButtonComponent.class)
-        .addListener(menu_listeners.helpButtonListener());
-    }
+  public void processThirtyButton() {
   }
 
-  public SPFZSceneLoader currentSSL() {
-    return resManager.getCurrentSSL();
+  public void processSixtyButton() {
   }
 
-  public void setProcessing() {
-    resManager.getCurrentSSL().engine.getSystem(SPFZButtonSystem.class).setProcessing(true);
+  public void processNinetyButton() {
   }
 
-  //ACTION RUNNABLES
+  public void processBrightSlider() {
+  }
 
-  public void goToCharacterSelect() {
+  public void processSoundSlider() {
+  }
 
+  public void processConstellationButton() {
+  }
+
+  //CHARACTER AND STAGE SELECT MENU ACTIONS
+
+  public void processOkButton() {
+  }
+
+  public void processBackButton() {
+  }
+
+  public void processClearButton() {
+  }
+
+  public void processSprite() {
+    //if Arcade
+    //setcharsprite(arrayOfChar?)
+    //else
+  }
+
+  //STAGE SELECT
+
+  public void processStageSelect() {
   }
 }

@@ -35,15 +35,17 @@ class SPFZMenuO2DMenuObjects
     L_TRNBUTTON = "ltrnbutton",
     L_OPTBUTTON = "loptbutton",
     L_HLPBUTTON = "lhlpbutton",
-    L_SOUNDBTN = "soundbutton",
-    L_BRIGHTBTN = "brightbutton",
-    L_EXITBTN = "exitbutton",
     OPTDIALOG = "optdialog",
     TTCIMAGE = "ttcimage",
     ANIMCIRCLE = "animcircle",
     INTROCIRCLE = "introcircle",
     SWYPEFRMBTM = "swypefrmbtm",
-    SWYPEFRMTOP = "swypefrmtop";
+    SWYPEFRMTOP = "swypefrmtop",
+
+  //Shared Menu objects
+  SOUNDBTN = "soundbutton",
+    BRIGHTBTN = "brightbutton",
+    EXITBTN = "exitbutton";
 
   //Portrait view Menu Objects
 
@@ -75,8 +77,8 @@ class SPFZMenuO2DMenuObjects
     return new String[]{MENU_SCREEN_HELPBUTTON, IN_GAME_HELPBUTTON, HELP_BACKBUTTON};
   }
 
-  public String[] landMain3Buttons() {
-    return new String[]{L_SOUNDBTN, L_BRIGHTBTN, L_EXITBTN};
+  public String[] main3Buttons() {
+    return new String[]{SOUNDBTN, BRIGHTBTN, EXITBTN};
   }
 
   public String[] portMain5Buttons() {
