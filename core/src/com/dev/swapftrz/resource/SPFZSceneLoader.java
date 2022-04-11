@@ -65,7 +65,7 @@ public class SPFZSceneLoader
   public PooledEngine engine = null;
   public RayHandler rayHandler;
   public World world;
-  public Entity rootEntity;
+  private Entity rootEntity;
 
   //public EntityFactory entityFactory;
   public SPFZEntityFactory entityFactory;
@@ -93,6 +93,8 @@ public class SPFZSceneLoader
 
   public SPFZSceneLoader(SPFZResourceManager rm) {
     resMan = rm;
+    this.engine = new PooledEngine();
+    initSceneLoader();
   }
 
   public SPFZSceneLoader(IResourceRetriever rm, World world, RayHandler rayHandler)

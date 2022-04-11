@@ -39,7 +39,6 @@ public class SPFZMenu
    * Method directs the UI to the Arcade Select screen
    */
   public void arcadeCharacterSelect() {
-
   }
 
   /**
@@ -52,45 +51,36 @@ public class SPFZMenu
    * Method directs the UI to the Stage Select screen
    */
   public void stageSelect() {
-
   }
 
   /**
    * Method directs the UI to the Credits Section
    */
   public void enterCredits() {
-
   }
 
   /**
    * Method directs the UI back to the Main Menu screen
    */
   public void exitCredits() {
-
   }
 
   public void zoomToContributor() {
-
   }
 
   public void zoomToTechnologies() {
-
   }
 
   public void quitGame() {
-
   }
 
   public void cancelQuit() {
-
   }
 
   public void changeBrightness() {
-
   }
 
   public void back() {
-
   }
 
   public boolean isPortrait() {

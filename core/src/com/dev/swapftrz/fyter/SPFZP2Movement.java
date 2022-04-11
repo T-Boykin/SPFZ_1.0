@@ -826,7 +826,6 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
   @Override
   public void dispose()
   {
-
   }
 
   public void down(float delta)
@@ -1655,9 +1654,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
 
   }
 
-  public void parry()
-  {
-
+  public void parry() {
   }
 
   public float rtnFrametime(float frames)
@@ -1701,9 +1698,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
 
 
   @Override
-  public void update()
-  {
-
+  public void update() {
   }
 
   @Override

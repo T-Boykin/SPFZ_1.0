@@ -5,7 +5,7 @@ package com.dev.swapftrz.menu;
  */
 class SPFZMenuO2DMenuObjects
 {
-  public static final String
+  public final String
 
     //Shared menu objects
 
@@ -35,28 +35,37 @@ class SPFZMenuO2DMenuObjects
     L_TRNBUTTON = "ltrnbutton",
     L_OPTBUTTON = "loptbutton",
     L_HLPBUTTON = "lhlpbutton",
-    L_SOUNDBTN = "soundbutton",
-    L_BRIGHTBTN = "brightbutton",
-    L_EXITBTN = "exitbutton",
     OPTDIALOG = "optdialog",
     TTCIMAGE = "ttcimage",
     ANIMCIRCLE = "animcircle",
     INTROCIRCLE = "introcircle",
     SWYPEFRMBTM = "swypefrmbtm",
-    SWYPEFRMTOP = "swypefrmtop";
+    SWYPEFRMTOP = "swypefrmtop",
+
+  //Shared Menu objects
+  SOUNDBTN = "soundbutton",
+    BRIGHTBTN = "brightbutton",
+    EXITBTN = "exitbutton",
+    THIRTY = "thirtytime",
+    SIXTY = "sixtytime",
+    NINETY = "ninetytime",
+    YESBTN = "yes",
+    NOBTN = "no",
+    B_SLIDER = "brightslider",
+    S_SLIDER = "soundslider",
+    OPTBACK = "optbackbutton";
 
   //Portrait view Menu Objects
 
   public SPFZMenuO2DMenuObjects() {
-
   }
 
   public String animCircle() {
-    return "animcircle";
+    return ANIMCIRCLE;
   }
 
   public String ttcImage() {
-    return "ttcimage";
+    return TTCIMAGE;
   }
 
   public String fader() {
@@ -75,8 +84,8 @@ class SPFZMenuO2DMenuObjects
     return new String[]{MENU_SCREEN_HELPBUTTON, IN_GAME_HELPBUTTON, HELP_BACKBUTTON};
   }
 
-  public String[] landMain3Buttons() {
-    return new String[]{L_SOUNDBTN, L_BRIGHTBTN, L_EXITBTN};
+  public String[] main3Buttons() {
+    return new String[]{SOUNDBTN, BRIGHTBTN, EXITBTN};
   }
 
   public String[] portMain5Buttons() {
@@ -87,14 +96,20 @@ class SPFZMenuO2DMenuObjects
     return new String[]{L_ARCBUTTON, L_VSBUTTON, L_TRNBUTTON, L_OPTBUTTON, L_HLPBUTTON};
   }
 
+  public String[] altButtons() {
+    return new String[]{HELP_BACKBUTTON, THIRTY, SIXTY, NINETY, B_SLIDER, S_SLIDER, YESBTN,
+      NOBTN, OPTBACK};
+  }
+
   public String[] landMainMenuButtons() {
-    return new String[]{};
+    return new String[]{L_ARCBUTTON, L_VSBUTTON, L_TRNBUTTON, L_OPTBUTTON, L_HLPBUTTON,
+      SOUNDBTN, BRIGHTBTN, EXITBTN, YESBTN, NOBTN, THIRTY, NINETY, B_SLIDER, S_SLIDER};
   }
 
   public String[] portMainMenuButtons() {
-    return new String[]{"arcbutton", "vsbutton", "trnbutton", "helpbutton", "optbutton", "brightnessbtn",
-      "soundbutton", "exitbutton", "yes", "no", "thirtytime", "sixtytime", "ninetytime", "slidebright",
-      "slidesound", "revert"};
+    return new String[]{P_ARCBUTTON, P_VSBUTTON, P_TRNBUTTON, P_HLPBUTTON, P_OPTBUTTON, BRIGHTBTN,
+      SOUNDBTN, EXITBTN, YESBTN, NOBTN, THIRTY, SIXTY, NINETY, B_SLIDER,
+      S_SLIDER, "revert"};
   }
 
   public String[] portMenuScreenImages() {

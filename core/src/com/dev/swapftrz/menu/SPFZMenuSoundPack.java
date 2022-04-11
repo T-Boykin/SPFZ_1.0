@@ -23,7 +23,6 @@ public class SPFZMenuSoundPack
   private static final Sound zoomOut = Gdx.audio.newSound(Gdx.files.internal("sound/zoomout.ogg"));
 
   public SPFZMenuSoundPack() {
-
   }
 
   public final Music mainMenuMusic() {
