@@ -87,7 +87,6 @@ public class SPFZMenuAnimation
   //ANIMATION COMMAND METHODS --------------------------------------------------------------\\\\\\\
 
   public void landRemove(String object) {
-
   }
 
   public ItemWrapper getPortRoot() {
@@ -214,7 +213,6 @@ public class SPFZMenuAnimation
    * Bring portrait UI buttons in to the Main Center
    */
   public void portButtonsBringIn() {
-
   }
 
   /**
@@ -335,25 +333,30 @@ public class SPFZMenuAnimation
     return fadeActions;
   }
 
-  private void openOptionsPort() {
-    Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
-      Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.PMENU_OPTSCN_POSX,
-        SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
-        Interpolation.linear, Interpolation.linear)));
+  public void openOptions() {
+    if (spfzmenu.isPortrait())
+      Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
+        Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.PMENU_OPTSCN_POSX,
+          SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
+          Interpolation.linear, Interpolation.linear)));
+    else
+      Actions.addAction(landRoot.getChild(menuo2d.OPTDIALOG).getEntity(),
+        Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.LMENU_OPTDLG_BY_POSX, -SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
+          SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
+          Interpolation.linear)));
   }
 
-  private void closeOptionsPort() {
-    Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
-      Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.PMENU_OPTSCN_POSX,
-        SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
-        Interpolation.linear, Interpolation.linear)));
-  }
-
-  private void openOptionsLand() {
-    Actions.addAction(landRoot.getChild(menuo2d.OPTDIALOG).getEntity(),
-      Actions.parallel(moveByAndScaleO2dObj(-SPFZ_MAct.LMENU_OPTDLG_BY_POSX, -SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
-        SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
-        Interpolation.linear)));
+  public void closeOptions() {
+    if (spfzmenu.isPortrait())
+      Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
+        Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.PMENU_OPTSCN_POSX,
+          SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.ZERO, SPFZ_MAct.OPTION_MOVE_TIME,
+          Interpolation.linear, Interpolation.linear)));
+    else
+      Actions.addAction(landRoot.getChild(menuo2d.OPTDIALOG).getEntity(),
+        Actions.parallel(moveByAndScaleO2dObj(SPFZ_MAct.LMENU_OPTDLG_BY_POSX, SPFZ_MAct.LMENU_OPTDLG_BY_POSY,
+          SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.ZERO, SPFZ_MAct.NORM_DUR, Interpolation.linear,
+          Interpolation.linear)));
   }
 
   /**
@@ -515,14 +518,19 @@ public class SPFZMenuAnimation
     return new ActionData[]{moveActionData, scaleActionData};
   }
 
-  private void faderInPlusAction(ItemWrapper rootIW, Runnable run) {
+  public void faderInPlusAction(ItemWrapper rootIW, Runnable run) {
     Actions.addAction(rootIW.getChild(menuo2d.fader()).getEntity(), Actions.sequence(fadeInO2dObject(SPFZ_MAct.FADE_DUR, null),
       Actions.run(run)));
   }
 
-  private void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
+  public void faderOutPlusAction(ItemWrapper rootIW, Runnable run) {
     Actions.addAction(rootIW.getChild(menuo2d.fader()).getEntity(), Actions.sequence(fadeOutO2dObject(SPFZ_MAct.FADE_DUR, null),
       Actions.run(run)));
+  }
+
+  public void fadeInAndOutPlusAction(ItemWrapper rootIW, Runnable run) {
+    Actions.addAction(rootIW.getChild(menuo2d.fader()).getEntity(), Actions.sequence(fadeInO2dObject(SPFZ_MAct.FADE_DUR, null),
+      Actions.run(run), fadeOutO2dObject(SPFZ_MAct.FADE_DUR, null)));
   }
 
   //CUSTOM ANIMATION RUNNABLES

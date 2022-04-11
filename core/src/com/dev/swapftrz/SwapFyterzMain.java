@@ -2551,7 +2551,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   }
 
   public void pinchStop() {
-
   }
 
   public void processback() {
@@ -2670,7 +2669,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   }
 
   public void getAnimData() {
-
   }
 
   public void reloadchars() {
@@ -3606,7 +3604,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     {
       Intro();
     }
-
     else
     {
       INTRO = 2;
@@ -3663,201 +3660,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
               // animate the landscape scene
               //animateland();
-
-              root.getChild("larcbutton").getEntity().getComponent(SPFZButtonComponent.class)
-                .addListener(new SPFZButtonComponent.ButtonListener()
-                {
-
-                  @Override
-                  public void clicked() {
-                    //TODO Implement dragged from process into the SPFZButtonSystem
-                    if (draggedfrmbtn("larcbutton", false, null))
-                    {
-                      // WE DO NOT PROCESS THE BUTTON
-                    }
-                    else
-                    {
-                      //if (concheck(resourceManager.currentScene()))
-                      //{
-                      // if (!flingup && !flingdown && !transition)
-                      // {
-                      //portbtns.play(1.0f);
-                      transition = true;
-
-                      //closebtns(view);
-
-                      Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
-                      {
-
-                        @Override
-                        public void run() {
-                          isArcade = true;
-                          mode = true;
-
-                          if (resourceManager.appDevice() == resourceManager.ANDROID)
-                          {
-                            //android.lockOrientation(true, view);
-
-                          }
-
-                          //resourceManager.currentScene() = "arcadeselscn";
-                          // in testing, re-initializing the SceneLoader
-                          // made
-                          // this work when switching between landscape
-                          // scenes.
-                          land = new SPFZSceneLoader(resourceManager, SwapFyterzMain.this, "", "");
-
-                          update(view).loadScene(resourceManager.currentScene(), viewportland);
-
-                          inMode();
-                        }
-                      })));
-
-                      //}
-                      //}
-                    }
-                  }
-
-                  @Override
-                  public void touchDown() {
-
-                  }
-
-                  @Override
-                  public void touchUp() {
-
-                  }
-                });
-
-              root.getChild("lvsbutton").getEntity().getComponent(SPFZButtonComponent.class)
-                .addListener(new SPFZButtonComponent.ButtonListener()
-                {
-
-                  @Override
-                  public void clicked() {
-
-                    if (draggedfrmbtn("lvsbutton", false, null))
-                    {
-                      // WE DO NOT PROCESS THE BUTTON
-                    }
-                    else
-                    {
-                      if (concheck(resourceManager.currentScene()))
-                      {
-                        if (!flingup && !flingdown && !transition)
-                        {
-                          //portbtns.play(1.0f);
-                          transition = true;
-                          Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
-                          {
-
-                            @Override
-                            public void run() {
-                              // resourceManager.initselect();
-                              isArcade = false;
-                              mode = true;
-
-                              if (resourceManager.appDevice() == resourceManager.ANDROID)
-                              {
-                                //android.lockOrientation(true, view);
-
-                              }
-
-                              //resourceManager.currentScene() = "charselscene";
-                              prevScene = "charselscene";
-                              selecttype = 0;
-
-                              land = new SPFZSceneLoader(resourceManager, SwapFyterzMain.this, "", "");
-
-                              // resourceManager.unloadGame();
-                              // resourceManager.initsix();
-                              // resourceManager.loadSpriteAnimations();
-
-                              update(view).loadScene(resourceManager.currentScene(), viewportland);
-                              inMode();
-                            }
-                          })));
-
-                        }
-                      }
-                    }
-                  }
-
-                  @Override
-                  public void touchDown() {
-
-                  }
-
-                  @Override
-                  public void touchUp() {
-
-                  }
-                });
-
-              root.getChild("ltrnbutton").getEntity().getComponent(SPFZButtonComponent.class)
-                .addListener(new SPFZButtonComponent.ButtonListener()
-                {
-
-                  @Override
-                  public void clicked() {
-                    if (draggedfrmbtn("ltrnbutton", false, null))
-                    {
-                      // DO NOT PROCESS BUTTON
-                    }
-                    else
-                    {
-                      if (concheck(resourceManager.currentScene()))
-                      {
-
-
-                        if (!flingup && !flingdown && !transition)
-                        {
-                          //portbtns.play(1.0f);
-                          transition = true;
-                          Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
-                          {
-
-                            @Override
-                            public void run() {
-                              istraining = true;
-                              isArcade = false;
-                              mode = true;
-
-                              root.getEntity().removeAll();
-
-                              if (resourceManager.appDevice() == resourceManager.ANDROID)
-                              {
-                                //android.lockOrientation(true, view);
-
-                              }
-                              //resourceManager.currentScene() = "charselscene";
-                              prevScene = "charselscene";
-                              selecttype = 1;
-                              // resourceManager.unloadGame();
-                              // resourceManager.initsix();
-                              // resourceManager.loadSpriteAnimations();
-                              land = new SPFZSceneLoader(resourceManager, SwapFyterzMain.this, "", "");
-                              update(view).loadScene(resourceManager.currentScene(), viewportland);
-                              transition = true;
-                              inMode();
-                            }
-                          })));
-                        }
-                      }
-                    }
-                  }
-
-                  @Override
-                  public void touchDown() {
-
-                  }
-
-                  @Override
-                  public void touchUp() {
-
-                  }
-                });
-
               root.getChild("lhlpbutton").getEntity().getComponent(SPFZButtonComponent.class)
                 .addListener(new SPFZButtonComponent.ButtonListener()
                 {

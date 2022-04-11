@@ -268,9 +268,10 @@ public class SPFZMenuButtonListeners
 
     @Override
     public void clicked() {
-      menu_action.processExitButton();
+      menu_action.processYesButton();
     }
   };
+
   private final SPFZButtonComponent.ButtonListener noButtonListener = new SPFZButtonComponent.ButtonListener()
   {
     @Override
@@ -283,7 +284,7 @@ public class SPFZMenuButtonListeners
 
     @Override
     public void clicked() {
-      menu_action.processExitButton();
+      menu_action.processNoButton();
     }
   };
 
@@ -316,6 +317,22 @@ public class SPFZMenuButtonListeners
     @Override
     public void clicked() {
       menu_action.processConstellationButton();
+    }
+  };
+
+  private final SPFZButtonComponent.ButtonListener externalSupportButtonListener = new SPFZButtonComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+    }
+
+    @Override
+    public void touchDown() {
+    }
+
+    @Override
+    public void clicked() {
+      menu_action.processExternalSupportButton();
     }
   };
 

@@ -2,6 +2,7 @@ package com.dev.swapftrz.resource;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
@@ -444,12 +445,10 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 
   @Override
   public void loadShaders() {
-
   }
 
   @Override
   public void loadSpineAnimations() {
-
   }
 
   public void loadSpriteAnimations(String scene) {
@@ -495,7 +494,6 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 
   @Override
   public void loadSpriterAnimations() {
-
   }
 
   public void prepareAssetsToLoad() {
@@ -665,6 +663,14 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return landscapeSSL;
   }
 
+  public void setLandscapeSSL(String scene) {
+    currentScene = scene;
+    //setting with new SPFZSceneLoader object as it helps get desired result for main menu
+    landscapeSSL = new SPFZSceneLoader(this);
+    landscapeSSL.loadScene(currentScene, spfzMCamera.getViewport());
+    setRootWrapper(new ItemWrapper(landscapeSSL.getRoot()));
+  }
+
   public SPFZSceneLoader getStagePauseSSL() {
     return stagePauseSSL;
   }
@@ -678,6 +684,7 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   }
 
   public void setRootWrapper(ItemWrapper rootWrapper) {
+    this.rootWrapper.getEntity().removeAll();
     this.rootWrapper = new ItemWrapper(getCurrentSSL().getRoot());
   }
 
@@ -740,8 +747,8 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     {
       case Android:
         appDevice = ANDROID;
-        Gdx.input.setCatchBackKey(true);
-        Gdx.input.setCatchMenuKey(true);
+        Gdx.input.setCatchKey(Input.Keys.BACK, true);
+        Gdx.input.setCatchKey(Input.Keys.MENU, true);
         Gdx.app.setLogLevel(Application.LOG_DEBUG);
         break;
       case iOS:

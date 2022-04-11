@@ -332,7 +332,6 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
   public void airatkedanim()
   {
-
   }
 
   public void airatkanim()
@@ -920,9 +919,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   }
 
   @Override
-  public void dispose()
-  {
-
+  public void dispose() {
   }
 
   public void down(float delta)
@@ -2499,15 +2496,11 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   }
 
   @Override
-  public void update()
-  {
-
+  public void update() {
   }
 
   @Override
-  public void returnmove()
-  {
-
+  public void returnmove() {
   }
 
   @Override
@@ -2524,14 +2517,10 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     return hit;
   }
 
-  public void reflect()
-  {
-
+  public void reflect() {
   }
 
-  public void parry()
-  {
-
+  public void parry() {
   }
 
   public float currTotalFrames()

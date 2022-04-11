@@ -33,59 +33,81 @@ public class SPFZMenuAction
   }
 
   public void setMainMenuButtonListeners() {
+    SPFZButtonComponent.ButtonListener[] altButtonListeners = menu_listeners.altButtonListeners();
     SPFZButtonComponent.ButtonListener[] main3ButtonListeners = menu_listeners.main3ButtonListeners();
     SPFZButtonComponent.ButtonListener[] main5ButtonListeners = menu_listeners.main5ButtonListeners();
+    String[] altButtons = menu_o2d.altButtons();
     String[] main3Buttons = menu_o2d.main3Buttons();
     String[] main5Buttons = resManager.getCurrentOrientation().equals(resManager.PORTRAIT)
       ? menu_o2d.portMain5Buttons() : menu_o2d.landMain5Buttons();
 
     if (resManager.getCurrentOrientation().equals(resManager.PORTRAIT))
-    {
       for (int i = 0; i < main3Buttons.length; i++)
         resManager.rootWrapper().getChild(menu_o2d.CTRLBOARD).getChild(menu_o2d.main3Buttons()[i]).getEntity()
           .getComponent(SPFZButtonComponent.class).addListener(main3ButtonListeners[i]);
-    }
     else
-    {
       for (int i = 0; i < main3Buttons.length; i++)
         resManager.rootWrapper().getChild(main3Buttons[i]).getEntity()
           .getComponent(SPFZButtonComponent.class).addListener(main3ButtonListeners[i]);
-    }
+
+    //process for adding Listeners for constellations and support links
+    //TODO Find a way to use key values in a set up such as: You: {fb, twit} process creates link
 
     for (int i = 0; i < main5Buttons.length; i++)
       resManager.rootWrapper().getChild(main5Buttons[i]).getEntity()
         .getComponent(SPFZButtonComponent.class).addListener(main5ButtonListeners[i]);
 
+    for (int i = 0; i < altButtonListeners.length; i++)
+      resManager.rootWrapper().getChild(altButtons[i]).getEntity()
+        .getComponent(SPFZButtonComponent.class).addListener(altButtonListeners[i]);
+  }
+
+  public void setCharacterSelectButtonListeners() {
+    //character buttons
+    //ok, back, and clear buttons
+  }
+
+  public void setStageSelectButtonListeners() {
+    //back and ok buttons
+    //stage buttons
   }
 
   public SPFZSceneLoader currentSSL() {
     return resManager.getCurrentSSL();
   }
 
+  //maybe set this within the system itself
   public void setProcessing() {
     resManager.getCurrentSSL().engine.getSystem(SPFZButtonSystem.class).setProcessing(true);
   }
 
   //ACTION RUNNABLES
-
+  //Don't forget to lock orientation when changing to next steps of scenes
   public void goToCharacterSelect() {
   }
 
   public void processArcadeButton() {
     setProcessing();
+    menu_sound.playConfirmSound();
+    menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> resManager.setLandscapeSSL("arcadeselscn"));
   }
 
   public void processVsTrainingButton() {
     setProcessing();
+    menu_sound.playConfirmSound();
+    menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> resManager.setLandscapeSSL("charselscene"));
   }
 
   public void processHelpButton() {
     setProcessing();
     menu_sound.playConfirmSound();
+    menu_animation.openHelpOptions();
   }
 
   public void processOptionsButton() {
     setProcessing();
+    menu_sound.playConfirmSound();
+    menu_animation.openOptions();
   }
 
   public void processSoundButton() {
@@ -144,6 +166,8 @@ public class SPFZMenuAction
   public void processConstellationButton() {
   }
 
+  public void processExternalSupportButton() {
+  }
   //CHARACTER AND STAGE SELECT MENU ACTIONS
 
   public void processOkButton() {
@@ -155,6 +179,12 @@ public class SPFZMenuAction
   public void processClearButton() {
   }
 
+  public void processYesButton() {
+  }
+
+  public void processNoButton() {
+  }
+
   public void processSprite() {
     //if Arcade
     //setcharsprite(arrayOfChar?)
@@ -162,7 +192,6 @@ public class SPFZMenuAction
   }
 
   //STAGE SELECT
-
   public void processStageSelect() {
   }
 }
