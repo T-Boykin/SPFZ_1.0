@@ -221,7 +221,7 @@ public class SPFZMenuButtonListeners
 
     @Override
     public void clicked() {
-      menu_action.processNinetyButton();
+      menu_action.processNinetyNineButton();
     }
   };
 

@@ -11,16 +11,16 @@ import com.badlogic.gdx.audio.Sound;
 public class SPFZMenuSoundPack
 {
   //Music
-  private static final Music mainMenu = Gdx.audio.newMusic(Gdx.files.internal("music/Heclecta main menu.mp3"));
-  private static final Music mainMenuLoop = Gdx.audio.newMusic(Gdx.files.internal("music/Heclecta main menu.mp3"));
+  private static final Music mainMenu = Gdx.audio.newMusic(Gdx.files.internal("music/Heclecta main menu.mp3")),
+    mainMenuLoop = Gdx.audio.newMusic(Gdx.files.internal("music/Heclecta main menu.mp3"));
 
   //Sounds
-  private static final Sound deselect = Gdx.audio.newSound(Gdx.files.internal("sound/deselect.ogg"));
-  private static final Sound portraitUIButton = Gdx.audio.newSound(Gdx.files.internal("sound/portconfirm.ogg"));
-  private static final Sound back = Gdx.audio.newSound(Gdx.files.internal("sound/backbtn1.ogg"));
-  private static final Sound confirm = Gdx.audio.newSound(Gdx.files.internal("sound/okconfirm.ogg"));
-  private static final Sound zoomIn = Gdx.audio.newSound(Gdx.files.internal("sound/zoomin.ogg"));
-  private static final Sound zoomOut = Gdx.audio.newSound(Gdx.files.internal("sound/zoomout.ogg"));
+  private static final Sound deselect = Gdx.audio.newSound(Gdx.files.internal("sound/deselect.ogg")),
+    portraitUIButton = Gdx.audio.newSound(Gdx.files.internal("sound/portconfirm.ogg")),
+    back = Gdx.audio.newSound(Gdx.files.internal("sound/backbtn1.ogg")),
+    confirm = Gdx.audio.newSound(Gdx.files.internal("sound/okconfirm.ogg")),
+    zoomIn = Gdx.audio.newSound(Gdx.files.internal("sound/zoomin.ogg")),
+    zoomOut = Gdx.audio.newSound(Gdx.files.internal("sound/zoomout.ogg"));
 
   public SPFZMenuSoundPack() {
   }

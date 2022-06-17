@@ -1,9 +1,15 @@
 package com.dev.swapftrz.menu;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.dev.swapftrz.resource.SPFZButtonComponent;
 import com.dev.swapftrz.resource.SPFZButtonSystem;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
+import com.uwsoft.editor.renderer.components.DimensionsComponent;
+import com.uwsoft.editor.renderer.components.TransformComponent;
+import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 
 /**
  * Class performs the button functionality for the Menu UI
@@ -82,9 +88,7 @@ public class SPFZMenuAction
   }
 
   //ACTION RUNNABLES
-  //Don't forget to lock orientation when changing to next steps of scenes
-  public void goToCharacterSelect() {
-  }
+  //Don't forget to lock orientation when changing to next steps of scene
 
   public void processArcadeButton() {
     setProcessing();
@@ -105,38 +109,144 @@ public class SPFZMenuAction
   }
 
   public void processOptionsButton() {
+    //oritentation lock while options menu is open
     setProcessing();
     menu_sound.playConfirmSound();
+    setsliders();
     menu_animation.openOptions();
   }
 
+  public void setsliders() {
+    String composite = "";
+    TransformComponent transcomponent = ComponentRetriever
+      .get(resManager.rootWrapper().getChild(composite).getChild("brightslider").getEntity(), TransformComponent.class);
+    DimensionsComponent dimcomponent = ComponentRetriever
+      .get(resManager.rootWrapper().getChild(composite).getChild("brightslider").getEntity(), DimensionsComponent.class);
+    TransformComponent transcomp = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getChild("brightbar").getEntity(),
+      TransformComponent.class);
+    DimensionsComponent dimcompon = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getChild("brightbar").getEntity(),
+      DimensionsComponent.class);
+    Vector2 dimwhs = new Vector2(), dimwh = new Vector2();
+    Vector3 transpar = new Vector3(0, 0, 0);
+    final float MAX_VOL = resManager.getMaxSoundSettingsValues(), MAX_BRIGHT = resManager.getMaxBrightSettingsValues();
+    float brightamount = resManager.getBrightSettingsValues(), soundamount = resManager.getSoundSettingsValues(), fullbarpercent;
+
+    // set bright
+    // slider---------------------------------------------------------------
+
+    transpar.x = transcomponent.x;
+    transpar.y = transcomponent.y;
+
+    dimwh.x = dimcomponent.width * transcomponent.scaleX;
+    dimwh.y = dimcomponent.height * transcomponent.scaleY;
+    dimwhs.x = dimcompon.width * transcomp.scaleX;
+    dimwhs.y = dimcompon.height * transcomp.scaleY;
+
+    // bar full percentage
+    fullbarpercent = dimwhs.x;
+
+    // brightamount is received from the flavor in prefs
+    brightamount = 100 * (brightamount / MAX_BRIGHT);
+
+    transcomponent.x = (transcomp.x - (dimwh.x * .5f)) + (float) ((brightamount * .01) * fullbarpercent);
+
+    brightamount = brightamount * (MAX_BRIGHT * .01f);
+    // set sound
+    // slider----------------------------------------------------------------
+    transcomponent = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getEntity(), TransformComponent.class);
+
+    transpar.x = transcomponent.x;
+    transpar.y = transcomponent.y;
+
+    transcomponent = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getChild("soundslider").getEntity(),
+      TransformComponent.class);
+    dimcomponent = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getChild("soundslider").getEntity(),
+      DimensionsComponent.class);
+    transcomp = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getChild("soundbar").getEntity(),
+      TransformComponent.class);
+    dimcompon = ComponentRetriever.get(resManager.rootWrapper().getChild(composite).getChild("soundbar").getEntity(),
+      DimensionsComponent.class);
+
+    dimwh.x = dimcomponent.width * transcomponent.scaleX;
+    dimwh.y = dimcomponent.height * transcomponent.scaleY;
+    dimwhs.x = dimcompon.width * transcomp.scaleX;
+    dimwhs.y = dimcompon.height * transcomp.scaleY;
+
+    // bar full percentageU
+    fullbarpercent = dimwhs.x;
+
+    // soundamount is received from the file - see readFile(String File)
+    soundamount = 100 * (soundamount / MAX_VOL);
+
+    // transcomponent.x = (transcomp.x - (dimwh.x / 2)) + (float) ((soundamount
+    // * .01) * fullbarpercent);
+    //Center the Slider
+    transcomponent.x = (transcomp.x - (dimwh.x * .5f)) + (float) ((soundamount * .01) * fullbarpercent);
+
+    soundamount = soundamount * (MAX_VOL * .01f);
+  }
+
   public void processSoundButton() {
+    float maxSound = resManager.getMaxSoundSettingsValues(),
+      currentSoundLevel = resManager.getSoundSettingsValues(),
+      increments = resManager.getSoundIncrementsSettingsValues(),
+      newSoundLevel = 0;
+
+    for (float i = 1; i <= increments; i++)
+    {
+      if (currentSoundLevel > i / increments && newSoundLevel == 0)
+        continue;
+
+      if (currentSoundLevel == maxSound)
+        newSoundLevel = 1 / increments;
+
+      if (newSoundLevel == 0)
+        newSoundLevel = i / increments;
+    }
+
+    resManager.saveSoundSettings(newSoundLevel);
+    menu_sound.setGameVolume(newSoundLevel);
+    menu_sound.playConfirmSound();
   }
 
   public void processBrightnessButton() {
-    /*//get amount from properties file int brightamount = 0;
-    brightamount += 51;
-    if (brightamount >= 255)
+    float minBrightness = resManager.getMinBrightSettingsValues(),
+      maxBrightness = resManager.getMaxBrightSettingsValues(),
+      currentBrightnessLevel = resManager.getBrightSettingsValues(),
+      increments = resManager.getBrightIncrementSettingsValues(),
+      newBrightnessLevel = 0;
+
+    for (float i = 1; i <= increments; i++)
     {
-      brightamount = 51;
+      if (currentBrightnessLevel > (i / maxBrightness) && newBrightnessLevel == 0)
+        continue;
+
+      if (currentBrightnessLevel == maxBrightness)
+        newBrightnessLevel = minBrightness;
+
+      if (newBrightnessLevel == 0)
+        newBrightnessLevel = i / increments;
     }
-    else if (brightamount < 51)
-    {
-      brightamount = 51;
-    }*/
-    //saveSettings in ResourceManager
-    //adjustBrightness(brightamount);
+
+    resManager.saveBrightSettings(newBrightnessLevel);
+    menu_sound.playConfirmSound();
   }
 
   public void processExitButton() {
     setProcessing();
+    menu_animation.showExitDialog();
+    menu_animation.portButtonsBelowMain();
   }
 
   public void processYesConfirmButton() {
+    menu_animation.faderInPlusAction(resManager.rootWrapper(),
+      () -> Gdx.app.exit());
   }
 
   public void processNoConfirmButton() {
     setProcessing();
+    menu_animation.lowerExitDialog();
+    menu_animation.portButtonsToMainCenter();
   }
 
   public void processMnuScnButton() {
@@ -149,12 +259,19 @@ public class SPFZMenuAction
   }
 
   public void processThirtyButton() {
+    resManager.setRoundTimeSettings(30);
   }
 
   public void processSixtyButton() {
+    resManager.setRoundTimeSettings(60);
   }
 
-  public void processNinetyButton() {
+  public void processNinetyNineButton() {
+    resManager.setRoundTimeSettings(99);
+  }
+
+  public void initializeSliders() {
+
   }
 
   public void processBrightSlider() {
