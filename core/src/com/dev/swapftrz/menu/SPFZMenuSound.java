@@ -32,24 +32,20 @@ public class SPFZMenuSound
   }
 
   public Runnable playMainMenuLoopMusic() {
-    Runnable runnable = () -> {
-      if (soundPack.mainMenuMusic().getVolume() != gameVolume)
-        soundPack.mainMenuMusic().setVolume(gameVolume);
+   return () -> {
+     if (soundPack.mainMenuMusic().getVolume() != gameVolume)
+       soundPack.mainMenuMusic().setVolume(gameVolume);
 
-      soundPack.mainMenuMusic().setLooping(true);
-      soundPack.mainMenuMusic().play();
-    };
-
-    return runnable;
+     soundPack.mainMenuMusic().setLooping(true);
+     soundPack.mainMenuMusic().play();
+   };
   }
 
   public Runnable stopMainMenuMusic() {
-    Runnable runnable = () -> {
+    return () -> {
       if (soundPack.mainMenuMusic().isPlaying())
         soundPack.mainMenuMusic().stop();
     };
-
-    return runnable;
   }
 
   public void playDeselectSound() {

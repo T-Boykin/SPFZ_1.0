@@ -774,10 +774,41 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return spfzprefs.getFloat("brightness");
   }
 
+  public float getBrightIncrementSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("brightnessIncrements");
+  }
+
+  public float getMinBrightSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("MinBrightness");
+  }
+
+
+  public float getMaxBrightSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("MaxBrightness");
+  }
+
   public float getSoundSettingsValues() {
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
 
     return spfzprefs.getFloat("sound");
+  }
+
+  public float getMaxSoundSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("MaxSound");
+  }
+
+  public float getSoundIncrementsSettingsValues() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("soundIncrements");
   }
 
   public void saveBrightSettings(float brightness) {
@@ -798,6 +829,13 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
 
     spfzprefs.put(settings);
+    spfzprefs.flush();
+  }
+
+  public void setRoundTimeSettings(float seconds) {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    spfzprefs.putFloat("time", seconds);
     spfzprefs.flush();
   }
 }
