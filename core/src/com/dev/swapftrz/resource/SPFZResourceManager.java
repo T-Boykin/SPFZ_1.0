@@ -82,8 +82,8 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   protected SPFZSceneLoader landscapeSSL;
   protected SPFZSceneLoader stagePauseSSL;
   protected ItemWrapper rootWrapper;
-  private SPFZMenuCamera spfzMCamera;
-  private SPFZStageCamera spfzSCamera;
+  private final SPFZMenuCamera spfzMCamera;
+  private final SPFZStageCamera spfzSCamera;
 
   //Resolutions
   //Map<String, Integer> resolutionWidth = new HashMap<String, Integer>();
@@ -102,13 +102,16 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   // String invalidfnt3 = "LCD";
 
   public SPFZResourceManager() {
-    projectVO.pixelToWorld = 3;
+    projectVO.pixelToWorld = getPixelToWorldSize();
+
     portraitSSL = new SPFZSceneLoader(this);
     landscapeSSL = new SPFZSceneLoader(this);
     //stagePauseSL = new SPFZSceneLoader(this, appMain);
     setAppDevice();
     setWorkingResolution(packResolutionName);
     dbOperations = new SPFZDBOperations(this);
+    spfzMCamera = new SPFZMenuCamera(this);
+    spfzSCamera = new SPFZStageCamera(this);
   }
 
   public void dispose() {
@@ -762,6 +765,24 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     }
   }
 
+  public int getPixelToWorldSize() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getInteger("pixelToWorld");
+  }
+
+  public int getWorldWidth() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getInteger("worldWidth");
+  }
+
+  public int getWorldHeight() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getInteger("worldHeight");
+  }
+
   public float[] getOptionsSettingsValues() {
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
 
@@ -785,7 +806,6 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 
     return spfzprefs.getFloat("MinBrightness");
   }
-
 
   public float getMaxBrightSettingsValues() {
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
@@ -837,5 +857,33 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 
     spfzprefs.putFloat("time", seconds);
     spfzprefs.flush();
+  }
+
+  public float[] getCameraBoundaries() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+    String[] propertyValues = spfzprefs.getString("cameraBoundaries").split(" ");
+    float[] values = {};
+
+    for (int i = 0; i < propertyValues.length; i++)
+      values[i] = Integer.parseInt(propertyValues[i]);
+
+    return values;
+  }
+
+  public float[] getStageBoundaries() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+    String[] propertyValues = spfzprefs.getString("stageBoundaries").split(" ");
+    float[] values = {};
+
+    for (int i = 0; i < propertyValues.length; i++)
+      values[i] = Integer.parseInt(propertyValues[i]);
+
+    return values;
+  }
+
+  public float getRoundTimeSettings() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("time");
   }
 }

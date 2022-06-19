@@ -4,29 +4,53 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dev.swapftrz.resource.SPFZResourceManager;
 
 /**
  * Class controls the stage camera
- * */
-public class SPFZStageCamera
+ */
+public class SPFZStageCamera extends Camera
 {
-  private static final short WORLD_WIDTH = 640;
-  private static final short WORLD_HEIGHT = 400;
-  private Viewport viewport;
-  public SPFZStageCamera() {
-    if(Gdx.graphics.getWidth() > Gdx.graphics.getHeight()) {
+  private float WORLD_WIDTH, WORLD_HEIGHT;
+  private final Viewport viewport;
+  private SPFZResourceManager resManager;
+
+  public SPFZStageCamera(SPFZResourceManager resManager) {
+    WORLD_WIDTH = resManager.getWorldWidth();
+    WORLD_HEIGHT = resManager.getWorldHeight();
+
+    if (Gdx.graphics.getWidth() > Gdx.graphics.getHeight())
       viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT);
-    }
-    else {
+    else
       viewport = new StretchViewport(WORLD_HEIGHT, WORLD_WIDTH);
-    }
+
+    this.resManager = resManager;
+    viewport.setCamera(this);
+    viewport.setScreenWidth(Gdx.graphics.getWidth());
+    viewport.setScreenHeight(Gdx.graphics.getHeight());
+    //centers camera
+    viewport.apply(true);
   }
 
   public Camera stageCamera() {
-    return viewport.getCamera();
+    return this;
   }
 
   public void changeViewport(float width, float height) {
     viewport.setWorldSize(width, height);
+  }
+
+  public Viewport getViewport() {
+    return viewport;
+  }
+
+  @Override
+  public void update() {
+
+  }
+
+  @Override
+  public void update(boolean updateFrustum) {
+
   }
 }

@@ -282,7 +282,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
         root = new ItemWrapper(update(view).getRoot());
         //transform = tc.get(root.getEntity());
         //action = ac.get(root.getEntity());
-        setSettings();
         level++;
         // load the 1st texture that will appear on the default layer
         storypath = "arcade/" + storyline + "/" + level + ".png";
@@ -1819,7 +1818,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
     update(view).addComponentsByTagName("button", SPFZButtonComponent.class);
 
-    setSettings();
     // When we are at the character select scene we want to process so
     // we can
     // move forward
@@ -3548,7 +3546,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       //writeOut("1.0\n255");save Settings in ResourceManager
       setrdtime(99);
     }
-    setSettings();
 
     Actions.addAction(root.getChild("tocreditsone").getEntity(), Actions.fadeOut(0f));
     Actions.addAction(root.getChild("tocreditstwo").getEntity(), Actions.fadeOut(0f));
@@ -3831,7 +3828,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
    */
   public void stageSel() {
     fader = root.getChild("transition").getEntity();
-    setSettings();
     Actions.addAction(fader, Actions.sequence(Actions.fadeOut(.3f)));
     update(view).addComponentsByTagName("button", SPFZButtonComponent.class);
 

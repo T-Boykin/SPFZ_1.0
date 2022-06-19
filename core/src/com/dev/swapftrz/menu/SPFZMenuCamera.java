@@ -4,21 +4,32 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dev.swapftrz.resource.SPFZResourceManager;
 
 /**
  * Class controls the menu camera actions
  */
-public class SPFZMenuCamera
+public class SPFZMenuCamera extends Camera
 {
-  private static final short WORLD_WIDTH = 640;
-  private static final short WORLD_HEIGHT = 400;
-  private final Viewport viewport;
+  private float WORLD_WIDTH, WORLD_HEIGHT;
+  private Viewport viewport;
+  private SPFZResourceManager resManager;
 
-  public SPFZMenuCamera() {
+  public SPFZMenuCamera(SPFZResourceManager resManager) {
+    WORLD_WIDTH = resManager.getWorldWidth();
+    WORLD_HEIGHT = resManager.getWorldHeight();
+
     if (Gdx.graphics.getWidth() > Gdx.graphics.getHeight())
       viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT);
     else
       viewport = new StretchViewport(WORLD_HEIGHT, WORLD_WIDTH);
+
+    this.resManager = resManager;
+    viewport.setCamera(this);
+    viewport.setScreenWidth(Gdx.graphics.getWidth());
+    viewport.setScreenHeight(Gdx.graphics.getHeight());
+    //centers camera
+    viewport.apply(true);
   }
 
   public Camera menuCamera() {
@@ -31,5 +42,15 @@ public class SPFZMenuCamera
 
   public Viewport getViewport() {
     return viewport;
+  }
+
+  @Override
+  public void update() {
+
+  }
+
+  @Override
+  public void update(boolean updateFrustum) {
+
   }
 }

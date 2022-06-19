@@ -2,20 +2,17 @@ package com.dev.swapftrz.menu;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.scenes.scene2d.actions.AlphaAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.dev.swapftrz.resource.SPFZO2DMethods;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
 import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.systems.action.Actions;
 import com.uwsoft.editor.renderer.systems.action.data.ActionData;
-import com.uwsoft.editor.renderer.systems.action.data.AlphaData;
-import com.uwsoft.editor.renderer.systems.action.data.DelayData;
 import com.uwsoft.editor.renderer.systems.action.data.MoveByData;
 import com.uwsoft.editor.renderer.systems.action.data.MoveToData;
 import com.uwsoft.editor.renderer.systems.action.data.ScaleToData;
-import com.uwsoft.editor.renderer.systems.action.logic.DelayAction;
 import com.uwsoft.editor.renderer.systems.action.logic.ScaleToAction;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
 
@@ -26,7 +23,7 @@ import java.util.Arrays;
 /**
  * Class handles the bulk of animations for the menu screens
  */
-public class SPFZMenuAnimation
+public class SPFZMenuAnimation extends SPFZO2DMethods
 {
   private final SPFZSceneLoader portrait, landscape;
   private final SPFZMenuO2DMenuObjects menuo2d;
@@ -270,94 +267,6 @@ public class SPFZMenuAnimation
     expandLandMain3Buttons();
   }
 
-  // ACTIONDATA CUSTOM ACTIONS ---------------------------------- \\\\\\\\\\\\\\\
-
-  /**
-   * Move Overlap2D Object to target destination
-   *
-   * @param toXVal        - move X to Value
-   * @param toYVal        - move Y to Value
-   * @param duration      - time of action
-   * @param interpolation - tween operator
-   */
-  private ActionData moveO2dObjTo(float toXVal, float toYVal, float duration, Interpolation interpolation) {
-    if (interpolation == null)
-      interpolation = Interpolation.fade;
-
-    MoveToData actionData = new MoveToData(interpolation, duration, toXVal, toYVal);
-
-    return actionData;
-  }
-
-  /**
-   * Move Overlap2D Object By specified values
-   *
-   * @param byXVal        - by X value given
-   * @param byYVal        - by Y value given
-   * @param duration      - time of action
-   * @param interpolation - tween operator
-   */
-  private MoveByData moveO2dObjBy(float byXVal, float byYVal, float duration, Interpolation interpolation) {
-    MoveByData actionData = new MoveByData(interpolation, duration, byXVal, byYVal);
-    actionData.logicClassName = MoveByAction.class.getName();
-
-    return actionData;
-  }
-
-  //TRANSFORM ACTIONS
-  private ScaleToData scaleO2dObj(float scaleX,
-                                  float scaleY, float scaleResize,
-                                  float duration, Interpolation interpolation) {
-    if (interpolation == null)
-      interpolation = Interpolation.fade;
-
-    ScaleToData actionData = new ScaleToData(
-      interpolation,
-      duration,
-      scaleX + scaleResize,
-      scaleY + scaleResize
-    );
-    actionData.logicClassName = ScaleToAction.class.getName();
-    return actionData;
-  }
-
-  /**
-   * Action flashes the object passed, essentially fading it in and out
-   *
-   * @param repititions - number of times object should fade in and out
-   * @param duration    - time action should be performed
-   * @param slowDown    - reptitions slow down overtime if set to true
-   * @param speedUp     - repititions speed up overtime if set to true
-   */
-  private AlphaData[] flashO2dObject(float repititions, float duration,
-                                     boolean slowDown, boolean speedUp) {
-    float actionDuration = duration / repititions;
-    boolean setFadeIn = false;
-    AlphaData[] fadeActions = {};
-
-    for (int i = 0; i < repititions; i++)
-    {
-      if (speedUp && !slowDown)
-        actionDuration /= actionDuration;
-
-      if (slowDown && !speedUp)
-        actionDuration *= actionDuration;
-
-      if (setFadeIn)
-      {
-        fadeActions[i] = fadeInO2dObject(actionDuration, null);
-        setFadeIn = false;
-      }
-      else
-      {
-        fadeActions[i] = fadeOutO2dObject(actionDuration, null);
-        setFadeIn = true;
-      }
-    }
-
-    return fadeActions;
-  }
-
   public void openOptions() {
     if (spfzmenu.isPortrait())
       Actions.addAction(portRoot.getChild(menuo2d.OPTIONSCREEN).getEntity(),
@@ -431,53 +340,6 @@ public class SPFZMenuAnimation
 
   //TRANSPARENCY/REMOVAL ACTIONS
 
-  private void rmvO2dObject(SPFZSceneLoader ssl, ItemWrapper rootIW, String stringObj) {
-    ssl.getEngine().removeEntity(rootIW.getChild(stringObj).getEntity());
-  }
-
-  private void rmvO2dObjects(SPFZSceneLoader ssl, ItemWrapper rootIW, String[] stringObjs) {
-    for (String stringObj : stringObjs)
-      ssl.getEngine().removeEntity(rootIW.getChild(stringObj).getEntity());
-  }
-
-  private void hideO2dObject(ItemWrapper rootIW, String stringObj) {
-    Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
-  }
-
-  private void hideO2dObjects(ItemWrapper rootIW, String[] stringObjs) {
-    for (String stringObj : stringObjs)
-      Actions.addAction(rootIW.getChild(stringObj).getEntity(), Actions.fadeOut(0f));
-  }
-
-  private AlphaData fadeOutO2dObject(float duration, Interpolation interpolation) {
-
-    if (interpolation == null)
-      interpolation = Interpolation.linear;
-
-    AlphaData alphaData = new AlphaData(interpolation, duration, 0);
-    alphaData.logicClassName = AlphaAction.class.getName();
-
-    return alphaData;
-  }
-
-  private AlphaData fadeInO2dObject(float duration, Interpolation interpolation) {
-
-    if (interpolation == null)
-      interpolation = Interpolation.linear;
-
-    AlphaData alphaData = new AlphaData(interpolation, duration, 1);
-    alphaData.logicClassName = AlphaAction.class.getName();
-
-    return alphaData;
-  }
-
-  private DelayData delayO2dObject(float duration) {
-    DelayData delayData = new DelayData(
-      duration
-    );
-    delayData.logicClassName = DelayAction.class.getName();
-    return delayData;
-  }
 
   //COMBINED/CUSTOM ACTIONS
 

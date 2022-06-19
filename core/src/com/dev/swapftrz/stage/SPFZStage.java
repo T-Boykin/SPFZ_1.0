@@ -3,7 +3,6 @@ package com.dev.swapftrz.stage;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -21,6 +20,10 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.dev.swapftrz.SwapFyterzMain;
+import com.dev.swapftrz.fyter.SPFZP1Movement;
+import com.dev.swapftrz.fyter.SPFZP2Movement;
+import com.dev.swapftrz.resource.SPFZResourceManager;
+import com.dev.swapftrz.resource.SPFZStageImagePack;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.MainItemComponent;
 import com.uwsoft.editor.renderer.components.TintComponent;
@@ -46,16 +49,18 @@ public class SPFZStage extends Stage
     finishedrd, pausetime, gameover, standby, damagedealt, training, pauseconfirm, show, showboxes, boxes, pauseset, strt1,
     strt2, initcheck, setneut, sigp1lock, runscript, shake, p1charzoom, p2charzoom;
 
-  Camera cam;
-
+  Camera stageCamera;
+  SPFZResourceManager resManager;
+  SPFZStageHUD stageHUD;
+  ItemWrapper stageWrapper;
   double timeleftdbl;
   Entity p1c1, p1c2, p1c3, p2c1, p2c2, p2c3;
 
-  float xattr, p1xattr, p1yattr, p2xattr, p2yattr, diff, aspectratioh, aspectratiow, p1HPpercent, p2HPpercent,
+  float roundTime, xattr, p1xattr, p1yattr, p2xattr, p2yattr, diff, aspectratioh, aspectratiow, p1HPpercent, p2HPpercent,
     p1SPpercent, p2SPpercent, begpercent, begsuperpct, stagetempx, stagetempy, reflPCT;
 
-  float[] camboundary;
-  float[] stageboundary = {-240, 880};
+  float[] cameraBoundaries;
+  float[] stageBoundaries;
 
   // Keeps the characters at this height which will be the ground level for each
   // stage. STARTP1 and STARTP2 must level out to = 640(Viewport size which
@@ -71,7 +76,7 @@ public class SPFZStage extends Stage
   static final int ANDROID = 0, DESKTOP = 1, MAX_SUPER = 600;
 
   short btnupdwn, btnlftrgt, camcon;
-  int p1, p2, switchcount, picked, timeleft, p1health, p2health, p1spec, p2spec, rdcount, optime, p1rdcount, p2rdcount,
+  int p1, p2, switchcount, picked, timeleft, p1health, p2health, p1spec, p2spec, rdcount, p1rdcount, p2rdcount,
     startp1, startp2, check;
 
   SwapFyterzMain access;
@@ -86,7 +91,6 @@ public class SPFZStage extends Stage
   List<HashMap<String, int[]>> player2anims = new ArrayList<HashMap<String, int[]>>();
   List<ArrayList<String>> player2moves = new ArrayList<ArrayList<String>>();
 
-  List<LabelComponent> charnames = new ArrayList<LabelComponent>();
   List<String> characters = new ArrayList<String>();
   List<Object> arrscripts = new ArrayList<Object>();
   List<Integer> processed = new ArrayList<Integer>();
@@ -103,123 +107,55 @@ public class SPFZStage extends Stage
     "downleftbutton", "leftbutton", "leftupbutton", "punch", "kick", "mmbutton", "resbutton", "button"};
   //                  0      1      2      3      4      5      6      7      8     9       10     11    12      13
 
-  String[] normals = {"CLP", "CMP", "CHP", "CLK", "CMK", "CHK", "SLP", "SMP", "SHP", "SLK", "SMK", "SHK", "BJP", "NJP",
-                      "FJP", "BJK", "NJK", "FJK"};
+  //should be in Player class
+  String[] normals = {};
   //                  14     15     16     17
   TextureRegion testregion, healthreg1, healthreg2, healthout1, healthout2;
 
-  TextureAtlas healthatl;
-
+  s
   Texture health1, health2, outline1, outline2, specmeter1, specmeter2, exdots1, healthtex1, healthtex2,
     exdots2, superout1, superout2;
 
- Sprite pausetex;
+  Sprite pausetex;
 
-  public SPFZStage(IResourceRetriever i, Camera camera, String stage, int device, float[] bounds,
-                   List<String> characters, SwapFyterzMain trial, boolean training)
-  {
+  public SPFZStage(List<String> characters, boolean training, SPFZResourceManager resManager) {
+    this.resManager = resManager;
+    stageCamera = resManager.getStageCam();
+    cameraBoundaries = resManager.getCameraBoundaries();
+    stageBoundaries = resManager.getStageBoundaries();
+    stageWrapper = resManager.rootWrapper();
     this.training = training;
     // setup stage
-    initStage(i, bounds, camera, stage, trial, characters);
+    initStage(characters);
 
     // setup character scripts
     initScripts();
     charspicked(characters);
     setupcharacters(characters);
     totalhealth();
-
     setactors();
 
     //((OrthographicCamera) access.viewportland.getCamera()).zoom = .075f;
   }
 
-  public void initStage(IResourceRetriever i, float[] bounds, Camera camera, String stage, SwapFyterzMain trial,
-                        List<String> chars)
-  {
-
+  public void initStage(List<String> chars) {
     standby = true;
-
     Gdx.input.setInputProcessor(this);
     this.characters = chars;
 
     // look at options to figure out what time to set timeleft at
     timeleft = 10;
     //optime = trial.stageTime;
-    Preferences spfzpref = Gdx.app.getPreferences("spfzfile");
-    optime = spfzpref.getInteger("time");
-
-    camboundary = bounds;
-    cam = camera;
-    access = trial;
+    roundTime = resManager.getRoundTimeSettings();
 
     // Lifesystem engine manages the health bars drawn onto the scene
 
     // initActions();
-    healthatl = new TextureAtlas(Gdx.files.internal("orig/pack.atlas"));
-
-
-    health1 = new Texture(Gdx.files.internal("health/health.png"));
-    health2 = new Texture(Gdx.files.internal("health/health.png"));
-    outline1 = new Texture(Gdx.files.internal("health/healthbar.png"));
-    outline2 = new Texture(Gdx.files.internal("health/healthbar.png"));
-
-    specmeter1 = new Texture(Gdx.files.internal("super/superbarone.png"));
-    specmeter2 = new Texture(Gdx.files.internal("super/superbar.png"));
-    exdots1 = new Texture(Gdx.files.internal("super/filltwo.png"));
-    exdots2 = new Texture(Gdx.files.internal("super/fill.png"));
-    superout1 = new Texture(Gdx.files.internal("super/supoutone.png"));
-    superout2 = new Texture(Gdx.files.internal("super/supouttwo.png"));
-
-    resettimer();
-
-    if (training)
-    {
-      access.root.getChild("ctrlandhud").getChild("time").getComponent(TintComponent.class).color.a = 0f;
-      access.root.getChild("ctrlandhud").getChild("timeranim").getChild("tenths")
-        .getComponent(TintComponent.class).color.a = 0f;
-      access.root.getChild("ctrlandhud").getChild("timeranim").getChild("ones")
-        .getComponent(TintComponent.class).color.a = 0f;
-      access.root.getChild("ctrlandhud").getChild("timeranim").getChild("tenths")
-        .getComponent(TintComponent.class).color.a = 0f;
-      access.root.getChild("ctrlandhud").getChild("timeranim").getChild("ones")
-        .getComponent(SpriteAnimationStateComponent.class).paused = true;
-      access.root.getChild("ctrlandhud").getChild("timeranim").getChild("tenths")
-        .getComponent(SpriteAnimationStateComponent.class).paused = true;
-
-    }
-    else
-    {
-      access.root.getChild("ctrlandhud").getChild("infinite").getComponent(TintComponent.class).color.a = 0f;
-    }
-
-    setnames();
-    Entity fader = access.root.getChild("fader").getEntity();
-    access.setSettings();
-    Actions.addAction(fader, Actions.sequence(Actions.delay(1f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-    {
-      @Override
-      public void run()
-      {
-
-        roundtextset();
-        prefighttimer();
-      }
-    })));
-
-  }
-
-  public void resettimer()
-  {
-    // New timer
-    Entity tenths = access.root.getChild("ctrlandhud").getChild("timeranim").getChild("tenths").getEntity();
-    Entity ones = access.root.getChild("ctrlandhud").getChild("timeranim").getChild("ones").getEntity();
-
-    tenths.getComponent(SpriteAnimationStateComponent.class)
-      .set(new FrameRange("tens", (optime % 100) / 10, (optime % 100) / 10), 1, Animation.PlayMode.NORMAL);
-    ones.getComponent(SpriteAnimationStateComponent.class)
-      .set(new FrameRange("ones" + optime + "", optime % 10, optime % 10), 1, Animation.PlayMode.NORMAL);
-    ones.getComponent(SpriteAnimationStateComponent.class).paused = true;
-    tenths.getComponent(SpriteAnimationStateComponent.class).paused = true;
+    stageHUD.createStageHUDTextures();
+    stageHUD.resetHUDTimer(roundTime);
+    stageHUD.setTimerTexture(training);
+    stageHUD.setHUDCharacterNames(characters);
+    stageHUD.preFightFade();
   }
 
   public void initScripts()
@@ -300,8 +236,7 @@ public class SPFZStage extends Stage
     }
   }
 
-  public void setupcharacters(List<String> chars)
-  {
+  public void setupcharacters(List<String> chars) {
     // Entity p1c1;
 
     // load the characters from the library
@@ -311,8 +246,8 @@ public class SPFZStage extends Stage
     player1char1.zIndex = 4;
     player2char1.zIndex = 4;
 
-    p1c1 = access.land.entityFactory.createEntity(access.root.getEntity(), player1char1);
-    p2c1 = access.land.entityFactory.createEntity(access.root.getEntity(), player2char1);
+    p1c1 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player1char1);
+    p2c1 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player2char1);
 
     ItemWrapper playerone = new ItemWrapper(p1c1);
     ItemWrapper playertwo = new ItemWrapper(p2c1);
@@ -505,63 +440,9 @@ public class SPFZStage extends Stage
 
   }
 
-  public void setnames()
-  {
-    for (int i = 0; i < characters.size(); i++)
-    {
-      switch (i)
-      {
-        case 0:
-
-          charnames.add(i,
-            access.root.getChild("ctrlandhud").getChild("charonetxt").getEntity().getComponent(LabelComponent.class));
-          charnames.get(i).setText(characters.get(i));
-          break;
-        case 1:
-
-          charnames.add(i,
-            access.root.getChild("ctrlandhud").getChild("chartwotxt").getEntity().getComponent(LabelComponent.class));
-          charnames.get(i).setText(characters.get(i));
-
-          break;
-        case 2:
-
-          charnames.add(i,
-            access.root.getChild("ctrlandhud").getChild("charthreetxt").getEntity().getComponent(LabelComponent.class));
-          charnames.get(i).setText(characters.get(i));
-
-          break;
-        case 3:
-
-          charnames.add(i,
-            access.root.getChild("ctrlandhud").getChild("charfourtxt").getEntity().getComponent(LabelComponent.class));
-          charnames.get(i).setText(characters.get(i));
-
-          break;
-        case 4:
-
-          charnames.add(i,
-            access.root.getChild("ctrlandhud").getChild("charfivetxt").getEntity().getComponent(LabelComponent.class));
-          charnames.get(i).setText(characters.get(i));
-
-          break;
-        case 5:
-
-          charnames.add(i,
-            access.root.getChild("ctrlandhud").getChild("charsixtxt").getEntity().getComponent(LabelComponent.class));
-          charnames.get(i).setText(characters.get(i));
-
-          break;
-
-        default:
-          break;
-      }
-    }
-  }
-
   public void pausebtn()
   {
-    Entity pausebtn = access.root.getChild("ctrlandhud").getChild("pausebutton").getEntity();
+    Entity pausebtn = stageWrapper.getChild("ctrlandhud").getChild("pausebutton").getEntity();
 
     pausebtn.getComponent(SPFZStageComponent.class).addListener(new SPFZStageComponent.ButtonListener()
     {
@@ -600,7 +481,7 @@ public class SPFZStage extends Stage
 
   public void upleftcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("diagupleftbtn").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("diagupleftbtn").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -642,7 +523,7 @@ public class SPFZStage extends Stage
 
   public void leftcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("leftbutton").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("leftbutton").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -679,7 +560,7 @@ public class SPFZStage extends Stage
 
   public void downleftcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("diagdownleftbtn").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("diagdownleftbtn").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -717,7 +598,7 @@ public class SPFZStage extends Stage
 
   public void downcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("downbutton").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("downbutton").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -746,7 +627,7 @@ public class SPFZStage extends Stage
 
   public void downrightcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("diagdownrightbtn").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("diagdownrightbtn").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -783,7 +664,7 @@ public class SPFZStage extends Stage
 
   public void rightcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("rightbutton").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("rightbutton").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -819,7 +700,7 @@ public class SPFZStage extends Stage
 
   public void uprightcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("diaguprightbtn").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("diaguprightbtn").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -859,7 +740,7 @@ public class SPFZStage extends Stage
 
   public void upcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("upbutton").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("upbutton").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -891,7 +772,7 @@ public class SPFZStage extends Stage
 
   public void attackcontrols()
   {
-    access.root.getChild("ctrlandhud").getChild("punchbutton").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("punchbutton").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -919,7 +800,7 @@ public class SPFZStage extends Stage
         }
       });
 
-    access.root.getChild("ctrlandhud").getChild("kickbutton").getEntity().getComponent(SPFZStageComponent.class)
+    stageWrapper.getChild("ctrlandhud").getChild("kickbutton").getEntity().getComponent(SPFZStageComponent.class)
       .addListener(new SPFZStageComponent.ButtonListener()
       {
 
@@ -950,7 +831,7 @@ public class SPFZStage extends Stage
   {
     Entity fader, p1round1, p1round2, p2round1, p2round2, roundtext;
 
-    p1round1 = access.root.getChild("ctrlandhud").getChild("roundonep1").getEntity();
+    p1round1 = stageWrapper.getChild("ctrlandhud").getChild("roundonep1").getEntity();
     p1round1.getComponent(TransformComponent.class).originX -= p1round1.getComponent(TransformComponent.class).originX
       / 2;
     p1round1.getComponent(TransformComponent.class).originY -= p1round1.getComponent(TransformComponent.class).originY
@@ -958,7 +839,7 @@ public class SPFZStage extends Stage
     p1round1.getComponent(TransformComponent.class).x += p1round1.getComponent(TransformComponent.class).originX / 2;
     p1round1.getComponent(TransformComponent.class).y += p1round1.getComponent(TransformComponent.class).originY / 2;
 
-    p1round2 = access.root.getChild("ctrlandhud").getChild("roundtwop1").getEntity();
+    p1round2 = stageWrapper.getChild("ctrlandhud").getChild("roundtwop1").getEntity();
     p1round2.getComponent(TransformComponent.class).originX -= p1round2.getComponent(TransformComponent.class).originX
       / 2;
     p1round2.getComponent(TransformComponent.class).originY -= p1round2.getComponent(TransformComponent.class).originY
@@ -966,7 +847,7 @@ public class SPFZStage extends Stage
     p1round2.getComponent(TransformComponent.class).x += p1round2.getComponent(TransformComponent.class).originX / 2;
     p1round2.getComponent(TransformComponent.class).y += p1round2.getComponent(TransformComponent.class).originY / 2;
 
-    p2round1 = access.root.getChild("ctrlandhud").getChild("roundonep2").getEntity();
+    p2round1 = stageWrapper.getChild("ctrlandhud").getChild("roundonep2").getEntity();
     p2round1.getComponent(TransformComponent.class).originX -= p2round1.getComponent(TransformComponent.class).originX
       / 2;
     p2round1.getComponent(TransformComponent.class).originY -= p2round1.getComponent(TransformComponent.class).originY
@@ -975,7 +856,7 @@ public class SPFZStage extends Stage
       + p2round1.getComponent(TransformComponent.class).originX / 2);
     p2round1.getComponent(TransformComponent.class).y += p2round1.getComponent(TransformComponent.class).originY / 2;
 
-    p2round2 = access.root.getChild("ctrlandhud").getChild("roundtwop2").getEntity();
+    p2round2 = stageWrapper.getChild("ctrlandhud").getChild("roundtwop2").getEntity();
     p2round2.getComponent(TransformComponent.class).originX -= p2round2.getComponent(TransformComponent.class).originX
       / 2;
     p2round2.getComponent(TransformComponent.class).originY -= p2round2.getComponent(TransformComponent.class).originY
@@ -984,15 +865,14 @@ public class SPFZStage extends Stage
       + p2round2.getComponent(TransformComponent.class).originX / 2);
     p2round2.getComponent(TransformComponent.class).y += p2round2.getComponent(TransformComponent.class).originY / 2;
 
-    roundtext = access.root.getChild("ctrlandhud").getChild("roundtext").getEntity();
+    roundtext = stageWrapper.getChild("ctrlandhud").getChild("roundtext").getEntity();
 
     Actions.addAction(roundtext, Actions.fadeOut(.01f));
   }
 
-  public void timer()
-  {
-    Entity tenths = access.root.getChild("ctrlandhud").getChild("timeranim").getChild("tenths").getEntity();
-    Entity ones = access.root.getChild("ctrlandhud").getChild("timeranim").getChild("ones").getEntity();
+  public void timer() {
+    Entity tenths = stageWrapper.getChild("ctrlandhud").getChild("timeranim").getChild("tenths").getEntity();
+    Entity ones = stageWrapper.getChild("ctrlandhud").getChild("timeranim").getChild("ones").getEntity();
 
     int tempten = (timeleft % 100) / 10;
     int tempone = timeleft % 10;
@@ -1002,12 +882,12 @@ public class SPFZStage extends Stage
     {
       setneut = false;
       timeElapsed = (System.currentTimeMillis() - time) / 1000;
-      timeleft = (int) (optime - timeElapsed);
+      timeleft = (int) (roundTime - timeElapsed);
 
       // Double time is correct. Need to figure out way to translate it into the
       // timer
       tedbl = ((System.currentTimeMillis() - (long) time) / 1000.0);
-      timeleftdbl = (double) optime - tedbl;
+      timeleftdbl = (double) roundTime - tedbl;
 
       tenths.getComponent(SpriteAnimationStateComponent.class).paused = false;
       ones.getComponent(SpriteAnimationStateComponent.class).paused = false;
@@ -1079,51 +959,50 @@ public class SPFZStage extends Stage
     startp2 = p2health;
 
 
+    stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+      .add(new LifeTextureComponent(health1, outline1, startp1, stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("healthout1").getEntity(), true));
 
-    access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-      .add(new LifeTextureComponent(health1, outline1, startp1, access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
-        access.root.getChild("ctrlandhud").getChild("healthout1").getEntity(), true));
-
-    access.root.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+    stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
       .add(new LifeTextureComponent(health2, outline2, startp2,
-        access.root.getChild("ctrlandhud").getChild("healthcheck2").getEntity(),
-        access.root.getChild("ctrlandhud").getChild("healthout2").getEntity(), false));
+        stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("healthout2").getEntity(), false));
 
-    access.root.getChild("ctrlandhud").getChild("supbarone").getEntity()
+    stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
       .add(new SpecialTexComponent(specmeter1, exdots1, superout1, 0,
-        access.root.getChild("ctrlandhud").getChild("supbarone").getEntity(),
-        access.root.getChild("ctrlandhud").getChild("fillone").getEntity(),
-        access.root.getChild("ctrlandhud").getChild("sprmtrone").getEntity(), true));
+        stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("fillone").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("sprmtrone").getEntity(), true));
 
-    access.root.getChild("ctrlandhud").getChild("supbartwo").getEntity()
+    stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity()
       .add(new SpecialTexComponent(specmeter2, exdots2, superout2, 0,
-        access.root.getChild("ctrlandhud").getChild("supbartwo").getEntity(),
-        access.root.getChild("ctrlandhud").getChild("filltwo").getEntity(),
-        access.root.getChild("ctrlandhud").getChild("sprmtrtwo").getEntity(), false));
+        stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("filltwo").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("sprmtrtwo").getEntity(), false));
 
-    Entity healthreg = access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity();
+    Entity healthreg = stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity();
 
-   /* p1HPpercent = access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+   /* p1HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
       .getComponent(LifeTextureComponent.class).width;
 
-    p2HPpercent = access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+    p2HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
       .getComponent(LifeTextureComponent.class).width;
 
-    begpercent = access.root.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+    begpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
       .getComponent(LifeTextureComponent.class).width;*/
-   /*p1HPpercent = access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+   /*p1HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
       .getComponent(DimensionsComponent.class).width;
 
-    p2HPpercent = access.root.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+    p2HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
             .getComponent(DimensionsComponent.class).width;
 
-    begpercent = access.root.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+    begpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
             .getComponent(DimensionsComponent.class).width;*/
    p1HPpercent = healthreg.getComponent(LifeTextureComponent.class).width;
    p2HPpercent = healthreg.getComponent(LifeTextureComponent.class).width;
    begpercent = healthreg.getComponent(LifeTextureComponent.class).width;
 
-    begsuperpct = access.root.getChild("ctrlandhud").getChild("supbarone").getEntity()
+    begsuperpct = stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
       .getComponent(SpecialTexComponent.class).width;
 
     access.update(access.view).engine.addSystem(lifesystem);
@@ -1184,33 +1063,33 @@ public class SPFZStage extends Stage
     // Collision boxes that will process the health as well as other
     // functionalities
     // when dealing with hitboxes
-    if (access.root.getChild("p1hit").getChild("p1confirm").getEntity()
+    if (stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity()
       .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
     {
-      if (access.root.getChild("p1hit").getChild("p1confirm").getEntity()
+      if (stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity()
         .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete())
       {
-        access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).x = 0;
-        access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).y = -20f;
+        stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).x = 0;
+        stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).y = -20f;
 
-        access.root.getChild("p1hit").getChild("p1confirm").getEntity()
+        stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity()
           .getComponent(SPFZParticleComponent.class).pooledeffects
-          .removeValue(access.root.getChild("p1hit").getChild("p1confirm").getEntity()
+          .removeValue(stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity()
             .getComponent(SPFZParticleComponent.class).pooledeffects.get(0), true);
 
       }
     }
-    if (access.root.getChild("p2hit").getChild("p2confirm").getEntity()
+    if (stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
       .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
     {
-      if (access.root.getChild("p2hit").getChild("p2confirm").getEntity()
+      if (stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
         .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete())
       {
-        access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).x = 0;
-        access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).y = -20f;
-        access.root.getChild("p2hit").getChild("p2confirm").getEntity()
+        stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).x = 0;
+        stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).y = -20f;
+        stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
           .getComponent(SPFZParticleComponent.class).pooledeffects
-          .removeValue(access.root.getChild("p2hit").getChild("p2confirm").getEntity()
+          .removeValue(stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
             .getComponent(SPFZParticleComponent.class).pooledeffects.get(0), true);
 
       }
@@ -1282,28 +1161,28 @@ public class SPFZStage extends Stage
         }
 
         //Set particle effects to appropriate scaling based on hitboxsize that the opponent was attacked by
-        access.root.getChild("p1hit").getChild("p1confirm").getEntity()
+        stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity()
           .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-        access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp1move.hitboxsize.y / 50f) * tempflip;
-        access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleY =
+        stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp1move.hitboxsize.y / 50f) * tempflip;
+        stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleY =
           (spfzp1move.hitboxsize.y / 50f) * tempflip;
 
 
-        access.root.getChild("p1block").getChild("p1bconfirm").getEntity()
+        stageWrapper.getChild("p1block").getChild("p1bconfirm").getEntity()
           .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-        access.root.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp1move.hitboxsize.y / 50f) * tempflip;
-        access.root.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleY = (spfzp1move.hitboxsize.y / 50f) * tempflip;
+        stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp1move.hitboxsize.y / 50f) * tempflip;
+        stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleY = (spfzp1move.hitboxsize.y / 50f) * tempflip;
 
         if (spfzp1move.attributes().y > spfzp1move.charGROUND())
         {
-          access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
-          access.root.getChild("p1block").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
+          stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
+          stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
 
         }
         else
         {
-          access.root.getChild("p1block").getEntity().getComponent(TransformComponent.class).rotation = 0;
-          access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).rotation = 0;
+          stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).rotation = 0;
+          stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).rotation = 0;
         }
 
         // Set the positioning of the particle effects and handle hit events
@@ -1313,37 +1192,37 @@ public class SPFZStage extends Stage
           {
             if (spfzp1move.projectile.spfzattribute.scaleX > 0)
             {
-              access.root.getChild("p1hit").getEntity()
+              stageWrapper.getChild("p1hit").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 + spfzp1move.projectile.spfzdim.width;
             }
             else
             {
-              access.root.getChild("p1hit").getEntity()
+              stageWrapper.getChild("p1hit").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 - spfzp1move.projectile.spfzdim.width;
             }
 
-            access.root.getChild("p1hit").getEntity()
+            stageWrapper.getChild("p1hit").getEntity()
               .getComponent(TransformComponent.class).y = spfzp1move.projectile.spfzattribute.y
               + spfzp1move.projectile.spfzdim.height * .5f;
             spfzp1move.projectile.hit = false;
           }
           else
           {
-            access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
+            stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
 
-            access.root.getChild("p1hit").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
+            stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
           }
 
-          access.root.getChild("p1hit").getChild("p1confirm").getEntity().getComponent(SPFZParticleComponent.class)
+          stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity().getComponent(SPFZParticleComponent.class)
             .startEffect();
           // shake = true;
 
           if (!damagedealt)
           {
-            Entity Hit = access.root.getChild("ctrlandhud").getChild("p1himg").getEntity();
-            Entity cc = access.root.getChild("ctrlandhud").getChild("p1cc").getEntity();
+            Entity Hit = stageWrapper.getChild("ctrlandhud").getChild("p1himg").getEntity();
+            Entity cc = stageWrapper.getChild("ctrlandhud").getChild("p1cc").getEntity();
             spfzp2move.setcombonum(spfzp2move.combonum() + 1);
 
             // Hit.getComponent(TransformComponent.class).originY =
@@ -1359,11 +1238,11 @@ public class SPFZStage extends Stage
 
               }
 
-              Entity parent = access.root.getChild("ctrlandhud").getChild("p1cc").getEntity();
-              Entity p2cntTEN = access.root.getChild("ctrlandhud").getChild("p1cc").getChild("tenths").getEntity();
-              Entity p2cntONE = access.root.getChild("ctrlandhud").getChild("p1cc").getChild("ones").getEntity();
+              Entity parent = stageWrapper.getChild("ctrlandhud").getChild("p1cc").getEntity();
+              Entity p2cntTEN = stageWrapper.getChild("ctrlandhud").getChild("p1cc").getChild("tenths").getEntity();
+              Entity p2cntONE = stageWrapper.getChild("ctrlandhud").getChild("p1cc").getChild("ones").getEntity();
               LabelComponent combocount1;
-              combocount1 = access.root.getChild("ctrlandhud").getChild("combocount1").getEntity()
+              combocount1 = stageWrapper.getChild("ctrlandhud").getChild("combocount1").getEntity()
                 .getComponent(LabelComponent.class);
 
               // combocount1.setText(Integer.toString(spfzp2move.combonum()) + "
@@ -1403,18 +1282,18 @@ public class SPFZStage extends Stage
           {
             if (spfzp1move.projectile.spfzattribute.scaleX > 0)
             {
-              access.root.getChild("p1block").getEntity()
+              stageWrapper.getChild("p1block").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 + spfzp1move.projectile.spfzdim.width;
             }
             else
             {
-              access.root.getChild("p1block").getEntity()
+              stageWrapper.getChild("p1block").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 - spfzp1move.projectile.spfzdim.width;
             }
 
-            access.root.getChild("p1block").getEntity()
+            stageWrapper.getChild("p1block").getEntity()
               .getComponent(TransformComponent.class).y = spfzp1move.projectile.spfzattribute.y
               + spfzp1move.projectile.spfzdim.height * .5f;
             spfzp1move.projectile.hit = false;
@@ -1422,10 +1301,10 @@ public class SPFZStage extends Stage
           else
           {
 
-            access.root.getChild("p1block").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
-            access.root.getChild("p1block").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
+            stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
+            stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
           }
-          access.root.getChild("p1block").getChild("p1bconfirm").getEntity().getComponent(SPFZParticleComponent.class)
+          stageWrapper.getChild("p1block").getChild("p1bconfirm").getEntity().getComponent(SPFZParticleComponent.class)
             .startEffect();
           // shake = true;
         }
@@ -1474,29 +1353,29 @@ public class SPFZStage extends Stage
           tempflip = -1f;
         }
         //Set particle effects to appropriate scaling based on hitboxsize that the opponent was attacked by
-        access.root.getChild("p2hit").getChild("p2confirm").getEntity()
+        stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
           .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-        access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp2move.hitboxsize.y / 100f) * tempflip;
-        access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleY =
+        stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp2move.hitboxsize.y / 100f) * tempflip;
+        stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleY =
           (spfzp2move.hitboxsize.y / 100f) * tempflip;
 
 
-        access.root.getChild("p2block").getChild("p2bconfirm").getEntity()
+        stageWrapper.getChild("p2block").getChild("p2bconfirm").getEntity()
           .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-        access.root.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp2move.hitboxsize.y / 100f) * tempflip;
-        access.root.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleY =
+        stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp2move.hitboxsize.y / 100f) * tempflip;
+        stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleY =
           (spfzp2move.hitboxsize.y / 100f) * tempflip;
 
         if (spfzp2move.attributes().y > spfzp2move.charGROUND())
         {
-          access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
-          access.root.getChild("p2block").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
+          stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
+          stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
 
         }
         else
         {
-          access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).rotation = 0;
-          access.root.getChild("p2block").getEntity().getComponent(TransformComponent.class).rotation = 0;
+          stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).rotation = 0;
+          stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).rotation = 0;
         }
 
         // Set the positioning of the particle effects and handle hit events
@@ -1506,37 +1385,37 @@ public class SPFZStage extends Stage
           {
             if (spfzp1move.projectile.spfzattribute.scaleX > 0)
             {
-              access.root.getChild("p2hit").getEntity()
+              stageWrapper.getChild("p2hit").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 + spfzp1move.projectile.spfzdim.width;
             }
             else
             {
-              access.root.getChild("p2hit").getEntity()
+              stageWrapper.getChild("p2hit").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 - spfzp1move.projectile.spfzdim.width;
             }
 
-            access.root.getChild("p2hit").getEntity()
+            stageWrapper.getChild("p2hit").getEntity()
               .getComponent(TransformComponent.class).y = spfzp1move.projectile.spfzattribute.y
               + spfzp1move.projectile.spfzdim.height * .5f;
             spfzp1move.projectile.hit = false;
           }
           else
           {
-            access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
+            stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
 
-            access.root.getChild("p2hit").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
+            stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
           }
 
-          access.root.getChild("p2hit").getChild("p2confirm").getEntity().getComponent(SPFZParticleComponent.class)
+          stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity().getComponent(SPFZParticleComponent.class)
             .startEffect();
           // shake = true;
 
           if (!damagedealt)
           {
-            Entity Hit = access.root.getChild("ctrlandhud").getChild("p2himg").getEntity();
-            Entity cc = access.root.getChild("ctrlandhud").getChild("p2cc").getEntity();
+            Entity Hit = stageWrapper.getChild("ctrlandhud").getChild("p2himg").getEntity();
+            Entity cc = stageWrapper.getChild("ctrlandhud").getChild("p2cc").getEntity();
             spfzp2move.setcombonum(spfzp2move.combonum() + 1);
 
             // Hit.getComponent(TransformComponent.class).originY =
@@ -1553,11 +1432,11 @@ public class SPFZStage extends Stage
               }
 
               //handle combo counter
-              Entity parent = access.root.getChild("ctrlandhud").getChild("p2cc").getEntity();
-              Entity p2cntTEN = access.root.getChild("ctrlandhud").getChild("p2cc").getChild("tenths").getEntity();
-              Entity p2cntONE = access.root.getChild("ctrlandhud").getChild("p2cc").getChild("ones").getEntity();
+              Entity parent = stageWrapper.getChild("ctrlandhud").getChild("p2cc").getEntity();
+              Entity p2cntTEN = stageWrapper.getChild("ctrlandhud").getChild("p2cc").getChild("tenths").getEntity();
+              Entity p2cntONE = stageWrapper.getChild("ctrlandhud").getChild("p2cc").getChild("ones").getEntity();
               LabelComponent combocount2;
-              combocount2 = access.root.getChild("ctrlandhud").getChild("combocount2").getEntity()
+              combocount2 = stageWrapper.getChild("ctrlandhud").getChild("combocount2").getEntity()
                 .getComponent(LabelComponent.class);
 
 
@@ -1587,18 +1466,18 @@ public class SPFZStage extends Stage
           {
             if (spfzp1move.projectile.spfzattribute.scaleX > 0)
             {
-              access.root.getChild("p2block").getEntity()
+              stageWrapper.getChild("p2block").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 + spfzp1move.projectile.spfzdim.width;
             }
             else
             {
-              access.root.getChild("p2block").getEntity()
+              stageWrapper.getChild("p2block").getEntity()
                 .getComponent(TransformComponent.class).x = spfzp1move.projectile.spfzattribute.x
                 - spfzp1move.projectile.spfzdim.width;
             }
 
-            access.root.getChild("p2block").getEntity()
+            stageWrapper.getChild("p2block").getEntity()
               .getComponent(TransformComponent.class).y = spfzp1move.projectile.spfzattribute.y
               + spfzp1move.projectile.spfzdim.height * .5f;
             spfzp1move.projectile.hit = false;
@@ -1606,10 +1485,10 @@ public class SPFZStage extends Stage
           else
           {
 
-            access.root.getChild("p2block").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
-            access.root.getChild("p2block").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
+            stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).x = hitconfirm.x;
+            stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).y = hitconfirm.y;
           }
-          access.root.getChild("p2block").getChild("p2bconfirm").getEntity().getComponent(SPFZParticleComponent.class)
+          stageWrapper.getChild("p2block").getChild("p2bconfirm").getEntity().getComponent(SPFZParticleComponent.class)
             .startEffect();
         }
       }
@@ -1666,7 +1545,7 @@ public class SPFZStage extends Stage
     // animatenum(tens);
     // }
     animatecount(ones);
-    Entity Hit = access.root.getChild("ctrlandhud").getChild("p2himg").getEntity();
+    Entity Hit = stageWrapper.getChild("ctrlandhud").getChild("p2himg").getEntity();
     parent.getComponent(TransformComponent.class).y = Hit.getComponent(TransformComponent.class).y;
     // parent.getComponent(TransformComponent.class).y = holder1;
 
@@ -1749,7 +1628,7 @@ public class SPFZStage extends Stage
       {
         if (spfzp1move.dashdir == 0)
         {
-          if (cam.position.x <= camboundary[0] + 1 && spfzp2move.attributes().x <= stageboundary[0])
+          if (stageCamera.position.x <= camboundary[0] + 1 && spfzp2move.attributes().x <= stageboundary[0])
           {
             spfzp1move.attributes().x += 0f;
             spfzp2move.attributes().x += 0f;
@@ -1762,7 +1641,7 @@ public class SPFZStage extends Stage
         }
         else
         {
-          if (cam.position.x + 1 >= camboundary[1] && spfzp2move.attributes().x + 1 >= stageboundary[1])
+          if (stageCamera.position.x + 1 >= camboundary[1] && spfzp2move.attributes().x + 1 >= stageboundary[1])
           {
             spfzp1move.attributes().x += 0f;
             spfzp2move.attributes().x += 0f;
@@ -1913,7 +1792,7 @@ public class SPFZStage extends Stage
     else
     {
 
-      if (cam.position.x <= camboundary[0] + 1 && spfzp2move.attributes().x <= stageboundary[0])
+      if (stageCamera.position.x <= camboundary[0] + 1 && spfzp2move.attributes().x <= stageboundary[0])
       {
         spfzp1move.attributes().x += 0f;
       }
@@ -2059,7 +1938,7 @@ public class SPFZStage extends Stage
     else if (!spfzp2move.p2movement.get(0) && !spfzp2move.p2movement.get(1))
     {
 
-      if (cam.position.x + 1 >= camboundary[1] && spfzp2move.attributes().x + 1 >= stageboundary[1])
+      if (stageCamera.position.x + 1 >= camboundary[1] && spfzp2move.attributes().x + 1 >= stageboundary[1])
       {
         spfzp1move.attributes().x += 0f;
       }
@@ -2342,7 +2221,7 @@ public class SPFZStage extends Stage
   public void newcam()
   {
     Vector3 movecamera = new Vector3();
-    float[] bounds = {80, 560};
+    float[] bounds;
     float camX, camY;
     // "camX" will be placed between player one and player two. It will stop
     // whenever it has reached either the left
@@ -2385,7 +2264,7 @@ public class SPFZStage extends Stage
           ((OrthographicCamera) access.viewportland.getCamera()).zoom = 1f;
         }
       }
-      cam.position.lerp(movecamera, .3f);
+      stageCamera.position.lerp(movecamera, .3f);
       if (camcon == 3)
       {
         camcon = 0;
@@ -2467,13 +2346,13 @@ public class SPFZStage extends Stage
       float newx, newy = HALF_WORLDH;
       if (rand == 0)
       {
-        newx = cam.position.x + incrementx;
-        newy = cam.position.y + incrementy;
+        newx = stageCamera.position.x + incrementx;
+        newy = stageCamera.position.y + incrementy;
       }
       else
       {
-        newx = cam.position.x - incrementx;
-        newy = cam.position.y - incrementy;
+        newx = stageCamera.position.x - incrementx;
+        newy = stageCamera.position.y - incrementy;
       }
       if (newy < HALF_WORLDH)
       {
@@ -2487,7 +2366,7 @@ public class SPFZStage extends Stage
       // movecamera.set(newx, camY, 0);
       if(!spfzp1move.bouncer)
       {
-        cam.position.lerp(movecamera, 1f);
+        stageCamera.position.lerp(movecamera, 1f);
       }
     }
   }
@@ -2522,7 +2401,7 @@ public class SPFZStage extends Stage
         p1++;
         access.land.getEngine().removeEntity(p1c1);
         player1char2 = access.land.loadVoFromLibrary(characters.get(p1));
-        p1c2 = access.land.entityFactory.createEntity(access.root.getEntity(), player1char2);
+        p1c2 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player1char2);
         p1c2.getComponent(ZIndexComponent.class).layerIndex = 2;
         p1c2.getComponent(ZIndexComponent.class).setZIndex(4);
         p1c2.getComponent(MainItemComponent.class).itemIdentifier = characters.get(p1);
@@ -2535,7 +2414,7 @@ public class SPFZStage extends Stage
         p1++;
         access.land.getEngine().removeEntity(p1c2);
         player1char3 = access.land.loadVoFromLibrary(characters.get(p1));
-        p1c3 = access.land.entityFactory.createEntity(access.root.getEntity(), player1char3);
+        p1c3 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player1char3);
         p1c3.getComponent(ZIndexComponent.class).layerIndex = 2;
         p1c3.getComponent(ZIndexComponent.class).setZIndex(4);
         p1c3.getComponent(MainItemComponent.class).itemIdentifier = characters.get(p1);
@@ -2549,7 +2428,7 @@ public class SPFZStage extends Stage
         p1 = 0;
         access.land.getEngine().removeEntity(p1c3);
         player1char1 = access.land.loadVoFromLibrary(characters.get(p1));
-        p1c1 = access.land.entityFactory.createEntity(access.root.getEntity(), player1char1);
+        p1c1 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player1char1);
         p1c1.getComponent(ZIndexComponent.class).layerIndex = 2;
         p1c1.getComponent(ZIndexComponent.class).setZIndex(4);
         p1c1.getComponent(MainItemComponent.class).itemIdentifier = characters.get(p1);
@@ -2583,21 +2462,21 @@ public class SPFZStage extends Stage
 
     // Start swap particle effect
 
-    if (access.root.getChild("p1swap").getChild("swapp1").getEntity()
+    if (stageWrapper.getChild("p1swap").getChild("swapp1").getEntity()
       .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
     {
-      access.root.getChild("p1swap").getChild("swapp1").getEntity()
+      stageWrapper.getChild("p1swap").getChild("swapp1").getEntity()
         .getComponent(SPFZParticleComponent.class).pooledeffects
-        .removeValue(access.root.getChild("p1swap").getChild("swapp1").getEntity()
+        .removeValue(stageWrapper.getChild("p1swap").getChild("swapp1").getEntity()
           .getComponent(SPFZParticleComponent.class).pooledeffects.get(0), true);
     }
-    access.root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = spfzp1move.center();
-    access.root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = spfzp1move.attributes().y
+    stageWrapper.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = spfzp1move.center();
+    stageWrapper.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = spfzp1move.attributes().y
       + spfzp1move.setrect().height * .5f;
-    access.root.getChild("p1swap").getChild("swapp1").getEntity()
+    stageWrapper.getChild("p1swap").getChild("swapp1").getEntity()
       .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-    access.root.getChild("p1swap").getChild("swapp1").getEntity().getComponent(TransformComponent.class).scaleX = 1f;
-    access.root.getChild("p1swap").getChild("swapp1").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+    stageWrapper.getChild("p1swap").getChild("swapp1").getEntity().getComponent(TransformComponent.class).scaleX = 1f;
+    stageWrapper.getChild("p1swap").getChild("swapp1").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
     switchcount++;
     switchp1 = false;
 
@@ -2628,7 +2507,7 @@ public class SPFZStage extends Stage
           p2++;
           access.land.getEngine().removeEntity(p2c1);
           player2char2 = access.land.loadVoFromLibrary(characters.get(p2));
-          p2c2 = access.land.entityFactory.createEntity(access.root.getEntity(), player2char2);
+          p2c2 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player2char2);
           p2c2.getComponent(ZIndexComponent.class).layerIndex = 2;
           p2c2.getComponent(ZIndexComponent.class).setZIndex(4);
           access.land.entityFactory.initAllChildren(access.land.getEngine(), p2c2, player2char2.composite);
@@ -2647,7 +2526,7 @@ public class SPFZStage extends Stage
           p2++;
           access.land.getEngine().removeEntity(p2c2);
           player2char3 = access.land.loadVoFromLibrary(characters.get(p2));
-          p2c3 = access.land.entityFactory.createEntity(access.root.getEntity(), player2char3);
+          p2c3 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player2char3);
           p2c3.getComponent(ZIndexComponent.class).layerIndex = 2;
           p2c3.getComponent(ZIndexComponent.class).setZIndex(4);
           access.land.entityFactory.initAllChildren(access.land.getEngine(), p2c3, player2char3.composite);
@@ -2666,7 +2545,7 @@ public class SPFZStage extends Stage
           p2 = 3;
           access.land.getEngine().removeEntity(p2c3);
           player2char1 = access.land.loadVoFromLibrary(characters.get(p2));
-          p2c1 = access.land.entityFactory.createEntity(access.root.getEntity(), player2char1);
+          p2c1 = access.land.entityFactory.createEntity(stageWrapper.getEntity(), player2char1);
           p2c1.getComponent(ZIndexComponent.class).layerIndex = 2;
           p2c1.getComponent(ZIndexComponent.class).setZIndex(4);
           access.land.entityFactory.initAllChildren(access.land.getEngine(), p2c1, player2char1.composite);
@@ -2710,10 +2589,10 @@ public class SPFZStage extends Stage
       Entity fader;
       // LabelComponent timer;
       // fader =
-      // access.root.getChild("ctrlandhud").getChild("transition").getEntity();
-      fader = access.root.getChild("fader").getEntity();
+      // stageItemWrapper.getChild("ctrlandhud").getChild("transition").getEntity();
+      fader = stageWrapper.getChild("fader").getEntity();
       // timer =
-      // access.root.getChild("ctrlandhud").getChild("time").getEntity().getComponent(LabelComponent.class);
+      // stageItemWrapper.getChild("ctrlandhud").getChild("time").getEntity().getComponent(LabelComponent.class);
 
       eoround = false;
       resettimer();
@@ -2722,7 +2601,7 @@ public class SPFZStage extends Stage
 
       // reset clock back to the round time then trigger the timer for the
       // next round
-      timeleft = optime;
+      timeleft = roundTime;
       time = System.currentTimeMillis();
       // timer.setText(Integer.toString(timeleft));
       Actions.addAction(fader, Actions.run(new Runnable()
@@ -2760,9 +2639,9 @@ public class SPFZStage extends Stage
 
         }
       }));
-      access.root.getChild("ctrlandhud").getChild("pausebutton").getEntity()
+      stageWrapper.getChild("ctrlandhud").getChild("pausebutton").getEntity()
         .getComponent(TransformComponent.class).scaleX = 1f;
-      access.root.getChild("ctrlandhud").getChild("pausebutton").getEntity()
+      stageWrapper.getChild("ctrlandhud").getChild("pausebutton").getEntity()
         .getComponent(TransformComponent.class).scaleY = 0f;
 
       roundtextset();
@@ -2790,7 +2669,7 @@ public class SPFZStage extends Stage
   public void animateround(int roundcount)
   {
     Entity roundtext;
-    roundtext = access.root.getChild("ctrlandhud").getChild("roundtext").getEntity();
+    roundtext = stageWrapper.getChild("ctrlandhud").getChild("roundtext").getEntity();
     switch (roundcount)
     {
       case 1:
@@ -2911,120 +2790,12 @@ public class SPFZStage extends Stage
 
   }
 
-  public void roundtextset()
-  {
-    Entity roundtext = access.root.getChild("ctrlandhud").getChild("roundtext").getEntity();
-    ;
-    Entity roundimg = access.root.getChild("ctrlandhud").getChild("roundimg").getEntity();
-
-    Actions.addAction(roundimg, Actions.sequence(Actions.scaleTo(1f, 1f, .3f, Interpolation.elastic),
-      Actions.delay(.3f), Actions.scaleTo(1f, 0f, .3f, Interpolation.elastic)));
-
-    if (finishedrd && gameover)
-    {
-      if (p1rdcount == 2 && p2rdcount != 2)
-      {
-        if (access.isArcade)
-        {
-          roundtext.getComponent(LabelComponent.class).setText("YOU WIN");
-        }
-        else
-        {
-          roundtext.getComponent(LabelComponent.class).setText("PLAYER ONE WINS");
-        }
-      }
-      else if (p2rdcount == 2 && p1rdcount != 2)
-      {
-        if (access.isArcade)
-        {
-          roundtext.getComponent(LabelComponent.class).setText("YOU LOSE");
-        }
-        else
-        {
-          roundtext.getComponent(LabelComponent.class).setText("PLAYER TWO WINS");
-        }
-      }
-      else if (p1rdcount == 2 && p2rdcount == 2)
-      {
-        if (access.isArcade)
-        {
-          roundtext.getComponent(LabelComponent.class).setText("DRAW GAME\n YOU LOSE");
-        }
-        else
-        {
-          roundtext.getComponent(LabelComponent.class).setText("DRAW GAME");
-        }
-      }
-
-      Actions.addAction(roundtext, Actions.sequence(Actions.fadeIn(3f), Actions.run(new Runnable()
-      {
-
-        @Override
-        public void run()
-        {
-          access.paused = false;
-          // access.getscreenshot();
-          access.pause();
-
-        }
-      })));
-    }
-
-    else
-    {
-      Actions.addAction(roundtext,
-        Actions.sequence(Actions.fadeIn(1.5f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-        {
-
-          @Override
-          public void run()
-          {
-            // Entity roundtext =
-            // access.root.getChild("ctrlandhud").getChild("roundtext").getEntity();;
-
-            // Entity fightimg =
-            // access.root.getChild("ctrlandhud").getChild("fightimg").getEntity();
-
-            // Actions.addAction(fightimg,
-            // Actions.sequence(Actions.scaleTo(1f, 1f, .3f,
-            // Interpolation.elastic), Actions.delay(.5f), Actions.scaleTo(1f,
-            // 0f, .4f, Interpolation.elastic)));
-
-            // roundtext.getComponent(LabelComponent.class).setText("FIGHT");
-            // Actions.addAction(roundtext, Actions.fadeIn(.8f));
-
-          }
-
-        })));
-      Actions.addAction(roundimg, Actions.sequence(Actions.scaleTo(1f, 1f, .4f, Interpolation.elastic),
-        Actions.delay(1f), Actions.scaleTo(1f, 0f, .4f, Interpolation.elastic), Actions.run(new Runnable()
-        {
-
-          @Override
-          public void run()
-          {
-            // Entity roundtext =
-            // access.root.getChild("ctrlandhud").getChild("roundtext").getEntity();;
-
-            Entity fightimg = access.root.getChild("ctrlandhud").getChild("fightimg").getEntity();
-
-            Actions.addAction(fightimg, Actions.sequence(Actions.scaleTo(1f, 1f, .3f, Interpolation.elastic),
-              Actions.delay(.5f), Actions.scaleTo(1f, 0f, .4f, Interpolation.elastic)));
-
-            // roundtext.getComponent(LabelComponent.class).setText("FIGHT");
-            // Actions.addAction(roundtext, Actions.fadeIn(.8f));
-
-          }
-
-        })));
-    }
-  }
 
   public void p1round1()
   {
     Entity p1round1;
 
-    p1round1 = access.root.getChild("ctrlandhud").getChild("roundonep1").getEntity();
+    p1round1 = stageWrapper.getChild("ctrlandhud").getChild("roundonep1").getEntity();
 
     // if the player one percentage is greater than player 2's. Increment
     // Player 1's round count. else, opposite.
@@ -3036,22 +2807,20 @@ public class SPFZStage extends Stage
       {
 
         @Override
-        public void run()
-        {
+        public void run() {
           Entity fader;
           // fader =
-          // access.root.getChild("ctrlandhud").getChild("fader").getEntity();
-          fader = access.root.getChild("fader").getEntity();
+          // stageItemWrapper.getChild("ctrlandhud").getChild("fader").getEntity();
+          fader = stageWrapper.getChild("fader").getEntity();
           if (p2rdcount != 2)
           {
             Actions.addAction(fader, Actions.sequence(Actions.fadeIn(1f), Actions.run(new Runnable()
             {
 
               @Override
-              public void run()
-              {
+              public void run() {
                 Entity fader;
-                fader = access.root.getChild("fader").getEntity();
+                fader = stageWrapper.getChild("fader").getEntity();
 
                 finishedrd = true;
                 Actions.addAction(fader, Actions.fadeOut(1f));
@@ -3068,7 +2837,7 @@ public class SPFZStage extends Stage
   {
     Entity p2round1;
 
-    p2round1 = access.root.getChild("ctrlandhud").getChild("roundonep2").getEntity();
+    p2round1 = stageWrapper.getChild("ctrlandhud").getChild("roundonep2").getEntity();
 
     Actions.addAction(p2round1,
       Actions.sequence(Actions.parallel(Actions.rotateBy(-720, 1f),
@@ -3080,7 +2849,7 @@ public class SPFZStage extends Stage
         public void run()
         {
           Entity fader;
-          fader = access.root.getChild("fader").getEntity();
+          fader = stageWrapper.getChild("fader").getEntity();
           ;
           if (p1rdcount != 2)
           {
@@ -3091,7 +2860,7 @@ public class SPFZStage extends Stage
               public void run()
               {
                 Entity fader;
-                fader = access.root.getChild("fader").getEntity();
+                fader = stageWrapper.getChild("fader").getEntity();
 
                 finishedrd = true;
                 Actions.addAction(fader, Actions.fadeOut(1f));
@@ -3107,7 +2876,7 @@ public class SPFZStage extends Stage
   {
     Entity p1round2;
 
-    p1round2 = access.root.getChild("ctrlandhud").getChild("roundtwop1").getEntity();
+    p1round2 = stageWrapper.getChild("ctrlandhud").getChild("roundtwop1").getEntity();
 
     Actions.addAction(p1round2,
       Actions.sequence(Actions.parallel(Actions.rotateBy(720, 1f),
@@ -3128,7 +2897,7 @@ public class SPFZStage extends Stage
   {
     Entity p2round2;
 
-    p2round2 = access.root.getChild("ctrlandhud").getChild("roundtwop2").getEntity();
+    p2round2 = stageWrapper.getChild("ctrlandhud").getChild("roundtwop2").getEntity();
 
     Actions.addAction(p2round2,
       Actions.sequence(Actions.parallel(Actions.rotateBy(-720, 1f),
@@ -3220,35 +2989,6 @@ public class SPFZStage extends Stage
     }
   }
 
-  public void prefighttimer()
-  {
-
-    // This method contains the actions to perform at the beginning of each
-    // round
-    Timer.schedule(new Task()
-    {
-
-      @Override
-      public void run()
-      {
-        Entity pausebtn = access.root.getChild("ctrlandhud").getChild("pausebutton").getEntity();
-        Entity roundtext = access.root.getChild("ctrlandhud").getChild("roundtext").getEntity();
-
-        standby = false;
-        initcheck = true;
-        // check = 500;
-
-        pausebtn.getComponent(
-          TransformComponent.class).originY = pausebtn.getComponent(DimensionsComponent.class).height * .5f;
-        Actions.addAction(pausebtn, Actions.scaleTo(1f, 1f, .3f, Interpolation.circle));
-
-        timeleft = optime;
-        time = System.currentTimeMillis();
-        Actions.addAction(roundtext, Actions.fadeOut(.3f));
-
-      }
-    }, 3);
-  }
 
   public float p1percent()
   {
@@ -3268,7 +3008,6 @@ public class SPFZStage extends Stage
     access.stageback.dispose();
     // access.trc = null;
     access.testregion = null;
-    healthatl.dispose();
     health1.dispose();
     health2.dispose();
     specmeter1.dispose();
@@ -3282,8 +3021,6 @@ public class SPFZStage extends Stage
     access.land.engine.removeSystem(access.land.engine.getSystem(LifeSystem.class));
     access.land.engine.removeSystem(access.land.engine.getSystem(SpecialSystem.class));
 
-    characters = null;
-    charnames = null;
     // spfzp1move.dispose();
     // spfzp2move.dispose();
 
