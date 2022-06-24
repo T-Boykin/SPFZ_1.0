@@ -2,14 +2,12 @@ package com.dev.swapftrz;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.FPSLogger;
@@ -27,7 +25,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dev.swapftrz.device.AndroidInterfaceLIBGDX;
 import com.dev.swapftrz.menu.SPFZMenu;
@@ -40,7 +37,7 @@ import com.dev.swapftrz.resource.SPFZParticleDrawableLogic;
 import com.dev.swapftrz.resource.SPFZParticleSystem;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
-import com.dev.swapftrz.resource.SPFZStageSystem;
+import com.dev.swapftrz.stage.SPFZStageSystem;
 import com.dev.swapftrz.resource.SpecialSystem;
 import com.dev.swapftrz.stage.SPFZStage;
 import com.uwsoft.editor.renderer.components.ActionComponent;
@@ -49,7 +46,6 @@ import com.uwsoft.editor.renderer.components.MainItemComponent;
 import com.uwsoft.editor.renderer.components.TextureRegionComponent;
 import com.uwsoft.editor.renderer.components.TintComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
-import com.uwsoft.editor.renderer.components.additional.ButtonComponent;
 import com.uwsoft.editor.renderer.components.label.LabelComponent;
 import com.uwsoft.editor.renderer.data.CompositeItemVO;
 import com.uwsoft.editor.renderer.data.SimpleImageVO;
@@ -58,17 +54,9 @@ import com.uwsoft.editor.renderer.systems.action.data.ParallelData;
 import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
 
-import java.awt.image.BufferedImage;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
-import java.util.logging.Logger;
 
 public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor, GestureListener
 {
@@ -3152,12 +3140,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
           if (!slowtime)
           {
             slowtime = true;
-            stage.spfzp1move.animationstate().paused = true;
+            stage.spfzplayer1.animationstate().paused = true;
           }
           else
           {
             slowtime = false;
-            stage.spfzp1move.animationstate().paused = false;
+            stage.spfzplayer1.animationstate().paused = false;
           }
         }
       }
@@ -3727,11 +3715,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     short HALF_WORLDH = 200;
     short HALF_WORLDW = 320;
 
-    if (resourceManager.appDevice() == resourceManager.DESKTOP)
-    {
-      stage.controls();
-    }
-
     if (root.getChild("p1swap").getChild("swapp1").getEntity()
       .getComponent(SPFZParticleComponent.class).pooledeffects != null)
     {
@@ -3741,45 +3724,12 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
         if ((!root.getChild("p1swap").getChild("swapp1").getEntity()
           .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete()) && stage.strt1)
         {
-          root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = stage.spfzp1move.center();
-          root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = stage.spfzp1move.attributes().y
-            + stage.spfzp1move.dimensions().height / 2;
+          root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = stage.spfzplayer1.center();
+          root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = stage.spfzplayer1.attributes().y
+            + stage.spfzplayer1.dimensions().height / 2;
         }
       }
     }
-
-    stage.lifeandround();
-
-    stage.newcam();
-
-    root.getChild("ctrlandhud").getEntity()
-      .getComponent(TransformComponent.class).x = viewportland.getCamera().position.x - (HALF_WORLDW);
-
-    root.getChild("ctrlandhud").getEntity()
-      .getComponent(TransformComponent.class).y = viewportland.getCamera().position.y - (HALF_WORLDH);
-
-    viewportland.getCamera().update();
-
-    if (stage.arrscripts != null)
-    {
-      for (int i = 0; i < stage.arrscripts.size(); i++)
-      {
-        if (i == stage.p1 || i == stage.p2)
-        {
-          stage.collision(i);
-        }
-      }
-    }
-
-    if (stage.switchp1)
-    {
-      stage.switchp1();
-    }
-    if (stage.switchp2)
-    {
-      stage.switchp2();
-    }
-
   }
 
   public void readOut(final String file) {
@@ -4522,43 +4472,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     }
   }
 
-  public void Zoom(float targetzoom, float duration, float movex, float movey) {
-    // set current vals to process interpolation smoothly
-    zoompoint = ((OrthographicCamera) viewportland.getCamera()).zoom;
-    endzoom = targetzoom;
-    targetduration = startingduration = duration;
-
-    if (((OrthographicCamera) viewportland.getCamera()).zoom >= targetzoom && credpress
-      || ((OrthographicCamera) viewportland.getCamera()).zoom <= targetzoom && !credpress)
-    {
-      targetduration -= Gdx.graphics.getDeltaTime();
-      float progress = targetduration < 0 ? 1 : 1f - targetduration / startingduration;
-
-      ((OrthographicCamera) viewportland.getCamera()).zoom = Interpolation.pow3Out.apply(zoompoint, endzoom, progress);
-
-      viewportland.getCamera().position.x = Interpolation.pow3Out.apply(viewportland.getCamera().position.x, movex,
-        progress);
-      viewportland.getCamera().position.y = Interpolation.pow3Out.apply(viewportland.getCamera().position.y, movey,
-        progress);
-    }
-    else if (stage != null)
-    {
-      if (stage.p1charzoom || stage.p2charzoom)
-      {
-        targetduration -= Gdx.graphics.getDeltaTime();
-        float progress = targetduration < 0 ? 1 : 1f - targetduration / startingduration;
-
-        ((OrthographicCamera) viewportland.getCamera()).zoom = Interpolation.pow5Out.apply(zoompoint, endzoom,
-          progress);
-
-        viewportland.getCamera().position.x = Interpolation.pow5Out.apply(viewportland.getCamera().position.x, movex,
-          progress);
-        viewportland.getCamera().position.y = Interpolation.pow5Out.apply(viewportland.getCamera().position.y, movey,
-          progress);
-      }
-    }
-
-  }
 
   /**
    * Method returns SceneLoader based on Screen orientation

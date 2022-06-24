@@ -1,23 +1,28 @@
 package com.dev.swapftrz.fyter;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import com.badlogic.gdx.math.Rectangle;
 
-public class CharAttributes
+public class CharacterAttirbutes
 {
-    boolean charfound = false;
-    int health, player;
-    float gravity;
-    float jump;
-    float walkspeed;
-    float dash;
-    float pushback;
-    float stuntime;
+  boolean charfound = false;
+  private final int characterLimit = 3;
+  int health, player;
+  float gravity;
+  float jump;
+  float walkspeed;
+  float dash;
+  float pushback;
+  float stuntime;
     Rectangle chardims;
 
     List<ArrayList<Double>> tempplayer = new ArrayList<ArrayList<Double>>();
@@ -33,17 +38,16 @@ public class CharAttributes
     Vector2 wandj;
 
 
-    public CharAttributes(String character, int total)
+  public CharacterAttirbutes(String character, int total) {
+    Connection conn = null;
+
+    conn = dbconnect();
+
+    // Read the file that will contain the frame information
+    if (total != characterLimit)
     {
-        Connection conn = null;
-
-        conn = dbconnect();
-
-        // Read the file that will contain the frame information
-        if (total != 3)
-        {
-            tempplayer = getCharData(character, conn);
-        }
+      tempplayer = getCharData(character, conn);
+    }
     }
 
 

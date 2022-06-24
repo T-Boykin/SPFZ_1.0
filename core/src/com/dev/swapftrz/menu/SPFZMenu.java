@@ -3,6 +3,8 @@ package com.dev.swapftrz.menu;
 import com.dev.swapftrz.device.AndroidInterfaceLIBGDX;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 
+import java.util.List;
+
 public class SPFZMenu
 {
   private final SPFZMenuO2DMenuObjects menu_o2d;
@@ -113,4 +115,76 @@ public class SPFZMenu
   public int portScene() {
     return portScene;
   }
+
+  /*public void charspicked(List<String> sprites)
+  {
+    int keep = 0;
+    // for (int i = 0; i < sprites.size(); i++)
+    for (String sprite : sprites)
+    {
+
+      // Set ArrayLists to null for initialization
+      // Add a boolean to see if we are coming back from Stage Select
+
+      if (arrscripts.size() < 6)
+      {
+        arrscripts.add(null);
+        processed.add(null);
+      }
+
+      if (sprite == "spriteball")
+      {
+        picked = 0;
+      }
+      //if (sprite == "spriteballred")
+      if (sprite == "zaine")
+      {
+        picked = 1;
+      }
+      if (sprite == "spriteballblack")
+      {
+        picked = 2;
+      }
+      if (sprite == "spriteblock")
+      {
+        picked = 3;
+      }
+      if (sprite == "spritepurplex")
+      {
+        picked = 4;
+      }
+      if (sprite == "redblotch")
+      {
+        picked = 5;
+      }
+      if (sprite == "walksprite")
+      {
+        picked = 6;
+      }
+      // set the processed array based on the character picked in order to
+      // evaluate
+      // which character data is needed from CharAttributes class when an object
+      // of it's
+      // instance is initialized within SPFZ(P1/P2)Movement classes
+      processed.set(keep, picked);
+
+      // Assign the player one script to belong to the first 3 characters
+      // selected
+      if (keep <= 2)
+      {
+        arrscripts.set(keep, spfzPlayer1);
+      }
+      // Assign the player two script to belong to the last 3 characters
+      // selected
+      else
+      {
+        if (keep <= 5)
+        {
+          arrscripts.set(keep, spfzp2move);
+        }
+      }
+      keep++;
+    }*/
+}
+
 }

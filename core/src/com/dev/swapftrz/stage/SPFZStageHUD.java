@@ -4,12 +4,11 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Timer;
-import com.dev.swapftrz.menu.SPFZ_MAct;
+import com.dev.swapftrz.resource.LifeSystem;
 import com.dev.swapftrz.resource.SPFZO2DMethods;
 import com.dev.swapftrz.resource.SPFZResourceManager;
-import com.dev.swapftrz.resource.SPFZStageImagePack;
+import com.dev.swapftrz.resource.SpecialSystem;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TintComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
@@ -24,27 +23,31 @@ import java.util.List;
 
 class SPFZStageHUD extends SPFZO2DMethods
 {
-   SPFZStageImagePack stageImagePack = new SPFZStageImagePack();
-   SPFZResourceManager resManager;
-   SPFZStageO2DObjects stage_o2d;
-   ItemWrapper stageWrapper;
-   private List<LabelComponent> charnames = new ArrayList<LabelComponent>();
-   private Texture leftHealth,
-     leftHealthOutline,
-     leftSpecialMeter,
-     leftSpecialMeterOutline,
-     leftSpecialMeterDots,
-     rightHealth,
-     rightHealthOutline,
-     rightSpecialMeter,
-     rightSpecialMeterOutline,
+  private final SPFZStageImagePack stageImagePack = new SPFZStageImagePack();
+  private final SPFZStage stage;
+  private final SPFZResourceManager resManager;
+  private final SPFZStageO2DObjects stage_o2d;
+  private final ItemWrapper stageWrapper;
+  private final float roundTime;
+  private List<LabelComponent> charnames = new ArrayList<LabelComponent>();
+  private Texture leftHealth,
+    leftHealthOutline,
+    leftSpecialMeter,
+    leftSpecialMeterOutline,
+    leftSpecialMeterDots,
+    rightHealth,
+    rightHealthOutline,
+    rightSpecialMeter,
+    rightSpecialMeterOutline,
      rightSpecialMeterDots;
 
-   public SPFZStageHUD(SPFZResourceManager resManager) {
-      this.resManager = resManager;
-      stageWrapper = resManager.rootWrapper();
-      stage_o2d = new SPFZStageO2DObjects();
-   }
+  public SPFZStageHUD(SPFZStage stage, SPFZResourceManager resManager) {
+    this.resManager = resManager;
+    this.stage = stage;
+    stageWrapper = stage.stageWrapper();
+    stage_o2d = new SPFZStageO2DObjects();
+    roundTime = resManager.getRoundTimeSettings();
+  }
 
    public void createStageHUDTextures() {
       leftHealth = stageImagePack.getHealthTexture();
@@ -150,24 +153,102 @@ class SPFZStageHUD extends SPFZO2DMethods
       Runnable preFightFadeRunnable;
       Entity fader = stageWrapper.getChild(stage_o2d.fader()).getEntity();
 
-      preFightFadeRunnable = () -> {
-         Actions.addAction(fader, Actions.sequence(delayO2dObject(1f), fadeOutO2dObject(.3f, null), Actions.run(() -> {
-            roundtextset();
-            prefighttimer();
-         })));
-      };
+     preFightFadeRunnable = () -> {
+       Actions.addAction(fader, Actions.sequence(delayO2dObject(1f), fadeOutO2dObject(.3f, null), Actions.run(() -> {
+         roundtextset();
+         prefighttimer();
+       })));
+     };
 
-      preFightFadeRunnable.run();
+     preFightFadeRunnable.run();
    }
 
-   private void roundtextset() {
-      Entity roundtext = stageWrapper.getChild(stage_o2d.controllerHUD()).getChild(stage_o2d.roundtext()).getEntity();
-      Entity roundimg = stageWrapper.getChild(stage_o2d.controllerHUD()).getChild(stage_o2d.roundimg()).getEntity();
-      //TODO need to come back and finish this runnable
-      Runnable roundImageRunnable = () -> {
-         Actions.addAction(roundimg, scaleO2dObj(StageValues.roundimagescale(), StageValues.roundimagescale(),
-           1f, StageValues.roundimageduration(), Interpolation.elastic));
-      };
+  public void totalhealth() {
+    LifeSystem lifesystem = new LifeSystem(stage.getBatch(), stage.getCamera(),
+      stage);
+    SpecialSystem Specsystem = new SpecialSystem(stage.getBatch(), stage.getCamera(),
+      stage);
+
+    for (int i = 0; i < processed.size(); i++)
+    {
+      // CharAttributes healthgetter = new CharAttributes(null);
+
+      if (i < 3)
+      {
+        // p1health += healthgetter.getHealth();
+        p1health += 1000;
+      }
+      else
+      {
+        // p2health += healthgetter.getHealth();
+        p2health += 1000;
+      }
+    }
+
+    startp1 = p1health;
+    startp2 = p2health;
+
+
+    stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+      .add(new LifeTextureComponent(health1, outline1, startp1, stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("healthout1").getEntity(), true));
+
+    stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+      .add(new LifeTextureComponent(health2, outline2, startp2,
+        stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("healthout2").getEntity(), false));
+
+    stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
+      .add(new SpecialTexComponent(specmeter1, exdots1, superout1, 0,
+        stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("fillone").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("sprmtrone").getEntity(), true));
+
+    stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity()
+      .add(new SpecialTexComponent(specmeter2, exdots2, superout2, 0,
+        stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("filltwo").getEntity(),
+        stageWrapper.getChild("ctrlandhud").getChild("sprmtrtwo").getEntity(), false));
+
+    Entity healthreg = stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity();
+
+   /* p1HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+      .getComponent(LifeTextureComponent.class).width;
+
+    p2HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+      .getComponent(LifeTextureComponent.class).width;
+
+    begpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+      .getComponent(LifeTextureComponent.class).width;*/
+   /*p1HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+      .getComponent(DimensionsComponent.class).width;
+
+    p2HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+            .getComponent(DimensionsComponent.class).width;
+
+    begpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+            .getComponent(DimensionsComponent.class).width;*/
+    p1HPpercent = healthreg.getComponent(LifeTextureComponent.class).width;
+    p2HPpercent = healthreg.getComponent(LifeTextureComponent.class).width;
+    begpercent = healthreg.getComponent(LifeTextureComponent.class).width;
+
+    begsuperpct = stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
+      .getComponent(SpecialTexComponent.class).width;
+
+    stage.stageSSL().engine.addSystem(lifesystem);
+    lifesystem.priority = 50;
+    stage.stageSSL().engine.addSystem(Specsystem);
+    Specsystem.priority = 51;
+  }
+
+  private void roundtextset() {
+    Entity roundtext = stageWrapper.getChild(stage_o2d.controllerHUD()).getChild(stage_o2d.roundtext()).getEntity();
+    Entity roundimg = stageWrapper.getChild(stage_o2d.controllerHUD()).getChild(stage_o2d.roundimg()).getEntity();
+    //TODO need to come back and finish this runnable
+    Runnable roundImageRunnable = () -> {
+      Actions.addAction(roundimg, scaleO2dObj(StageValues.roundimagescale(), StageValues.roundimagescale(),
+        1f, StageValues.roundimageduration(), Interpolation.elastic));
+    };
 
       Actions.addAction(roundimg, Actions.scaleTo(1f, 0f, .3f, Interpolation.elastic));
 
@@ -287,13 +368,8 @@ class SPFZStageHUD extends SPFZO2DMethods
             pausebtn.getComponent(
               TransformComponent.class).originY = pausebtn.getComponent(DimensionsComponent.class).height * .5f;
             Actions.addAction(pausebtn, Actions.scaleTo(1f, 1f, .3f, Interpolation.circle));
-
-            timeleft = roundTime;
-            time = System.currentTimeMillis();
             Actions.addAction(roundtext, Actions.fadeOut(.3f));
-
          }
       }, 3);
    }
-
 }

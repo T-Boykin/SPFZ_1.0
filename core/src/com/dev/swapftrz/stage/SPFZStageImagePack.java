@@ -1,4 +1,4 @@
-package com.dev.swapftrz.resource;
+package com.dev.swapftrz.stage;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;

@@ -886,4 +886,22 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
 
     return spfzprefs.getFloat("time");
   }
+
+  public float getStageGround() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("stage_ground");
+  }
+
+  public float getStageStartSpacing() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("start_space");
+  }
+
+  public float getWallJumpBoundary() {
+    Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
+
+    return spfzprefs.getFloat("walljumpbound");
+  }
 }
