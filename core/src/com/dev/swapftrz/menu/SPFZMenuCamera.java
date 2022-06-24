@@ -1,7 +1,10 @@
 package com.dev.swapftrz.menu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dev.swapftrz.resource.SPFZResourceManager;
@@ -14,6 +17,10 @@ public class SPFZMenuCamera extends Camera
   private float WORLD_WIDTH, WORLD_HEIGHT;
   private Viewport viewport;
   private SPFZResourceManager resManager;
+
+  Vector3 credits = new Vector3(320, 400 + (int) (400 * .5), 0), tomenu = new Vector3(320, 400 * .5f, 0),
+    termov = new Vector3(160f, 700f, 0), treymov = new Vector3(480f, 700f, 0), migmov = new Vector3(160f, 500f, 0),
+    mikmov = new Vector3(480f, 500f, 0), credmov = new Vector3(320f, 600f, 0), move = new Vector3(0, 0, 0);
 
   public SPFZMenuCamera(SPFZResourceManager resManager) {
     WORLD_WIDTH = resManager.getWorldWidth();
@@ -53,4 +60,88 @@ public class SPFZMenuCamera extends Camera
   public void update(boolean updateFrustum) {
 
   }
+
+  /**
+   * method performs action when the user swipes up or down
+   */
+  public void swipecheck() {
+    if (!optionsup)
+    {
+      if (flingup)
+      {
+        if (viewportland.getCamera().position.y == credits.y)
+        {
+          flingup = false;
+        }
+
+        viewportland.getCamera().position.lerp(credits, 0.2f);
+
+      }
+      if (flingdown)
+      {
+        if (viewportland.getCamera().position.y == tomenu.y)
+        {
+          flingdown = false;
+        }
+
+        viewportland.getCamera().position.lerp(tomenu, 0.2f);
+        if (((OrthographicCamera) viewportland.getCamera()).zoom != ZOOMCOUT)
+        {
+          ((OrthographicCamera) viewportland.getCamera()).zoom = ZOOMCOUT;
+        }
+      }
+    }
+  }
+
+  public void creditprocessing() {
+    controlCredits();
+    if (flingup && ((OrthographicCamera) viewportland.getCamera()).position.y >= credits.y - 1)
+    {
+      flingup = false;
+      flingdown = false;
+    }
+    if (flingdown && ((OrthographicCamera) viewportland.getCamera()).position.y <= tomenu.y + 1)
+    {
+      flingdown = false;
+      flingup = false;
+
+    }
+    if (credpress)
+    {
+      if (flingdown || flingup)
+      {
+        credpress = false;
+      }
+      else
+      {
+        // Zoom into credits, passing in the distance of zoom, time it should
+        // take, and the positioning of the camera
+        Zoom(ZOOMCIN, ZOOMCIDUR, move.x, move.y);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
+        {
+          processback();
+        }
+      }
+    }
+    else
+    {
+      if (((OrthographicCamera) viewportland.getCamera()).zoom != ZOOMCOUT && !flingdown && !flingup
+        && viewportland.getCamera().position.y >= tomenu.y)
+      {
+        // Zoom out, passing in the distance of zoom, time it should take, and
+        // the positioning of the camera
+        Zoom(ZOOMCOUT, ZOOMCODUR, credits.x, credits.y);
+      }
+    }
+
+    if (Gdx.input.isKeyJustPressed(Input.Keys.BACK))
+    {
+      if (stage == null)
+      {
+        processback();
+      }
+    }
+  }
+
 }

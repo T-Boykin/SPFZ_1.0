@@ -635,4 +635,27 @@ class SPFZFyterAnimation
 
   }
 
+  //Swap particle effect - may go into a Particle Class?
+  if(root.getChild("p1swap").
+
+  getChild("swapp1").
+
+  getEntity()
+      .
+
+  getComponent(SPFZParticleComponent .class).pooledeffects !=null)
+
+  {
+    if (root.getChild("p1swap").getChild("swapp1").getEntity()
+      .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
+    {
+      if ((!root.getChild("p1swap").getChild("swapp1").getEntity()
+        .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete()) && stage.strt1)
+      {
+        root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = stage.spfzplayer1.center();
+        root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = stage.spfzplayer1.attributes().y
+          + stage.spfzplayer1.dimensions().height / 2;
+      }
+    }
+  }
 }
