@@ -1,13 +1,19 @@
 package com.dev.swapftrz.menu;
 
 import com.badlogic.ashley.core.ComponentMapper;
+import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.dev.swapftrz.resource.SPFZO2DMethods;
+import com.dev.swapftrz.resource.SPFZParticleComponent;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
 import com.uwsoft.editor.renderer.components.ActionComponent;
+import com.uwsoft.editor.renderer.components.DimensionsComponent;
+import com.uwsoft.editor.renderer.components.TintComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
+import com.uwsoft.editor.renderer.components.label.LabelComponent;
 import com.uwsoft.editor.renderer.systems.action.Actions;
 import com.uwsoft.editor.renderer.systems.action.data.ActionData;
 import com.uwsoft.editor.renderer.systems.action.data.MoveByData;
@@ -501,5 +507,229 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
       moveToAndScaleO2dObj(0, 0, SPFZ_MAct.NORMAL_SCALE, SPFZ_MAct.NORMAL_SCALE,
         0, SPFZ_MAct.OPTION_MOVE_TIME, null, null);
     };
+  }
+
+  /**
+   * method runs credit process every 5 seconds
+   */
+  public void controlCredits() {
+
+    if (resourceManager.currentScene() == "landscene" || view == "portrait")
+    {
+      //banner logic meshed with fade credits
+      if ((System.currentTimeMillis() - credittime) * .001f >= 10)
+      {
+        fadeCredit();
+        credittime = System.currentTimeMillis();
+        System.out.println("fade in credits");
+      }
+
+
+    }
+  }
+
+  public void controlLights() {
+    TransformComponent lighttranscomp = root.getChild("mainlight").getEntity().getComponent(TransformComponent.class);
+    if (resourceManager.currentScene() == "landscene")
+    {
+      if (lighttranscomp.x >= 160f && moveright)
+      {
+        lighttranscomp.x += .5f;
+
+        if (lighttranscomp.x >= 480f)
+        {
+          moveright = false;
+        }
+      }
+      if (lighttranscomp.x <= 480f && !moveright)
+      {
+        lighttranscomp.x -= .5f;
+
+        if (lighttranscomp.x <= 160f)
+        {
+          moveright = true;
+        }
+      }
+    }
+
+  }
+
+  /**
+   * method fades the credits and arrows in and out
+   */
+  public void fadeCredit() {
+    String[] cdtcomponents = {"swypefrmbtm", "swypefrmtop"};
+
+    // move the credit text and arrows downwards
+    if (resourceManager.currentScene().equals("landscene"))
+    {
+      // move the credit text and arrows downwards
+      Actions.addAction(root.getChild(cdtcomponents[1]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
+        Actions.parallel(Actions.moveBy(0, -20f, 1f), Actions.fadeOut(1f)), Actions.moveBy(0, 20f, .01f)));
+
+      // move the credit text and arrows upwards
+      Actions.addAction(root.getChild(cdtcomponents[0]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
+        Actions.parallel(Actions.moveBy(0, 20f, 1f), Actions.fadeOut(1f)), Actions.moveBy(0, -20f, .01f)));
+
+      /*for (int i = 1; i < cdtcomponents.length - 3; i++)
+      {
+        Actions.addAction(root.getChild(cdtcomponents[i]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
+          Actions.parallel(Actions.moveBy(0, -20f, .5f), Actions.fadeOut(.5f)), Actions.moveBy(0, 20f, .01f)));
+      }
+
+      // move the to menu text and arrows upwards
+      for (int i = 2; i < cdtcomponents.length; i++)
+      {
+        Actions.addAction(root.getChild(cdtcomponents[i]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
+          Actions.parallel(Actions.moveBy(0, 20f, .5f), Actions.fadeOut(.5f)), Actions.moveBy(0, -20f, .01f)));
+      }*/
+
+      if (!credpress)
+      {
+        Actions.addAction(root.getChild("meconst").getChild("medraw").getEntity(),
+          Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
+      }
+
+    }
+    if (view == "portrait")
+    {
+
+      Actions.addAction(root.getChild("tocreditsone").getEntity(),
+        Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
+      Actions.addAction(root.getChild("tocreditstwo").getEntity(),
+        Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
+    }
+  }
+
+  /**
+   * Method adds the sprites to the character select screen
+   */
+  public void setcharsprites(String string, String button) {
+    String MAIN_LAYER = "Default";
+
+    for (int i = 0; i < charsselected.size(); i++)
+    {
+      // Check allows the same character to be selected on each side.
+      if (charsselected.get(i) == string && charsselected.get(2) == null || i >= 3 && charsselected.get(i) == string)
+      {
+        i = 6;
+        charpicked = true;
+      }
+      else
+      {
+
+        character = string;
+        if (charsselected.get(i) == null)
+        {
+
+          if (!charpicked)
+          {
+            charsselected.set(i, string);
+            charcomposites.set(i, update(view).loadVoFromLibrary(charsselected.get(i)));
+            charcomposites.set(i, update(view).loadVoFromLibrary(charsselected.get(i))).layerName = MAIN_LAYER;
+
+            // second half of character processing is commented out here but
+            // executes within the
+            // loadslot() method. The method executes when the character slot
+            // particle is finished
+
+            // charentities.set(i,
+            // update(view).entityFactory.createEntity(root.getEntity(),
+            // charcomposites.get(slot)));
+            // update(view).entityFactory.initAllChildren(update(view).getEngine(),
+            // charentities.get(i),
+            // charcomposites.get(i).composite);
+
+
+            switch (i)
+            {
+              case 0:
+                root.getChild("charonelbl").getEntity().getComponent(LabelComponent.class).setText(string);
+                root.getChild("charonelbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
+                root.getChild("firstcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
+                root.getChild("firstcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+                partstartone = true;
+                break;
+              case 1:
+                root.getChild("chartwolbl").getEntity().getComponent(LabelComponent.class).setText(string);
+                root.getChild("chartwolbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
+                root.getChild("secondcharpart").getEntity()
+                  .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
+                root.getChild("secondcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+                partstarttwo = true;
+                break;
+              case 2:
+                root.getChild("charthreelbl").getEntity().getComponent(LabelComponent.class).setText(string);
+                root.getChild("thirdcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
+                root.getChild("thirdcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+
+                root.getChild("charonelbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
+                root.getChild("chartwolbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
+
+                root.getChild("playerlbl").getEntity().getComponent(TintComponent.class).color = Color.RED;
+                partstartthree = true;
+                break;
+              case 3:
+                root.getChild("charfourlbl").getEntity().getComponent(LabelComponent.class).setText(string);
+                root.getChild("charfourlbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
+                root.getChild("fourthcharpart").getEntity()
+                  .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
+                root.getChild("fourthcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+                partstartfour = true;
+                break;
+              case 4:
+                root.getChild("charfivelbl").getEntity().getComponent(LabelComponent.class).setText(string);
+                root.getChild("charfivelbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
+                root.getChild("fifthcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
+                root.getChild("fifthcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+                partstartfive = true;
+                break;
+              case 5:
+                root.getChild("charsixlbl").getEntity().getComponent(LabelComponent.class).setText(string);
+                root.getChild("sixthcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
+                root.getChild("sixthcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
+
+                root.getChild("charfourlbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
+                root.getChild("charfivelbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
+                root.getChild("cpulbl").getEntity().getComponent(TintComponent.class).color = Color.BLUE;
+                partstartsix = true;
+                break;
+              default:
+                break;
+
+            }
+
+            i = 6;
+
+            animsel(root.getChild("charobject").getChild(button).getEntity());
+
+          }
+        }
+      }
+    }
+  }
+
+  public void animsel(Entity entity) {
+    float DURATION = .1f;
+    float scaleY = .43f;
+    TransformComponent transform = new TransformComponent();
+    DimensionsComponent dimension = new DimensionsComponent();
+    ComponentMapper<TransformComponent> tc = ComponentMapper.getFor(TransformComponent.class);
+    ComponentMapper<DimensionsComponent> dc = ComponentMapper.getFor(DimensionsComponent.class);
+    transform = tc.get(entity);
+    dimension = dc.get(entity);
+
+
+    float origX = transform.scaleX;
+    float origY = transform.scaleY;
+
+    float increase = origY + (origY * .5f);
+
+
+    Actions.addAction(entity,
+      Actions.sequence(Actions.parallel(Actions.scaleTo(origX, increase, DURATION, Interpolation.swing)),
+        Actions.scaleTo(origX, origY, DURATION, Interpolation.swing)));
+
+
   }
 }
