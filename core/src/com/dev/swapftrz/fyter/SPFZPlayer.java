@@ -1,20 +1,15 @@
 package com.dev.swapftrz.fyter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-
+import com.dev.swapftrz.stage.SPFZStage;
 import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.MainItemComponent;
@@ -31,22 +26,37 @@ import com.uwsoft.editor.renderer.systems.action.Actions;
 import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
 
-public class SPFZP1Movement implements IScript, Attribs, BufferandInput
-{
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-  boolean special, swap, hit, blk, dblk, dash, left, right, isJumping, jumpdir, attacking, attacked, confirm, walljump,
-    blocking, punchstuck, kickstuck, runscript, cancel, isRight, isLeft, isUp, isDown, isPunch, isKick, pushed,
+public class SPFZPlayer implements IScript, Attribs, BufferandInput
+{
+  public boolean isRight, isUp, isDown, isLeft, isPunch, isKick;
+
+  public boolean special, swap, hit, blk, dblk, dash, left, right, isJumping, jumpdir, attacking, attacked, confirm, walljump,
+    blocking, punchstuck, kickstuck, runscript, cancel, pushed,
     createbox, projact, pausefrm, inair, stwlk, ltstuck, ownatk, projhit, bouncer, wallb, invul;
 
-  CharAttributes spfzp1vals;
+  CharacterAttirbutes characterAttributes;
 
   SPFZStage stage;
   Vector2 walkandjump, dashpoints;
 
-  float stun, tempfdur, gravity, jumpspeed, walkspeed, dashspeed, tempspeed, tempdist, tempdur, pauseTime,
+  float ground, wallJumpBoundary, stun, tempfdur, gravity, jumpspeed, walkspeed, dashspeed, tempspeed, tempdist, tempdur,
+    pauseTime,
     stateTime = 0, intpush, spectime = 0, swaptime = 0, duration = .13f, distance = 1f, startpt, adjustX, adjustY;
 
-  int combocount, currentframe, buff, last, dashdir, lastcount, buffsize = 60, move, input, lastfps;
+  private SPFZPlayer opponent;
+  private float[] cameraBoundaries = {}, stageBoundaries = {};
+  private SPFZBuffer buffer;
+  private SPFZFyterAnimation spfzFyterAnimation;
+  private SPFZFyterCollision spfzFyterCollision;
+  private List<List<ArrayList<Double>>> characterData = new ArrayList<List<ArrayList<Double>>>();
+  private List<HashMap<String, int[]>> animations = new ArrayList<HashMap<String, int[]>>();
+  private List<ArrayList<String>> specials = new ArrayList<ArrayList<String>>();
+  private int currentCharacter;
+  int combocount, currentframe, buff, dashdir, lastcount, buffsize = 60, move, input, lastfps;
 
   int[] activeframes;
 
@@ -88,7 +98,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   ArrayList<int[]> inputs = new ArrayList<int[]>();
 
   List<Boolean> p1movement = new ArrayList<Boolean>(), lastp1movement = new ArrayList<Boolean>();
-  List<Integer> buffer = new ArrayList<Integer>(), last16 = new ArrayList<Integer>();
+  List<Integer> last16 = new ArrayList<Integer>();
 
   Entity spfzentity;
 
@@ -113,14 +123,52 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
   SPFZProjScript projectile;
 
-  public SPFZP1Movement(SPFZStage screen)
-  {
-    stage = screen;
+  public SPFZPlayer(SPFZStage stage) {
+    this.stage = stage;
+    ground = stage.ground();
+    wallJumpBoundary = stage.wallJumpBoundary();
+    cameraBoundaries = stage.cameraBoundaries();
+    stageBoundaries = stage.stageBoundaries();
+    spfzFyterAnimation = new SPFZFyterAnimation(this, stage, characterData, animations, specials);
+    spfzFyterCollision = new SPFZFyterCollision(this, stage.stageWrapper(), characterData, animations, specials);
+  }
+
+  public void setupcharacters(List<String> chars) {
+    // Entity p1c1;
+
+    // load the characters from the library
+    CompositeItemVO player1char1 = stage.stageSSL().loadVoFromLibrary(chars.get(0));
+    CompositeItemVO player2char1 = stage.stageSSL().loadVoFromLibrary(chars.get(3));
+
+    player1char1.zIndex = 4;
+    player2char1.zIndex = 4;
+
+    p1c1 = stage.stageSSL().entityFactory.createEntity(stage.stageWrapper().getEntity(), player1char1);
+    p2c1 = stage.stageSSL().entityFactory.createEntity(stage.stageWrapper().getEntity(), player2char1);
+
+    ItemWrapper playerone = new ItemWrapper(p1c1);
+    ItemWrapper playertwo = new ItemWrapper(p2c1);
+
+    stage.stageSSL().entityFactory.initAllChildren(stage.stageSSL().getEngine(), p1c1, player1char1.composite);
+    stage.stageSSL().entityFactory.initAllChildren(stage.stageSSL().getEngine(), p2c1, player2char1.composite);
+
+    p1c1.getComponent(MainItemComponent.class).itemIdentifier = chars.get(0);
+    p2c1.getComponent(MainItemComponent.class).itemIdentifier = chars.get(3);
+    stage.stageSSL().getEngine().addEntity(p1c1);
+    stage.stageSSL().getEngine().addEntity(p2c1);
+
+    p1 = 0;
+    p2 = 3;
+
+    playerone.addScript((IScript) arrscripts.get(p1));
+    playertwo.addScript((IScript) arrscripts.get(p2));
+
+    p1c1.getComponent(ZIndexComponent.class).setZIndex(4);
+    p2c1.getComponent(ZIndexComponent.class).setZIndex(4);
   }
 
   @Override
-  public void act(float delta)
-  {
+  public void act(float delta) {
     if (!stage.gameover)
     {
 
@@ -129,7 +177,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       stage.setface();
       if (createbox)
       {
-        createHitBox(stage.processed.get(stage.p1), spfzanimation.currentAnimation);
+        createHitBox(currentCharacter, spfzanimation.currentAnimation);
         createbox = false;
 
       }
@@ -164,7 +212,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   public void animation()
   {
 
-    if (spfzrect.y <= stage.GROUND)
+    if (spfzrect.y <= ground)
     {
       ground();
 
@@ -270,7 +318,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
         {
           attacking = false;
         }
-        if (spfzrect.y <= stage.GROUND)
+        if (spfzrect.y <= ground)
         {
           setneutral();
         }
@@ -287,8 +335,63 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
   }
 
-  public void inair()
-  {
+  //TODO still need to perform a check of which device is being used
+  public void controls() {
+    //TODO check the "stuck" logic. Seems to be timing based, simplify it.
+    isUp = Gdx.input.isKeyPressed(Input.Keys.UP);
+    isDown = Gdx.input.isKeyPressed(Input.Keys.DOWN);
+    isRight = Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+    isLeft = Gdx.input.isKeyPressed(Input.Keys.LEFT);
+    isPunch = Gdx.input.isKeyPressed(Input.Keys.Q); // can put the int eqivalent
+    isPunch = Gdx.input.isKeyPressed(Input.Keys.W);
+    /*if (Gdx.input.isKeyJustPressed(Keys.S) && spfzp1move.swap)
+    {
+      switchp1 = true;
+      switchcount = 0;
+    }
+    if (Gdx.input.isKeyJustPressed(Keys.P))
+    {
+      switchp2 = true;
+      switchcount = 0;
+      p2spec -= 100f;
+    }
+    if (Gdx.input.isKeyJustPressed(Keys.Z))
+    {
+      if (!shake)
+      {
+        shake = true;
+      }
+      else
+      {
+        shake = false;
+      }
+    }
+    if (Gdx.input.isKeyJustPressed(Keys.A))
+    {
+      if (!p1charzoom && !p2charzoom)
+        p1charzoom = true;
+      {
+      }
+      else
+      {
+        p1charzoom = false;
+      }
+    }*/
+
+   /*// if (Gdx.input.isKeyJustPressed(Keys.Q))
+   // {
+   //   if (!p1charzoom && !p2charzoom)
+      {
+        p2charzoom = true;
+      }
+      else
+      {
+        p2charzoom = false;
+      }
+    }*/
+  }
+
+  public void inair() {
     if (attacked && !attacking)
     {
       airatkedanim();
@@ -304,7 +407,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     }
     if(lastanim != spfzanimation.currentAnimation)
     {
-      spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+      spfzanimation.fps = characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation));
       lastfps = spfzanimation.fps;
     }
   }
@@ -325,7 +428,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     }
     if(lastanim != spfzanimation.currentAnimation)
     {
-      spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+      spfzanimation.fps = characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation));
       lastfps = spfzanimation.fps;
     }
   }
@@ -452,7 +555,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       ownatk = false;
     }
     // Check if player one is attacked
-    if (((Attribs) stage.arrscripts.get(stage.p2)).getboxconfirm() && !ownatk)
+    if (((Attribs) stage.arrscripts.get(opponent.currentCharacter)).getboxconfirm() && !ownatk)
     {
       // This combo counter is the combo counter for player 2
       hit = true;
@@ -466,7 +569,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       // }
       if (blocking)
       {
-        if (spfzrect.y == stage.GROUND)
+        if (spfzrect.y == ground)
         {
           if (isDown)
           {
@@ -523,7 +626,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       }
       if (stage.training)
       {
-        stage.p1health = stage.startp1;
+        currentCharacterhealth = stage.startp1;
       }
     }
     else
@@ -556,7 +659,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
         // pushback after hit
         if (spfzattribute.scaleX > 0)
         {
-          if (stage.cam.position.x <= stage.camboundary[0] + 1 && spfzrect.x <= stage.stageboundary[0])
+          if (stage.getStageCamera().position.x <= stageBoundaries[0] + 1 && spfzrect.x <= stageBoundaries[0])
           {
             spfzattribute.x -= pushback;
           }
@@ -568,7 +671,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
         // pushback if facing the opposite direction
         else
         {
-          if (stage.cam.position.x + 1 >= stage.camboundary[1] && spfzrect.x >= stage.stageboundary[1])
+          if (stage.getStageCamera().position.x + 1 >= cameraBoundaries[1] && spfzrect.x >= stageBoundaries[1])
           {
             spfzattribute.x += pushback;
           }
@@ -600,7 +703,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
       attacking = false;
       spfzanimation.currentAnimation = "IDLE";
-      spfzanimationstate.set(spfzanimation.frameRangeMap.get("IDLE"), spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation)), Animation.PlayMode.LOOP);
+      spfzanimationstate.set(spfzanimation.frameRangeMap.get("IDLE"), characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation)), Animation.PlayMode.LOOP);
       stateTime = 0;
     }
 
@@ -677,7 +780,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       cancel = false;
     }
     //spfzanimation.fps = 16;
-    if (!isDown && !isUp && (isLeft || isRight || dash) && spfzrect.y == stage.GROUND && !ltstuck)
+    if (!isDown && !isUp && (isLeft || isRight || dash) && spfzrect.y == ground && !ltstuck)
     {
 
       if (!stwlk)
@@ -691,7 +794,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
         if (!dash)
         {
           //spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
-          if (spfzrect.y <= stage.GROUND)
+          if (spfzrect.y <= ground)
           {
             // spfzanimation.currentAnimation = "movement";
             if (isLeft)
@@ -743,7 +846,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     {
       if (!dash)
       {
-        if (spfzrect.y <= stage.GROUND)
+        if (spfzrect.y <= ground)
         {
           if (stwlk)
           {
@@ -797,33 +900,32 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   {
 
     // If the player has reached the left bound facing right
-    if (spfzrect.x <= stage.cam.position.x - stage.HALF_WORLDW && spfzattribute.scaleX > 0)
+    if (spfzrect.x <= stage.getStageCamera().position.x - stage.HALF_WORLDW && spfzattribute.scaleX > 0)
     {
-      spfzattribute.x = stage.cam.position.x - charX() - stage.HALF_WORLDW;
+      spfzattribute.x = stage.getStageCamera().position.x - charX() - stage.HALF_WORLDW;
     }
     // If the player has reached the right bound facing right
-    else if (spfzrect.x + spfzrect.width >= stage.cam.position.x + stage.HALF_WORLDW && spfzattribute.scaleX > 0)
+    else if (spfzrect.x + spfzrect.width >= stage.getStageCamera().position.x + stage.HALF_WORLDW && spfzattribute.scaleX > 0)
     {
-      spfzattribute.x = stage.cam.position.x + stage.HALF_WORLDW - (spfzrect.width);
+      spfzattribute.x = stage.getStageCamera().position.x + stage.HALF_WORLDW - (spfzrect.width);
     }
 
     // If the player has reached the right bound facing left
-    if (spfzrect.x + spfzrect.width >= stage.cam.position.x + stage.HALF_WORLDW && spfzattribute.scaleX < 0)
+    if (spfzrect.x + spfzrect.width >= stage.getStageCamera().position.x + stage.HALF_WORLDW && spfzattribute.scaleX < 0)
     {
-      spfzattribute.x = stage.cam.position.x + stage.HALF_WORLDW - (spfzrect.width + charX());
+      spfzattribute.x = stage.getStageCamera().position.x + stage.HALF_WORLDW - (spfzrect.width + charX());
     }
 
     // If the player has reached the left bound facing left
-    else if (spfzrect.x - spfzrect.width <= stage.cam.position.x - stage.HALF_WORLDW && spfzattribute.scaleX < 0)
+    else if (spfzrect.x - spfzrect.width <= stage.getStageCamera().position.x - stage.HALF_WORLDW && spfzattribute.scaleX < 0)
     {
-      spfzattribute.x = stage.cam.position.x - stage.HALF_WORLDW + spfzrect.width;
+      spfzattribute.x = stage.getStageCamera().position.x - stage.HALF_WORLDW + spfzrect.width;
     }
 
   }
 
   @Override
-  public float center()
-  {
+  public float center() {
     return setrect().x + spfzrect.width * .5f;
   }
 
@@ -865,21 +967,21 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     posofhitbox.setZero();
     hitboxsize.setZero();
     float boxX;
-    float boxY = spfzattribute.y + stage.player1data.get(stage.p1).get(BOXY).get(move).floatValue();
+    float boxY = spfzattribute.y + characterData.get(currentCharacter).get(BOXY).get(move).floatValue();
     float sizeW;
     float sizeH;
 
     if(spfzattribute.scaleX > 0)
     {
-      boxX =  this.center() + stage.player1data.get(stage.p1).get(BOXX).get(move).floatValue();
-      sizeW = stage.player1data.get(stage.p1).get(BOXWIDTH).get(move).floatValue();
-      sizeH = stage.player1data.get(stage.p1).get(BOXHEIGHT).get(move).floatValue();
+      boxX = this.center() + characterData.get(currentCharacter).get(BOXX).get(move).floatValue();
+      sizeW = characterData.get(currentCharacter).get(BOXWIDTH).get(move).floatValue();
+      sizeH = characterData.get(currentCharacter).get(BOXHEIGHT).get(move).floatValue();
     }
     else
     {
-      boxX =  this.center() - stage.player1data.get(stage.p1).get(BOXX).get(move).floatValue() - stage.player1data.get(stage.p1).get(BOXWIDTH).get(move).floatValue();
-      sizeW = stage.player1data.get(stage.p1).get(BOXWIDTH).get(move).floatValue();
-      sizeH = stage.player1data.get(stage.p1).get(BOXHEIGHT).get(move).floatValue();
+      boxX = this.center() - characterData.get(currentCharacter).get(BOXX).get(move).floatValue() - characterData.get(currentCharacter).get(BOXWIDTH).get(move).floatValue();
+      sizeW = characterData.get(currentCharacter).get(BOXWIDTH).get(move).floatValue();
+      sizeH = characterData.get(currentCharacter).get(BOXHEIGHT).get(move).floatValue();
     }
     /*
      * New hitbox logic:
@@ -892,8 +994,8 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
      *
      */
 
-    activeframes[0] = stage.player1data.get(stage.p1).get(ACTSTARTBOX).get(move).intValue() - spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame;
-    activeframes[1] = stage.player1data.get(stage.p1).get(ACTENDBOX).get(move).intValue() - spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame;
+    activeframes[0] = characterData.get(currentCharacter).get(ACTSTARTBOX).get(move).intValue() - spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame;
+    activeframes[1] = characterData.get(currentCharacter).get(ACTENDBOX).get(move).intValue() - spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame;
 
     posofhitbox.x = boxX;
     posofhitbox.y = boxY + (spfzrect.y - boxY);
@@ -901,20 +1003,15 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     hitboxsize.y = sizeH;
 
 
-
   }
 
   @Override
-  public int currentframe()
-  {
-    //spfzanimationstate.currentAnimation.setFrameDuration(1/spfzanimation.fps);
+  public int currentframe() {
     return spfzanimationstate.currentAnimation.getKeyFrameIndex(stateTime);
   }
 
   @Override
-  public DimensionsComponent dimensions()
-  {
-
+  public DimensionsComponent dimensions() {
     return spfzdim;
   }
 
@@ -992,16 +1089,16 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   }
 
   @Override
-  public void init(Entity entity)
-  {
+  public void init(Entity entity) {
     ComponentMapper<MainItemComponent> mc = ComponentMapper.getFor(MainItemComponent.class);
+    characterAttributes = new CharacterAttirbutes(mc.get(entity).itemIdentifier, characterData.size());
+    buffer = new SPFZBuffer(this);
+    buffer.setSpecialMoveInputs(characterAttributes.inputs);
     mc.get(entity);
 
-    spfzp1vals = new CharAttributes(mc.get(entity).itemIdentifier, stage.player1data.size());
-
-    if (stage.player1data.size() != 3)
+    if (characterData.size() != 3)
     {
-      stage.player1data.add(spfzp1vals.tempplayer);
+      characterData.add(characterAttributes.tempplayer);
     }
 
     spfzsr = new ShapeRenderer();
@@ -1010,7 +1107,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     spfzdimbox = new ShapeRenderer();
 
     //spfzrect = new Rectangle();
-    spfzrect = new Rectangle(spfzp1vals.getCharDims());
+    spfzrect = new Rectangle(characterAttributes.getCharDims());
     adjustX = spfzrect.x;
     adjustY = spfzrect.y;
     spfzhitrect = new Rectangle();
@@ -1026,12 +1123,12 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     setanimations();
 
     // get the values of the character from the Character attributes class
-    gravity = spfzp1vals.getGravity();
-    jumpspeed = spfzp1vals.getJump();
-    walkspeed = spfzp1vals.getWalkspeed();
-    walkandjump = spfzp1vals.getWandj();
-    inputs = spfzp1vals.getmoveinputs();
-    dashspeed = spfzp1vals.getdashadv();
+    gravity = characterAttributes.getGravity();
+    jumpspeed = characterAttributes.getJump();
+    walkspeed = characterAttributes.getWalkspeed();
+    walkandjump = characterAttributes.getWandj();
+    inputs = characterAttributes.getmoveinputs();
+    dashspeed = characterAttributes.getdashadv();
     tempspeed = walkandjump.x;
 
 
@@ -1048,7 +1145,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   public void jumplogic(float delta)
   {
     // Apply gravity for spfzattribute calculations
-    if (setrect().y > stage.GROUND)
+    if (setrect().y > ground)
     {
       if (!spfzanimationstate.paused)
       {
@@ -1064,12 +1161,12 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
     if (isJumping)
     {
-      if (spfzrect.y > stage.GROUND)
+      if (spfzrect.y > ground)
       {
-        if (spfzrect.y > stage.GROUND + stage.WALLJRES
-          && (stage.cam.position.x <= stage.camboundary[0] + 1 || stage.cam.position.x + 1 >= stage.camboundary[1])
-          && ((spfzattribute.x + adjustX <= stage.stageboundary[0] && spfzattribute.scaleX > 0)
-          || spfzattribute.x - adjustX + 1 >= stage.stageboundary[1] && spfzattribute.scaleX < 0))
+        if (spfzrect.y > ground + wallJumpBoundary
+          && (stage.getStageCamera().position.x <= cameraBoundaries[0] + 1 || stage.getStageCamera().position.x + 1 >= cameraBoundaries[1])
+          && ((spfzattribute.x + adjustX <= stageBoundaries[0] && spfzattribute.scaleX > 0)
+          || spfzattribute.x - adjustX + 1 >= stageBoundaries[1] && spfzattribute.scaleX < 0))
         {
           if (isLeft && isUp && !isRight && spfzattribute.scaleX < 0
             || isRight && isUp && !isLeft && spfzattribute.scaleX > 0)
@@ -1079,7 +1176,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
             spfzattribute.y += walkandjump.y;
           }
         }
-        else if (spfzrect.y < stage.GROUND + stage.WALLJRES)
+        else if (spfzrect.y < ground + wallJumpBoundary)
         {
           walljump = false;
         }
@@ -1141,7 +1238,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
     // If spfzattribute has reached the boundary of the ground, set to the
     // boundary of the ground
-    if (spfzrect.y < stage.GROUND)
+    if (spfzrect.y < ground)
     {
 
       if (stage.access.root.getChild("p1land").getChild("landp1").getEntity()
@@ -1153,7 +1250,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
             .getComponent(SPFZParticleComponent.class).pooledeffects.get(0), true);
       }
       stage.access.root.getChild("p1land").getEntity().getComponent(TransformComponent.class).x = center();
-      stage.access.root.getChild("p1land").getEntity().getComponent(TransformComponent.class).y = stage.GROUND;
+      stage.access.root.getChild("p1land").getEntity().getComponent(TransformComponent.class).y = ground;
       stage.access.root.getChild("p1land").getChild("landp1").getEntity()
         .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
       stage.access.root.getChild("p1land").getChild("landp1").getEntity()
@@ -1179,19 +1276,19 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   }
   public float charGROUND()
   {
-    return stage.GROUND - (spfzrect.y - spfzattribute.y);
+    return ground - (spfzrect.y - spfzattribute.y);
   }
 
   public void kick()
   {
     spfzanimation.currentAnimation = null;
 
-    if (swap && stage.p1spec >= 100f)
+    if (swap && currentCharacterspec >= 100f)
     {
       // if height restriction or on ground allow,
-      if (spfzrect.y == stage.GROUND && projact || spfzrect.y >= stage.GROUND + 30f)
+      if (spfzrect.y == ground && projact || spfzrect.y >= ground + 30f)
       {
-        stage.switchp1 = true;
+        //stage.switchp1 = true;
         stage.sigp1lock = true;
         stage.switchcount = 0;
         swap = false;
@@ -1213,14 +1310,14 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
       if (spfzattribute.scaleX > 0)
       {
-        if (!special || spfzrect.y > stage.GROUND)
+        if (!special || spfzrect.y > ground)
         {
-          if (spfzrect.y == stage.GROUND)
+          if (spfzrect.y == ground)
           {
             if (isLeft)
             {
               input = 9;
-              if(isDown)
+              if (isDown)
               {
                 input = 3;
               }
@@ -1278,15 +1375,15 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       }
       else
       {
-        if (!special || spfzrect.y > stage.GROUND)
+        if (!special || spfzrect.y > ground)
         {
           // Ground Kicks
-          if (spfzrect.y == stage.GROUND)
+          if (spfzrect.y == ground)
           {
             if (isLeft)
             {
               input = 11;
-              if(isDown)
+              if (isDown)
               {
                 input = 5;
               }
@@ -1345,12 +1442,12 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
       attacking = true;
       // if the move is not null technically
-      move = spfzp1vals.moveset.indexOf(stage.normals[input]);
+      move = characterAttributes.moveset.indexOf(stage.normals[input]);
 
       if (move != -1)
       {
-        spfzanimation.currentAnimation = spfzp1vals.moveset.get(move);
-        spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation)),
+        spfzanimation.currentAnimation = characterAttributes.moveset.get(move);
+        spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation)),
           Animation.PlayMode.NORMAL);
         attackMove();
       }
@@ -1360,7 +1457,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     attacking = true;
     if (spfzanimation.currentAnimation != null)
     {
-      spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation)),
+      spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation)),
         Animation.PlayMode.NORMAL);
     }
   }
@@ -1371,91 +1468,90 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     return invul;
   }
 
-  public void attackMove()
-  {
+  public void attackMove() {
     //set the durations of the 3 stages of movement as well as the amount to push or pull the character.
     float strtupmov = 0;
     float actmov = 0;
     float recovmov = 0;
 
-    float firstdur = rtnFrametime(stage.player1data.get(stage.p1).get(ACTSTARTBOX).get(move).floatValue() - (float) spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame);
-    float seconddur = rtnFrametime(stage.player1data.get(stage.p1).get(ACTENDBOX).get(move).floatValue() - stage.player1data.get(stage.p1).get(ACTSTARTBOX).get(move).floatValue());
-    float thirddur = rtnFrametime(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).endFrame - stage.player1data.get(stage.p1).get(ACTENDBOX).get(move).floatValue());
+    float firstdur = rtnFrametime(characterData.get(currentCharacter).get(ACTSTARTBOX).get(move).floatValue() - (float) spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame);
+    float seconddur = rtnFrametime(characterData.get(currentCharacter).get(ACTENDBOX).get(move).floatValue() - characterData.get(currentCharacter).get(ACTSTARTBOX).get(move).floatValue());
+    float thirddur = rtnFrametime(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).endFrame - characterData.get(currentCharacter).get(ACTENDBOX).get(move).floatValue());
 
-    if (stage.player1data.get(stage.p1).get(BACK_START).get(move).doubleValue() == 1)
+    if (characterData.get(currentCharacter).get(BACK_START).get(move).doubleValue() == 1)
     {
-      strtupmov = stage.player1data.get(stage.p1).get(BMOVE).get(move).floatValue();
+      strtupmov = characterData.get(currentCharacter).get(BMOVE).get(move).floatValue();
 
-      if(spfzattribute.scaleX > 0)
+      if (spfzattribute.scaleX > 0)
       {
         strtupmov *= -1f;
       }
 
     }
-    if (stage.player1data.get(stage.p1).get(FWD_START).get(move).doubleValue() == 1)
+    if (characterData.get(currentCharacter).get(FWD_START).get(move).doubleValue() == 1)
     {
-      strtupmov = stage.player1data.get(stage.p1).get(FMOVE).get(move).floatValue();
+      strtupmov = characterData.get(currentCharacter).get(FMOVE).get(move).floatValue();
 
-      if(spfzattribute.scaleX < 0)
+      if (spfzattribute.scaleX < 0)
       {
         strtupmov *= -1f;
       }
     }
 
-    if (stage.player1data.get(stage.p1).get(BACK_START).get(move).doubleValue() == 0 &&
-            stage.player1data.get(stage.p1).get(FWD_START).get(move).doubleValue() == 0)
+    if (characterData.get(currentCharacter).get(BACK_START).get(move).doubleValue() == 0 &&
+      characterData.get(currentCharacter).get(FWD_START).get(move).doubleValue() == 0)
     {
       strtupmov = 0;
       //firstdur = 0;
     }
 
-    if (stage.player1data.get(stage.p1).get(BACK_ACTIVE).get(move).doubleValue() == 1)
+    if (characterData.get(currentCharacter).get(BACK_ACTIVE).get(move).doubleValue() == 1)
     {
-      actmov = stage.player1data.get(stage.p1).get(BMOVE).get(move).floatValue();
+      actmov = characterData.get(currentCharacter).get(BMOVE).get(move).floatValue();
 
-      if(spfzattribute.scaleX > 0)
+      if (spfzattribute.scaleX > 0)
       {
         actmov *= -1f;
       }
     }
-    if (stage.player1data.get(stage.p1).get(FWD_ACTIVE).get(move).doubleValue() == 1)
+    if (characterData.get(currentCharacter).get(FWD_ACTIVE).get(move).doubleValue() == 1)
     {
-      actmov = stage.player1data.get(stage.p1).get(FMOVE).get(move).floatValue();
+      actmov = characterData.get(currentCharacter).get(FMOVE).get(move).floatValue();
 
-      if(spfzattribute.scaleX < 0)
+      if (spfzattribute.scaleX < 0)
       {
         actmov *= -1f;
       }
     }
 
-    if (stage.player1data.get(stage.p1).get(BACK_ACTIVE).get(move).doubleValue() == 0 &&
-            stage.player1data.get(stage.p1).get(FWD_ACTIVE).get(move).doubleValue() == 0)
+    if (characterData.get(currentCharacter).get(BACK_ACTIVE).get(move).doubleValue() == 0 &&
+      characterData.get(currentCharacter).get(FWD_ACTIVE).get(move).doubleValue() == 0)
     {
       actmov = 0;
       //seconddur = 0;
     }
 
-    if (stage.player1data.get(stage.p1).get(BACK_RECOV).get(move).doubleValue() == 1)
+    if (characterData.get(currentCharacter).get(BACK_RECOV).get(move).doubleValue() == 1)
     {
-      recovmov = stage.player1data.get(stage.p1).get(BMOVE).get(move).floatValue();
+      recovmov = characterData.get(currentCharacter).get(BMOVE).get(move).floatValue();
 
-      if(spfzattribute.scaleX > 0)
+      if (spfzattribute.scaleX > 0)
       {
         recovmov *= -1f;
       }
     }
-    if (stage.player1data.get(stage.p1).get(FWD_RECOV).get(move).doubleValue() == 1)
+    if (characterData.get(currentCharacter).get(FWD_RECOV).get(move).doubleValue() == 1)
     {
-      recovmov = stage.player1data.get(stage.p1).get(FMOVE).get(move).floatValue();
+      recovmov = characterData.get(currentCharacter).get(FMOVE).get(move).floatValue();
 
-      if(spfzattribute.scaleX < 0)
+      if (spfzattribute.scaleX < 0)
       {
         recovmov *= -1f;
       }
     }
 
-    if (stage.player1data.get(stage.p1).get(BACK_RECOV).get(move).doubleValue() == 0 &&
-            stage.player1data.get(stage.p1).get(FWD_RECOV).get(move).doubleValue() == 0)
+    if (characterData.get(currentCharacter).get(BACK_RECOV).get(move).doubleValue() == 0 &&
+      characterData.get(currentCharacter).get(FWD_RECOV).get(move).doubleValue() == 0)
     {
       recovmov = 0;
       //thirddur = 0;
@@ -1463,15 +1559,15 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
     Actions.addAction(spfzentity,
       Actions.sequence(
-              Actions.moveBy(strtupmov, 0, firstdur, Interpolation.sineOut),
-              Actions.moveBy(actmov, 0, seconddur, Interpolation.sineOut),
-              Actions.moveBy(recovmov, 0, thirddur, Interpolation.sineOut)));
+        Actions.moveBy(strtupmov, 0, firstdur, Interpolation.sineOut),
+        Actions.moveBy(actmov, 0, seconddur, Interpolation.sineOut),
+        Actions.moveBy(recovmov, 0, thirddur, Interpolation.sineOut)));
     createbox = true;
   }
   public void left(float delta)
   {
     // If sprite is on the ground
-    if (spfzrect.y == stage.GROUND)
+    if (spfzrect.y == ground)
     {
       if (!stage.close)
       {
@@ -1493,7 +1589,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
   public void movement(float delta)
   {
-    storeinputs();
+    buffer.bufferUpdate();
 
     for (int i = 0; i < inputs.size(); i++)
     {
@@ -1510,7 +1606,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       }
     }
 
-    stage.p1xattr = spfzattribute.x;
+    currentCharacterxattr = spfzattribute.x;
 
     if (isLeft)
     {
@@ -1652,14 +1748,14 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
 
       if ((spfzanimation.currentAnimation == "BDASH" || spfzanimation.currentAnimation == "FDASH") ||
-        dash && spfzrect.y == stage.GROUND)
+        dash && spfzrect.y == ground)
       {
         float totalFrames = currTotalFrames();
         float totalFrmTime = rtnFrametime(totalFrames);
 
         float progress = stateTime / totalFrmTime;
 
-        if(startpt == 0)
+        if (startpt == 0)
         {
           startpt = spfzattribute.x;
           dashpoints = new Vector2(startpt, 0);
@@ -1720,21 +1816,21 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     bouncer = false;
     move = -1;
 
-    if (stage.p1charzoom)
+    if (currentCharactercharzoom)
     {
-      stage.p1charzoom = false;
+      currentCharactercharzoom = false;
     }
     if (spfzattribute.scaleX > 0)
     {
-      if (!special || spfzrect.y > stage.GROUND)
+      if (!special || spfzrect.y > ground)
       {
-        if (spfzrect.y == stage.GROUND)
+        if (spfzrect.y == ground)
         {
           if (isLeft)
           {
 
             input = 6;
-            if(isDown)
+            if (isDown)
             {
               input = 0;
             }
@@ -1785,7 +1881,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
             input = 13;
           }
 
-          if (spfzrect.y > stage.GROUND)
+          if (spfzrect.y > ground)
           {
             weight = "H";
           }
@@ -1797,7 +1893,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       }
       else
       {
-        if (special && spfzrect.y == stage.GROUND)
+        if (special && spfzrect.y == ground)
         {
           spfzanimation.currentAnimation = "projectile";
           if (!projact && special)
@@ -1806,7 +1902,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
             weight = "H";
             if (speccount >= 2)
             {
-              stage.p1charzoom = true;
+              currentCharactercharzoom = true;
               // speccount = 0;
             }
             else
@@ -1827,16 +1923,16 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     }
     else
     {
-      if (!special || spfzrect.y > stage.GROUND)
+      if (!special || spfzrect.y > ground)
       {
 
-        if (spfzrect.y == stage.GROUND)
+        if (spfzrect.y == ground)
         {
           if (isLeft)
           {
             input = 8;
             weight = "H";
-            if(isDown)
+            if (isDown)
             {
               input = 2;
               bouncer = true;
@@ -1885,7 +1981,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
           {
             input = 13;
           }
-          if (spfzrect.y > stage.GROUND)
+          if (spfzrect.y > ground)
           {
             weight = "H";
             createbox = true;
@@ -1895,7 +1991,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       }
       else
       {
-        if (special && spfzrect.y == stage.GROUND)
+        if (special && spfzrect.y == ground)
         {
           move = -1;
           spfzanimation.currentAnimation = "projectile";
@@ -1916,12 +2012,12 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
 
     attacking = true;
     // if the move is not null technically
-    move = spfzp1vals.moveset.indexOf(stage.normals[input]);
+    move = characterAttributes.moveset.indexOf(stage.normals[input]);
     if (move != -1)
     {
-      spfzanimation.currentAnimation = spfzp1vals.moveset.get(move);
+      spfzanimation.currentAnimation = characterAttributes.moveset.get(move);
     }
-    spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation)),
+    spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation)),
       Animation.PlayMode.NORMAL);
     attackMove();
   }
@@ -2125,9 +2221,9 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       spfzanimation.currentAnimation = "CRCH";
     }
 
-    spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+    spfzanimation.fps = characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation));
     spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation), spfzanimation.fps,
-            Animation.PlayMode.LOOP);
+      Animation.PlayMode.LOOP);
   }
 
   public void right(float delta)
@@ -2135,7 +2231,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     // if user is pressing down RIGHT on the control pad
 
     // If sprite is on the ground
-    if (spfzrect.y == stage.GROUND)
+    if (spfzrect.y == ground)
     {
       if (!stage.close)
       {
@@ -2155,7 +2251,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     nc = ComponentRetriever.get(spfzentity, NodeComponent.class);
     spfzaction = ComponentRetriever.get(spfzentity, ActionComponent.class);
     spfzattribute = ComponentRetriever.get(spfzentity, TransformComponent.class);
-    spfzattribute.x = stage.STAGE_CENTER - 200f;
+    spfzattribute.x = stage.centerOfStage() - 200f; // value may be initial start
     spfzattribute.y = charGROUND();
 
     spfzdim = ComponentRetriever.get(spfzentity, DimensionsComponent.class);
@@ -2163,36 +2259,32 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     spfzanimationstate = ComponentRetriever.get(nc.children.get(0), SpriteAnimationStateComponent.class);
     List<String> keys = new ArrayList<String>();
 
-    if (stage.player1anims.size() < 3)
+    if (animations.size() < 3)
     {
-      stage.player1anims.add(spfzp1vals.animations);
-      stage.player1moves.add(spfzp1vals.moveset);
-      keys = new ArrayList<String>(spfzp1vals.animations.keySet());
+      animations.add(characterAttributes.animations);
+      specials.add(characterAttributes.moveset);
     }
-    else
-    {
-      keys = new ArrayList<String>(stage.player1anims.get(stage.p1).keySet());
-    }
+    keys = new ArrayList<String>(animations.get(currentCharacter).keySet());
 
     // create frame ranges for all animations listed for each character
 
-    if (stage.player1data.size() < 3)
+    if (characterData.size() < 3)
     {
-      for (int i = 0; i < spfzp1vals.getAnimations().size(); i++)
+      for (int i = 0; i < characterAttributes.getAnimations().size(); i++)
       {
 
         spfzanimation.frameRangeMap.put(keys.get(i), new FrameRange(keys.get(i),
-          spfzp1vals.animations.get(keys.get(i))[0], spfzp1vals.getAnimations().get(keys.get(i))[1]));
+          characterAttributes.animations.get(keys.get(i))[0], characterAttributes.getAnimations().get(keys.get(i))[1]));
       }
     }
     else
     {
-      for (int i = 0; i < stage.player1anims.get(stage.p1).size(); i++)
+      for (int i = 0; i < animations.get(currentCharacter).size(); i++)
       {
 
         spfzanimation.frameRangeMap.put(keys.get(i),
-          new FrameRange(keys.get(i), stage.player1anims.get(stage.p1).get(keys.get(i))[0],
-            stage.player1anims.get(stage.p1).get(keys.get(i))[1]));
+          new FrameRange(keys.get(i), animations.get(currentCharacter).get(keys.get(i))[0],
+            animations.get(currentCharacter).get(keys.get(i))[1]));
       }
     }
 
@@ -2215,8 +2307,8 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   {
     if (stage.switchp1)
     {
-      spfzattribute.x = stage.p1xattr;
-      spfzattribute.y = stage.p1yattr;
+      spfzattribute.x = currentCharacterxattr;
+      spfzattribute.y = currentCharacteryattr;
       attacking = false;
     }
     else
@@ -2240,7 +2332,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       {
         if (stage.spfzp1move.move != -1 && stun == 0)
         {
-          stun = rtnFrametime(stage.player1data.get(stage.p1).get(BLKSTN).get(stage.spfzp1move.move).floatValue());
+          stun = rtnFrametime(characterData.get(currentCharacter).get(BLKSTN).get(stage.spfzp1move.move).floatValue());
         }
         else
         {
@@ -2254,7 +2346,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       {
         if (stage.spfzp1move.move != -1 && stun == 0)
         {
-          stun = rtnFrametime(stage.player2data.get(stage.p2).get(BLKSTN).get(stage.spfzp2move.move).floatValue());
+          stun = rtnFrametime(opponent.characterData().get(opponent.currentCharacter).get(BLKSTN).get(stage.spfzp2move.move).floatValue());
         }
         else
         {
@@ -2272,7 +2364,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       {
         if (stage.spfzp1move.move != -1 && stun == 0)
         {
-          stun = rtnFrametime(stage.player1data.get(stage.p1).get(HITSTN).get(stage.spfzp1move.move).floatValue());
+          stun = rtnFrametime(characterData.get(currentCharacter).get(HITSTN).get(stage.spfzp1move.move).floatValue());
         }
         else
         {
@@ -2286,7 +2378,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
       {
         if (stage.spfzp1move.move != -1 && stun == 0)
         {
-          stun = rtnFrametime(stage.player2data.get(stage.p2).get(HITSTN).get(stage.spfzp2move.move).floatValue());
+          stun = rtnFrametime(opponent.characterData().get(opponent.currentCharacter).get(HITSTN).get(stage.spfzp2move.move).floatValue());
         }
         else
         {
@@ -2343,71 +2435,6 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     return crossrect;
   }
 
-  @Override
-  public void storeinputs()
-  {
-    // iterate through the buffer and store the integer value which
-    // signifies
-    // the inputs
-    // LEFT = 0 UP = 2 LEFT & UP = 4 RIGHT & DOWN = 6
-    // RIGHT = 1 DOWN = 3 RIGHT & UP = 5 LEFT & DOWN = 7 NEUTRAL = 8
-
-    if (buff == 15)
-    {
-      last16.clear();
-      last = 0;
-    }
-    if (buffer.size() == buffsize)
-    {
-      buffer.clear();
-      buff = 0;
-      System.out.println("buffer has been cleared");
-
-    }
-    buffer.add(buff, null);
-
-    for (int j = 0; j < p1movement.size(); j++)
-    {
-      if (buffer.size() > 0)
-      {
-
-        if (p1movement.get(j))
-        {
-          buffer.set(buff, j);
-
-          j = p1movement.size();
-
-        }
-
-      }
-    }
-    if (buffer.get(buff) == null)
-    {
-      buffer.set(buff, 8);
-    }
-
-    if (buff >= 43 && buff <= 59)
-    {
-      last16.add(buffer.get(buff));
-      /*
-       * System.out.println(buffer.get(buff) + " added to buffer. ---- index[" +
-       * (buffer.size() - 1) + "] ------------ last stored input -----------" +
-       * (last16.get(last)));
-       */
-      last++;
-    }
-    else
-    {
-
-      /*
-       * System.out.println(buffer.get(buff) + " added to buffer. ---- index[" +
-       * (buffer.size() - 1) + "]");
-       */
-    }
-    System.out.println("Buffer input ----- " + buffer.get(buff));
-    buff++;
-  }
-
   public void spwnPrj()
   {
     SPFZProjScript projecter = new SPFZProjScript(stage);
@@ -2456,7 +2483,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
     if (!attacking && !attacked && !dash && !stage.standby)
     {
 
-      if (stage.GROUND == spfzrect.y || walljump)
+      if (ground == spfzrect.y || walljump)
       {
         if (!walljump)
         {
@@ -2492,7 +2519,7 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   public float rtnFrametime(float frames)
   {
       //return frames / 60f;
-    return frames / spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+    return frames / characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation));
   }
 
   @Override
@@ -2552,14 +2579,40 @@ public class SPFZP1Movement implements IScript, Attribs, BufferandInput
   }
 
   @Override
-  public Rectangle setrflbox()
-  {
+  public Rectangle setrflbox() {
     return null;
   }
 
   @Override
-  public ShapeRenderer drawrflbox()
-  {
+  public ShapeRenderer drawrflbox() {
     return null;
+  }
+
+  public boolean[] movement() {
+    // LEFT = 0 UP = 2 LEFT & UP = 4 RIGHT & DOWN = 6
+    // RIGHT = 1 DOWN = 3 RIGHT & UP = 5 LEFT & DOWN = 7 NEUTRAL = 8
+    return new boolean[]{isLeft, isRight, isUp, isDown,
+      (isLeft && isUp), (isRight && isUp), (isRight && isDown), (isLeft && isDown),
+      (!isLeft && !isDown && !isRight && !isUp)};
+  }
+
+  public void setOpponent(SPFZPlayer opponent) {
+    this.opponent = opponent;
+  }
+
+  public SPFZPlayer opponent() {
+    return opponent;
+  }
+
+  public List<List<ArrayList<Double>>> characterData() {
+    return characterData;
+  }
+
+  public List<HashMap<String, int[]>> animations() {
+    return animations;
+  }
+
+  public List<ArrayList<String>> specials() {
+    return specials;
   }
 }

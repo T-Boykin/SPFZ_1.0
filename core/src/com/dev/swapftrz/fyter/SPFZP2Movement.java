@@ -1,8 +1,5 @@
 package com.dev.swapftrz.fyter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
@@ -13,6 +10,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.dev.swapftrz.stage.SPFZStage;
 import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.MainItemComponent;
@@ -26,6 +24,9 @@ import com.uwsoft.editor.renderer.scripts.IScript;
 import com.uwsoft.editor.renderer.systems.action.Actions;
 import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SPFZP2Movement implements IScript, Attribs, BufferandInput
 {
 
@@ -33,7 +34,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
     jumpdir, attacking, attacked, blocking, ownatk, projhit, projact, confirm, walljump, kickstuck, punchstuck,
     reflect, dash, bounced, roll, invul;
 
-  CharAttributes spfzp2vals;
+  CharacterAttirbutes spfzp2vals;
 
   SPFZStage stage;
   Vector2 walkandjump;
@@ -917,7 +918,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
   {
     ComponentMapper<MainItemComponent> mc = ComponentMapper.getFor(MainItemComponent.class);
     mc.get(entity);
-    spfzp2vals = new CharAttributes(mc.get(entity).itemIdentifier, stage.player2data.size());
+    spfzp2vals = new CharacterAttirbutes(mc.get(entity).itemIdentifier, stage.player2data.size());
 
     spfzsr = new ShapeRenderer();
     spfzhitbox = new ShapeRenderer();
@@ -1476,46 +1477,6 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
   public float charX()
   {
     return spfzrect.x - spfzattribute.x;
-  }
-  @Override
-  public void storeinputs()
-  {
-    // iterate through the buffer and store the integer value which signifies
-    // the inputs
-    // LEFT = 0 UP = 2 LEFT & UP = 4 RIGHT & DOWN = 6
-    // RIGHT = 1 DOWN = 3 RIGHT & UP = 5 LEFT & DOWN = 7 NEUTRAL = 8
-    // for (int i = 0; i < buffsize; i++)
-    // {
-    if (buffer.size() == buffsize)
-    {
-      buffer.clear();
-      buff = 0;
-      System.out.println("buffer has been cleared");
-    }
-    buffer.add(buff, null);
-
-    for (int j = 0; j < stage.spfzp1move.p1movement.size(); j++)
-    {
-      if (buffer.size() > 0)
-      {
-
-        if (stage.spfzp1move.p1movement.get(j))
-        {
-          buffer.set(buff, j);
-
-          j = stage.spfzp1move.p1movement.size();
-          // i = buffsize;
-        }
-
-      }
-    }
-    if (buffer.get(buff) == null)
-    {
-      buffer.set(buff, 8);
-    }
-    // }
-    System.out.println(buffer.get(buff) + " added to buffer");
-    buff++;
   }
 
   public void up(float delta)
