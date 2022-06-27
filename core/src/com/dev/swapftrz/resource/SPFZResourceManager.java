@@ -1,5 +1,6 @@
 package com.dev.swapftrz.resource;
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -49,16 +50,18 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   public final byte ANDROID = 0, DESKTOP = 1, IOS = 2;
   public static final String LANDSCAPE = "landscape";
   public static final String PORTRAIT = "portrait";
-
   //private final AndroidInterfaceLIBGDX android;
 
   private int appDevice;
-  private String currentScene;
+  private String currentScene, previousScene;
   // public String particleEffectsPath = "particles";
 
   // public String fontsPath = "freetypefonts";
-
-  // public String[] menuscenes = { "landscene", "sceneone", "arcadeselscn",
+  private int uiLevel = 0;
+  private String[][] uiSceneMap = {{"sceneone", "landscene"}, {"arcadeselscn", "charselscn"}, {"arcstory", "stageselscn"},
+    {"stagescene"}};
+  //Timers managed within arrays, 1st Timer for CreditHints, 2nd Time for Ads, 3rd for MainMenu Light
+  private float[][] timersAndStops = {{0, 5f}, {0, 7f}, {0, 1.1f}};
   // "charselscene" };
 
   protected ProjectInfoVO projectVO = new ProjectInfoVO();
@@ -85,6 +88,7 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   private final SPFZMenuCamera spfzMCamera;
   private final SPFZStageCamera spfzSCamera;
 
+
   //Resolutions
   //Map<String, Integer> resolutionWidth = new HashMap<String, Integer>();
   //Map<String, Integer> resolutionHeight = new HashMap<String, Integer>();
@@ -102,16 +106,16 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   // String invalidfnt3 = "LCD";
 
   public SPFZResourceManager() {
-    projectVO.pixelToWorld = getPixelToWorldSize();
-
     portraitSSL = new SPFZSceneLoader(this);
     landscapeSSL = new SPFZSceneLoader(this);
     //stagePauseSL = new SPFZSceneLoader(this, appMain);
-    setAppDevice();
-    setWorkingResolution(packResolutionName);
     dbOperations = new SPFZDBOperations(this);
     spfzMCamera = new SPFZMenuCamera(this);
     spfzSCamera = new SPFZStageCamera(this);
+    projectVO.pixelToWorld = getPixelToWorldSize();
+
+    //this should be all handled on a separate Thread
+    loadResources();
   }
 
   public void dispose() {
@@ -666,12 +670,24 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return landscapeSSL;
   }
 
+  public void setBackToPrevousScene() {
+    setLandscapeSSL(previousScene);
+    uiLevel--;
+  }
+
+  public void setScene(int scene) {
+    previousScene = currentScene;
+    String selectedScene = uiSceneMap[uiLevel][scene];
+    setLandscapeSSL(selectedScene);
+    uiLevel++;
+  }
+
   public void setLandscapeSSL(String scene) {
     currentScene = scene;
     //setting with new SPFZSceneLoader object as it helps get desired result for main menu
     landscapeSSL = new SPFZSceneLoader(this);
     landscapeSSL.loadScene(currentScene, spfzMCamera.getViewport());
-    setRootWrapper(new ItemWrapper(landscapeSSL.getRoot()));
+    setRootWrapper(landscapeSSL.getRoot());
   }
 
   public SPFZSceneLoader getStagePauseSSL() {
@@ -686,9 +702,9 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
       return landscapeSSL;
   }
 
-  public void setRootWrapper(ItemWrapper rootWrapper) {
+  public void setRootWrapper(Entity rootEntity) {
     this.rootWrapper.getEntity().removeAll();
-    this.rootWrapper = new ItemWrapper(getCurrentSSL().getRoot());
+    this.rootWrapper = new ItemWrapper(rootEntity);
   }
 
   public ItemWrapper rootWrapper() {
@@ -764,6 +780,28 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
         break;
     }
   }
+
+  public void loadResources() {
+    setAppDevice();
+    setWorkingResolution(packResolutionName);
+    setManager(assetManager);
+    initAllResources();
+  }
+
+  public void runTimers() {
+    for (int i = 0; i < timersAndStops.length; i++)
+    {
+      timersAndStops[i][0] += Gdx.graphics.getDeltaTime();
+
+      if (timersAndStops[i][0] > timersAndStops[i][1])
+        timersAndStops[i][0] = 0f;
+    }
+  }
+
+  public boolean isTimeToReset(int timer) {
+    return timersAndStops[timer][0] == 0;
+  }
+  //Methods for grabbing information from SPFZFILE Preferences file
 
   public int getPixelToWorldSize() {
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);

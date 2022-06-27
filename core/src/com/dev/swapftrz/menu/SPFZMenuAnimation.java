@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.utils.Timer;
 import com.dev.swapftrz.resource.SPFZO2DMethods;
 import com.dev.swapftrz.resource.SPFZParticleComponent;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
@@ -75,16 +76,15 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
    * Landscape Main Menu opening animation
    */
   public void landscapeMenuAnimation() {
-    hideO2dObjects(getLandRoot(), menuo2d.continueLandComponents());
+    hideO2dObjects(landRoot, menuo2d.continueLandComponents());
     rmvO2dObjects(landscape, getLandRoot(), menuo2d.continueLandComponents());
     faderOutPlusAction(getLandRoot(), landAnimationRunnable());
   }
 
   public void portraitMenuAnimation() {
-    hideO2dObjects(getPortRoot(), menuo2d.continuePortComponents());
+    hideO2dObjects(portRoot, menuo2d.continuePortComponents());
     rmvO2dObjects(portrait, getPortRoot(), menuo2d.continuePortComponents());
     portButtonsToMainCenter();
-
   }
 
   //ANIMATION COMMAND METHODS --------------------------------------------------------------\\\\\\\
@@ -435,20 +435,25 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
    * 2. Blackout is hidden to show 1st circle and Main Menu music starts at the same time
    * 3.
    */
-  private Runnable spfzIntroduction() {
+  public Runnable spfzIntroduction(boolean isLandscape) {
     Runnable runnable, startRunnable, soundRunnable,
       animCircleRunnable, introCircleRunnable, flashTTCRunnable;
     //TODO this needs to be handled better
     float delay1 = 1.5f, fade = SPFZ_MAct.FADE_DUR, delay2 = delay1 + fade,
       delay3 = delay1 + delay2 + fade;
 
+    if (isLandscape)
+      setLandRoot(spfzmenu.rootEntityWrapper());
+    else
+      setPortRoot(spfzmenu.rootEntityWrapper());
+
     startRunnable = () -> {
-      Actions.addAction(getPortRoot().getChild(menuo2d.ttcImage()).getEntity(),
+      Actions.addAction(portRoot.getChild(menuo2d.ttcImage()).getEntity(),
         fadeOutO2dObject(0, null));
     };
 
     soundRunnable = () -> {
-      Actions.addAction(getPortRoot().getChild(menuo2d.fader()).getEntity(),
+      Actions.addAction(portRoot.getChild(menuo2d.fader()).getEntity(),
         Actions.parallel(fadeOutO2dObject(0, null), Actions.run(spfzmenu.sound().playMainMenuLoopMusic())));
 
     };
@@ -457,7 +462,7 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
       ActionData[] actionData = moveByAndScaleO2dObj(0, 0, SPFZ_MAct.PMENU_ANIMCIRCLE_SCL, SPFZ_MAct.PMENU_ANIMCIRCLE_SCL, 0,
         SPFZ_MAct.ANIMCIRCLE_DUR, null, null);
 
-      Actions.addAction(getPortRoot().getChild(menuo2d.animCircle()).getEntity(),
+      Actions.addAction(portRoot.getChild(menuo2d.animCircle()).getEntity(),
         Actions.sequence(delayO2dObject(delay1), Actions.parallel(actionData[0], actionData[1],
           fadeOutO2dObject(SPFZ_MAct.FADE_DUR, null))));
     };
@@ -466,12 +471,12 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
       ActionData[] actionData = moveByAndScaleO2dObj(0, 0, SPFZ_MAct.PMENU_INTROCIRCLE_SCL,
         SPFZ_MAct.PMENU_INTROCIRCLE_SCL, 0, SPFZ_MAct.INTROCIRCLE_DUR, null, null);
 
-      Actions.addAction(getPortRoot().getChild(menuo2d.animCircle()).getEntity(),
+      Actions.addAction(portRoot.getChild(menuo2d.animCircle()).getEntity(),
         Actions.sequence(delayO2dObject(delay2), Actions.parallel(actionData[0], actionData[1])));
     };
 
     flashTTCRunnable = () -> {
-      Actions.addAction(getPortRoot().getChild(menuo2d.ttcImage()).getEntity(),
+      Actions.addAction(portRoot.getChild(menuo2d.ttcImage()).getEntity(),
         Actions.sequence(delayO2dObject(delay3),
           Actions.sequence(flashO2dObject(SPFZ_MAct.TTC_REPS, SPFZ_MAct.TTC_DUR, false, false))));
     };
@@ -498,7 +503,7 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
       //Assign action to each of the Main 5 main menu buttons
       for (int i = 0; i < menuo2d.landMain5Buttons().length; i++)
       {
-        Actions.addAction(getLandRoot().getChild(menuo2d.landMain5Buttons()[i]).getEntity(),
+        Actions.addAction(landRoot.getChild(menuo2d.landMain5Buttons()[i]).getEntity(),
           moveO2dObjTo(SPFZ_MAct.LAND_MAIN5_BUTTONS_X[i],
             SPFZ_MAct.LAND_MAIN5_BUTTONS_Y[i], SPFZ_MAct.OPTION_MOVE_TIME, null));
       }
@@ -510,46 +515,25 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
   }
 
   /**
-   * method runs credit process every 5 seconds
+   * method runs credit hint process every 5 seconds
+   * credit hint timer is canceled after user enters credits
+   * or opens the option/help/exit screen
    */
-  public void controlCredits() {
-
-    if (resourceManager.currentScene() == "landscene" || view == "portrait")
-    {
-      //banner logic meshed with fade credits
-      if ((System.currentTimeMillis() - credittime) * .001f >= 10)
-      {
-        fadeCredit();
-        credittime = System.currentTimeMillis();
-        System.out.println("fade in credits");
-      }
-
-
-    }
+  public void processCreditsHint() {
+    creditsHintAnimation();
   }
 
-  public void controlLights() {
-    TransformComponent lighttranscomp = root.getChild("mainlight").getEntity().getComponent(TransformComponent.class);
-    if (resourceManager.currentScene() == "landscene")
+  public void processLights() {
+    Entity mainlight = landRoot.getChild("mainlight").getEntity();
+
+    if (spfzmenu.isLandscape())
     {
-      if (lighttranscomp.x >= 160f && moveright)
-      {
-        lighttranscomp.x += .5f;
-
-        if (lighttranscomp.x >= 480f)
-        {
-          moveright = false;
-        }
-      }
-      if (lighttranscomp.x <= 480f && !moveright)
-      {
-        lighttranscomp.x -= .5f;
-
-        if (lighttranscomp.x <= 160f)
-        {
-          moveright = true;
-        }
-      }
+      if (mainlight.getComponent(TransformComponent.class).x < spfzmenu.camera().viewportWidth * .5f)
+        Actions.addAction(mainlight, moveO2dObjTo(spfzmenu.camera().viewportWidth * .75f,
+          spfzmenu.camera().viewportHeight / .5f, 1f, null));
+      else if (mainlight.getComponent(TransformComponent.class).x >= spfzmenu.camera().viewportWidth * .5f)
+        Actions.addAction(mainlight, moveO2dObjTo(spfzmenu.camera().viewportWidth * .25f,
+          spfzmenu.camera().viewportHeight / .5f, 1f, null));
     }
 
   }
@@ -557,18 +541,18 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
   /**
    * method fades the credits and arrows in and out
    */
-  public void fadeCredit() {
+  private void creditsHintAnimation() {
     String[] cdtcomponents = {"swypefrmbtm", "swypefrmtop"};
 
     // move the credit text and arrows downwards
-    if (resourceManager.currentScene().equals("landscene"))
+    if (spfzmenu.isLandscape())
     {
       // move the credit text and arrows downwards
-      Actions.addAction(root.getChild(cdtcomponents[1]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
+      Actions.addAction(landRoot.getChild(cdtcomponents[1]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
         Actions.parallel(Actions.moveBy(0, -20f, 1f), Actions.fadeOut(1f)), Actions.moveBy(0, 20f, .01f)));
 
       // move the credit text and arrows upwards
-      Actions.addAction(root.getChild(cdtcomponents[0]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
+      Actions.addAction(landRoot.getChild(cdtcomponents[0]).getEntity(), Actions.sequence(Actions.fadeIn(.05f),
         Actions.parallel(Actions.moveBy(0, 20f, 1f), Actions.fadeOut(1f)), Actions.moveBy(0, -20f, .01f)));
 
       /*for (int i = 1; i < cdtcomponents.length - 3; i++)
@@ -586,17 +570,16 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
 
       if (!credpress)
       {
-        Actions.addAction(root.getChild("meconst").getChild("medraw").getEntity(),
+        Actions.addAction(landRoot.getChild("meconst").getChild("medraw").getEntity(),
           Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
       }
 
     }
-    if (view == "portrait")
+    else
     {
-
-      Actions.addAction(root.getChild("tocreditsone").getEntity(),
+      Actions.addAction(portRoot.getChild("tocreditsone").getEntity(),
         Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
-      Actions.addAction(root.getChild("tocreditstwo").getEntity(),
+      Actions.addAction(portRoot.getChild("tocreditstwo").getEntity(),
         Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
     }
   }

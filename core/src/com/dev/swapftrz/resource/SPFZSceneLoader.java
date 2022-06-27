@@ -33,7 +33,6 @@ import com.uwsoft.editor.renderer.data.ResolutionEntryVO;
 import com.uwsoft.editor.renderer.data.SceneVO;
 import com.uwsoft.editor.renderer.physics.PhysicsBodyLoader;
 import com.uwsoft.editor.renderer.resources.IResourceRetriever;
-import com.uwsoft.editor.renderer.resources.ResourceManager;
 import com.uwsoft.editor.renderer.scripts.IScript;
 import com.uwsoft.editor.renderer.systems.CompositeSystem;
 import com.uwsoft.editor.renderer.systems.LabelSystem;
@@ -59,9 +58,8 @@ public class SPFZSceneLoader
   private String curResolution = "orig";
   private SceneVO sceneVO;
   private IResourceRetriever rm = null;
-  private SPFZResourceManager resMan;
+  private SPFZResourceManager resManager;
 
-  //public Engine engine = null;
   public PooledEngine engine = null;
   public RayHandler rayHandler;
   public World world;
@@ -77,46 +75,37 @@ public class SPFZSceneLoader
 
   SwapFyterzMain access;
 
-  public SPFZSceneLoader(World world, RayHandler rayHandler)
-  {
+  public SPFZSceneLoader(World world, RayHandler rayHandler) {
+    SPFZResourceManager rm = new SPFZResourceManager();
+    this.engine = new PooledEngine();
     this.world = world;
     this.rayHandler = rayHandler;
-    ResourceManager rm = new ResourceManager();
-    rm.initAllResources();
-
-    this.rm = rm;
-
+    //this.rm = rm;
     //this.engine = new Engine();
-    this.engine = new PooledEngine();
     initSceneLoader();
   }
 
   public SPFZSceneLoader(SPFZResourceManager rm) {
-    resMan = rm;
     this.engine = new PooledEngine();
+    resManager = rm;
     initSceneLoader();
   }
 
-  public SPFZSceneLoader(IResourceRetriever rm, World world, RayHandler rayHandler)
-  {
-    this.world = world;
+  public SPFZSceneLoader(IResourceRetriever rm, World world, RayHandler rayHandler) {
+    this.engine = new PooledEngine();
     this.rayHandler = rayHandler;
+    this.world = world;
     //this.engine = new Engine();
-    this.engine = new PooledEngine();
     this.rm = rm;
     initSceneLoader();
   }
 
-  public SPFZSceneLoader(IResourceRetriever rm, SwapFyterzMain app, String nullval, String nullval2)
-  {
-    // this(rm, null, null);
-    access = app;
-    this.world = null;
-    this.rm = rm;
-
-    this.rayHandler = null;
-    //this.engine = new Engine();
+  public SPFZSceneLoader(IResourceRetriever rm, SwapFyterzMain app) {
     this.engine = new PooledEngine();
+    this.rayHandler = null;
+    this.world = null;
+    access = app;
+    this.rm = rm;
     initSceneLoader();
   }
 
@@ -133,7 +122,7 @@ public class SPFZSceneLoader
     {
       PhysicsBodyLoader.getInstance().mul = 1;
     }
-
+    //may not need this code.
     if (rayHandler == null)
     {
       RayHandler.setGammaCorrection(true);
@@ -240,6 +229,7 @@ public class SPFZSceneLoader
     LabelSystem labelSystem = new LabelSystem();
     ScriptSystem scriptSystem = new ScriptSystem();
     ActionSystem actionSystem = new ActionSystem();
+    SPFZButtonSystem spfzButtonSystem = new SPFZButtonSystem();
     //BoundingBoxSystem boundboxsystem = new BoundingBoxSystem();
     //CullingSystem cullingsystem = new CullingSystem();
     renderer = new SPFZRenderer(new PolygonSpriteBatch(2000, createDefaultShader()), getMainRM().getMenuCam());
@@ -256,7 +246,7 @@ public class SPFZSceneLoader
     engine.addSystem(scriptSystem);
     engine.addSystem(actionSystem);
     engine.addSystem(renderer);
-    engine.addSystem(new SPFZButtonSystem());
+    engine.addSystem(spfzButtonSystem);
     // engine.addSystem(boundboxsystem);
     // engine.addSystem(cullingsystem);
 
@@ -425,7 +415,6 @@ public class SPFZSceneLoader
     return rootEntity;
   }
 
-
   /**
    * Returns a new instance of the default shader used by SpriteBatch for GL2
    * when no shader is specified.
@@ -483,8 +472,7 @@ public class SPFZSceneLoader
     return renderer.getBatch();
   }
 
-  public SPFZResourceManager getMainRM()
-  {
-    return resMan;
+  public SPFZResourceManager getMainRM() {
+    return resManager;
   }
 }

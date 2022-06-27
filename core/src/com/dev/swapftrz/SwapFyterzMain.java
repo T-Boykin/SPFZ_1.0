@@ -3,10 +3,8 @@ package com.dev.swapftrz;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.Vector2;
@@ -14,12 +12,10 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dev.swapftrz.device.AndroidInterfaceLIBGDX;
 import com.dev.swapftrz.menu.SPFZMenu;
-import com.dev.swapftrz.resource.SPFZCharButtonSystem;
 import com.dev.swapftrz.resource.SPFZParticleDrawableLogic;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
 import com.dev.swapftrz.stage.SPFZStage;
-import com.dev.swapftrz.stage.SPFZStageSystem;
 import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
@@ -37,28 +33,21 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   float soundamount, brightamount;
 
-  int INTRO = 0;
+  private final GestureDetector gd;
+  // private static final InputMultiplexer im = new InputMultiplexer();
 
-  GestureDetector gd;
-  InputMultiplexer im;
 
   // ItemWrapper grabs all of the entities created within the Overlap2d
   // Application
   ItemWrapper root;
 
   SPFZSceneLoader port, land;
-  SPFZCharButtonSystem spfzbsystem;
-  SPFZStageSystem stagesystem;
   SPFZParticleDrawableLogic logic;
   // Stage needed for Controls when within the fight interface
   SPFZStage stage;
-  public SPFZState state;
-  Sprite texhel1, texhel2;
+  private SPFZState state;
 
   //ShaderProgram shaderProgram;
-
-  String view;
-
   // String[] opponents = { "spriteball", "spriteballred", "spriteballblack",
   // "spriteblock", "redblotch", "spritepurplex",
   // "walksprite" };
@@ -67,15 +56,14 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   // "egyptstage", "futurestage", "gargoyle",
   // "junglestage", "skullstage", "undergroundstage" };
 
-  //TransformComponent transform;
-
   Viewport viewportland, viewportport;
 
   // Default Constructor - mainly for Desktop setup
   public SwapFyterzMain() {
-    resourceManager = new SPFZResourceManager();
-    spfzmenu = new SPFZMenu(resourceManager);
     android = null;
+    resourceManager = new SPFZResourceManager();
+    spfzmenu = new SPFZMenu(resourceManager, state);
+    gd = new GestureDetector(this);
   }
 
   //Constructor set to receive the custom interfacing for Android System
@@ -83,12 +71,75 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   public SwapFyterzMain(AndroidInterfaceLIBGDX tools, SPFZResourceManager resManager) {
     resourceManager = resManager;
     android = tools;
-    spfzmenu = new SPFZMenu(resourceManager, android);
+    spfzmenu = new SPFZMenu(resourceManager, android, state);
+    gd = new GestureDetector(this);
   }
 
   @Override
   public void create() {
 
+    //spfzbsystem = new SPFZCharButtonSystem();
+    //stagesystem = new SPFZStageSystem();
+
+    //TODO Come back and recode this class
+    logic = (SPFZParticleDrawableLogic) land.renderer.drawableLogicMapper.getDrawable(7);
+
+    //im.addProcessor(gd);
+    //im.addProcessor(this);
+    state = SPFZState.INIT;
+  }
+
+  public void resize(int width, int height) {
+    switch (state)
+    {
+      case INIT:
+        if (width > height)
+          spfzmenu.setupMainMenu(true);
+        else
+          spfzmenu.setupMainMenu(false);
+
+        break;
+      case RUNNING:
+        break;
+    }
+    //grab status of the game
+    //startup, startUpComplete,
+    resourceManager.setCurrentOrientation();
+  }
+
+  public void render() {
+    frameClear();
+
+    switch (state)
+    {
+      case INIT:
+        initProcessing();
+        break;
+      case RUNNING:
+        runningProcessing();
+        break;
+      case PAUSE:
+        pauseProcessing();
+        break;
+      case RESUME:
+        resume();
+        break;
+    }
+  }
+
+  public void initProcessing() {
+    if (Gdx.input.isTouched()) spfzmenu.runMenuAnimation();
+  }
+
+  public void runningProcessing() {
+    spfzmenu.processTimedBackgroundTasks();
+  }
+
+  public void pauseProcessing() {
+
+  }
+
+  public void resumeProcessing() {
 
   }
 
@@ -100,7 +151,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     // at the main menu,
     // and if the user has not pressed any of the constellations.
 
-    if (!optionsup && view == "landscape" && ac != null && resourceManager.currentScene() == "landscene")
+    if (!optionsup && spfzmenu.isLandscape() && ac != null && resourceManager.currentScene() == "landscene")
     {
       if (velocityY > 1000f && !credpress && !transition)
       {
@@ -114,45 +165,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       }
     }
     return true;
-  }
-
-  public void init() {
-    state = SPFZState.RUNNING;
-
-    // set screen for inputs and set the starting point for the main menu
-    // screen
-    // music and start music
-    //mainmenu.setPosition(AFTER_INTRO);
-    resourceManager.setManager(resourceManager.getManager());
-    // initialize the resource manager
-
-    // spfzbsystem = new SPFZButtonSystem(this);
-    spfzbsystem = new SPFZCharButtonSystem();
-    stagesystem = new SPFZStageSystem();
-
-    //resourceManager = new SPFZResourceManager(this);
-    // initialize viewports
-    //viewportland = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT);
-    //viewportport = new StretchViewport(WORLD_HEIGHT, WORLD_WIDTH);
-    //resourceManager.currentScene() = "landscene";
-
-    //port = new SPFZSceneLoader(resourceManager, this, "", "");
-    //land = new SPFZSceneLoader(resourceManager, this, "", "");
-    //pause = new SPFZSceneLoader(resourceManager, this, "", "");
-    logic = (SPFZParticleDrawableLogic) land.renderer.drawableLogicMapper.getDrawable(7);
-
-    //}
-
-    // Set the GestureDetector in order to utilize the camera lerping function
-    // for Credits
-    im = new InputMultiplexer();
-    gd = new GestureDetector(this);
-
-    im.addProcessor(gd);
-    im.addProcessor(this);
-    // initialize all resources
-
-    resourceManager.initAllResources();
   }
 
   @Override
@@ -172,13 +184,11 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   @Override
   public boolean longPress(float x, float y) {
-
     return false;
   }
 
   @Override
   public boolean mouseMoved(int screenX, int screenY) {
-
     return false;
   }
 
@@ -189,13 +199,11 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   @Override
   public boolean pan(float x, float y, float deltaX, float deltaY) {
-
     return false;
   }
 
   @Override
   public boolean panStop(float x, float y, int pointer, int button) {
-
     return false;
   }
 
@@ -205,26 +213,20 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   @Override
   public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
-
     return false;
   }
 
   @Override
   public void pinchStop() {
-
   }
 
-  public void render() {
-    //clearing for next frame
+  public void frameClear() {
     Gdx.gl.glClearColor(0, 0, 0, 1);
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
   }
 
-  public void resize(int width, int height) {
-  }
-
   public void resume() {
-    //after pause logic
+    resumeProcessing();
   }
 
   // ------------- END OF CODE BEFORE GESTURE DETECTOR METHODS
@@ -257,7 +259,6 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   @Override
   public boolean touchDown(float x, float y, int pointer, int button) {
-
     return false;
   }
 
@@ -281,7 +282,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       Vector3 transpar = new Vector3(0, 0, 0);
       String option = new String();
 
-      if (view == "portrait")
+      if (spfzmenu.isPortrait())
       {
         option = "optionscreen";
       }
@@ -343,7 +344,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       float fullbarpercent;
 
 
-      if (view == "portrait")
+      if (spfzmenu.isPortrait())
       {
         viewportport.getCamera().update();
         vec3.set(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -458,5 +459,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   public SPFZResourceManager resourceManager() {
     return resourceManager;
+  }
+
+  public SPFZState stateOfGame() {
+    return state;
   }
 }

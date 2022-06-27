@@ -2,8 +2,9 @@ package com.dev.swapftrz;
 
 public enum SPFZState
 {
-	PAUSE,
+	INIT,
 	RUNNING,
+	PAUSE,
 	RESUME,
 	STOPPED
 }
