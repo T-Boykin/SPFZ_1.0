@@ -655,7 +655,6 @@ public class SPFZMenuButtonListeners
 
         @Override
         public void clicked() {
-          back.play(1.0f);
           Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
           {
 
@@ -1073,7 +1072,6 @@ public class SPFZMenuButtonListeners
 
         @Override
         public void clicked() {
-          back.play(1.0f);
           Actions.addAction(fader, Actions.sequence(Actions.fadeIn(.3f), Actions.run(new Runnable()
           {
 

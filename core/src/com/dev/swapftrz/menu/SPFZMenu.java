@@ -3,6 +3,7 @@ package com.dev.swapftrz.menu;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -29,34 +30,38 @@ import java.util.Random;
 
 public class SPFZMenu
 {
+  private static final int PORT_SCENE_MAX = 4;
   private final SPFZMenuO2DMenuObjects menu_o2d;
   private final SPFZResourceManager resManager;
   private final SPFZMenuAction menu_action;
   private final SPFZMenuAnimation menu_animation;
   private final SPFZMenuSound menu_sound;
   private final AndroidInterfaceLIBGDX android;
-  private static final int PORT_SCENE_MAX = 4;
+  private SPFZState state;
   private int portScene = 1;
 
   private boolean isTraining;
 
-  public SPFZMenu(SPFZResourceManager resManager) {
-
-    this.resManager = resManager;
+  public SPFZMenu(SPFZResourceManager resManager, SPFZState state) {
     menu_o2d = new SPFZMenuO2DMenuObjects();
     menu_animation = new SPFZMenuAnimation(this, resManager.getPortraitSSL(), resManager.getLandscapeSSL(), menu_o2d);
     menu_sound = new SPFZMenuSound(resManager);
     menu_action = new SPFZMenuAction(resManager, menu_o2d, menu_animation, menu_sound);
+
+    this.resManager = resManager;
+    this.state = state;
     android = null;
   }
 
-  public SPFZMenu(SPFZResourceManager resManager, AndroidInterfaceLIBGDX android) {
-    this.resManager = resManager;
+  public SPFZMenu(SPFZResourceManager resManager, AndroidInterfaceLIBGDX android, SPFZState state) {
     menu_o2d = new SPFZMenuO2DMenuObjects();
     menu_animation = new SPFZMenuAnimation(this, resManager.getPortraitSSL(), resManager.getLandscapeSSL(), menu_o2d);
     menu_sound = new SPFZMenuSound(resManager);
     menu_action = new SPFZMenuAction(resManager, menu_o2d, menu_animation, menu_sound);
+
+    this.resManager = resManager;
     this.android = android;
+    this.state = state;
   }
 
   /**
@@ -104,7 +109,51 @@ public class SPFZMenu
   public void changeBrightness() {
   }
 
+  /**
+   * Sets the main menu up based on if device is in Landscape
+   *
+   * @param isLandscape
+   */
+  public void setupMainMenu(boolean isLandscape) {
+    if (isLandscape)
+      resManager.setScene(1);
+    else
+      resManager.setScene(0);
+
+    menu_animation.spfzIntroduction(isLandscape).run();
+  }
+
+  /**
+   * Method runs the main menu animation and sets game state to RUNNING
+   */
+  public void runMenuAnimation() {
+    if (isLandscape())
+      menu_animation.landscapeMenuAnimation();
+    else
+      menu_animation.portraitMenuAnimation();
+
+    state = SPFZState.RUNNING;
+  }
+
+  public void processTimedBackgroundTasks() {
+    resManager.runTimers();
+
+    if (resManager.isTimeToReset(0))
+      menu_animation.processCreditsHint();
+
+    if (resManager.isTimeToReset(1))
+      state = state;
+
+    if (resManager.isTimeToReset(2))
+      menu_animation.processLights();
+  }
+
   public void back() {
+    resManager.setBackToPrevousScene();
+  }
+
+  public Camera camera() {
+    return resManager.getMenuCam();
   }
 
   public boolean isPortrait() {
@@ -132,6 +181,10 @@ public class SPFZMenu
 
   public SPFZMenuSound sound() {
     return menu_sound;
+  }
+
+  public ItemWrapper rootEntityWrapper() {
+    return resManager.rootWrapper();
   }
 
   public int portScene() {
@@ -217,9 +270,6 @@ public class SPFZMenu
     resManager.getManager().finishLoading();
     // resManager.getManager().i
     root.getEntity().removeAll();
-
-    land = new SPFZSceneLoader(resManager, SwapFyterzMain.this, "", "");
-
     update(view).loadScene("stagescene", viewportland);
     stagesystem.priority = 0;
 
@@ -498,7 +548,6 @@ public class SPFZMenu
 
           update(view).loadScene(resManager.currentScene(), viewportland);
           root = new ItemWrapper(update(view).getRoot());
-          setMainMenu(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         }
         else
         {
@@ -509,7 +558,6 @@ public class SPFZMenu
 
           update(view).loadScene(resManager.currentScene(), viewportport);
           scenesel++;
-          setMainMenu(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         }
       }
     }
@@ -1370,6 +1418,8 @@ public class SPFZMenu
 
     }
   }
+
+  //public void setStateOfGame(SPFZState state) { this.state = state; }
   //Back processing - the button and Android back button on device
 }
 

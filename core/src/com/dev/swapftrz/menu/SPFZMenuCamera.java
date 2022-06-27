@@ -69,38 +69,37 @@ public class SPFZMenuCamera extends Camera
     {
       if (flingup)
       {
-        if (viewportland.getCamera().position.y == credits.y)
+        if (this.position.y == credits.y)
         {
           flingup = false;
         }
 
-        viewportland.getCamera().position.lerp(credits, 0.2f);
+        this.position.lerp(credits, 0.2f);
 
       }
       if (flingdown)
       {
-        if (viewportland.getCamera().position.y == tomenu.y)
+        if (this.position.y == tomenu.y)
         {
           flingdown = false;
         }
 
-        viewportland.getCamera().position.lerp(tomenu, 0.2f);
-        if (((OrthographicCamera) viewportland.getCamera()).zoom != ZOOMCOUT)
+        this.position.lerp(tomenu, 0.2f);
+        if (((OrthographicCamera) this).zoom != ZOOMCOUT)
         {
-          ((OrthographicCamera) viewportland.getCamera()).zoom = ZOOMCOUT;
+          ((OrthographicCamera) this).zoom = ZOOMCOUT;
         }
       }
     }
   }
 
   public void creditprocessing() {
-    controlCredits();
-    if (flingup && ((OrthographicCamera) viewportland.getCamera()).position.y >= credits.y - 1)
+    if (flingup && ((OrthographicCamera) this).position.y >= credits.y - 1)
     {
       flingup = false;
       flingdown = false;
     }
-    if (flingdown && ((OrthographicCamera) viewportland.getCamera()).position.y <= tomenu.y + 1)
+    if (flingdown && ((OrthographicCamera) this).position.y <= tomenu.y + 1)
     {
       flingdown = false;
       flingup = false;
@@ -126,8 +125,8 @@ public class SPFZMenuCamera extends Camera
     }
     else
     {
-      if (((OrthographicCamera) viewportland.getCamera()).zoom != ZOOMCOUT && !flingdown && !flingup
-        && viewportland.getCamera().position.y >= tomenu.y)
+      if (((OrthographicCamera) this).zoom != ZOOMCOUT && !flingdown && !flingup
+        && this.position.y >= tomenu.y)
       {
         // Zoom out, passing in the distance of zoom, time it should take, and
         // the positioning of the camera

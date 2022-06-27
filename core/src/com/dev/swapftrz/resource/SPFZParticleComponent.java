@@ -42,8 +42,6 @@ public class SPFZParticleComponent implements Component
 	{
 		scaleFactor = scale;
 		particleEffect.scaleEffect(scaleFactor * worldMultiplyer);
-		
-		
 	}
 
 	public float getScaleFactor()
