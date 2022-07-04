@@ -7,7 +7,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -15,12 +16,14 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Json;
 import com.dev.swapftrz.menu.SPFZMenuCamera;
+import com.dev.swapftrz.stage.SPFZStage;
 import com.dev.swapftrz.stage.SPFZStageCamera;
 import com.uwsoft.editor.renderer.data.CompositeItemVO;
 import com.uwsoft.editor.renderer.data.CompositeVO;
 import com.uwsoft.editor.renderer.data.ProjectInfoVO;
 import com.uwsoft.editor.renderer.data.ResolutionEntryVO;
 import com.uwsoft.editor.renderer.data.SceneVO;
+import com.uwsoft.editor.renderer.data.SimpleImageVO;
 import com.uwsoft.editor.renderer.data.SpriteAnimationVO;
 import com.uwsoft.editor.renderer.resources.FontSizePair;
 import com.uwsoft.editor.renderer.resources.IResourceLoader;
@@ -51,9 +54,9 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   public static final String LANDSCAPE = "landscape";
   public static final String PORTRAIT = "portrait";
   //private final AndroidInterfaceLIBGDX android;
-
+  private SPFZStage stage;
   private int appDevice;
-  private String currentScene, previousScene;
+  private String currentScene, previousScene, selectedStage, stagePath;
   // public String particleEffectsPath = "particles";
 
   // public String fontsPath = "freetypefonts";
@@ -81,9 +84,7 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   protected HashMap<String, FileHandle> skeletonJSON = new HashMap<>();
   protected HashMap<String, TextureAtlas> spriteAnimations = new HashMap<>();
   protected HashMap<FontSizePair, BitmapFont> bitmapFonts = new HashMap<>();
-  protected SPFZSceneLoader portraitSSL;
-  protected SPFZSceneLoader landscapeSSL;
-  protected SPFZSceneLoader stagePauseSSL;
+  protected SPFZSceneLoader portraitSSL, landscapeSSL, stagePauseSSL;
   protected ItemWrapper rootWrapper;
   private final SPFZMenuCamera spfzMCamera;
   private final SPFZStageCamera spfzSCamera;
@@ -670,6 +671,17 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return landscapeSSL;
   }
 
+  public SPFZSceneLoader getPauseSSL() {
+    return stagePauseSSL;
+  }
+
+  public void loadStageResource(String stage) {
+    String stagep = "stages/" + stage + ".png";
+
+    assetManager.load(stagep, Texture.class);
+    assetManager.finishLoading();
+  }
+
   public void setBackToPrevousScene() {
     setLandscapeSSL(previousScene);
     uiLevel--;
@@ -707,6 +719,11 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     this.rootWrapper = new ItemWrapper(rootEntity);
   }
 
+  public void removePauseMenuResources() {
+    stagePauseSSL.engine.removeAllEntities();
+    stagePauseSSL.entityFactory.clean();
+  }
+
   public ItemWrapper rootWrapper() {
     return rootWrapper;
   }
@@ -732,21 +749,17 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return orientation;
   }
 
-  public Camera getMenuCam() {
-    return spfzMCamera.menuCamera();
+  public SPFZMenuCamera getMenuCam() {
+    return spfzMCamera;
   }
 
-  public Camera getStageCam() {
-    return spfzSCamera.stageCamera();
+  public SPFZStageCamera getStageCam() {
+    return spfzSCamera;
   }
 
   public boolean isInMenu() {
-    return inMenu;
-  }
-
-  public void setInMenu(boolean inMenu) {
-    if (this.inMenu != inMenu)
-      this.inMenu = inMenu;
+    return isLandScene() || isSceneOneScene() ||
+      isArcadeSelectScene() || isCharacterSelectScene();
   }
 
   public ProjectInfoVO projectVO() {
@@ -788,6 +801,27 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     initAllResources();
   }
 
+  //to be executed when OK button is hit on Stage Select Screen
+  public void loadStageResource() {
+    stagePauseSSL = new SPFZSceneLoader(this);
+  }
+
+  public void setStage(SPFZStage stage) {
+    this.stage = stage;
+  }
+
+  public SPFZStage stageObject() {
+    return stage;
+  }
+
+
+  /*
+   *************************** MAIN MENU METHODS **********************************
+   */
+  public boolean isTimeToReset(int timer) {
+    return timersAndStops[timer][0] == 0;
+  }
+
   public void runTimers() {
     for (int i = 0; i < timersAndStops.length; i++)
     {
@@ -798,10 +832,66 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     }
   }
 
-  public boolean isTimeToReset(int timer) {
-    return timersAndStops[timer][0] == 0;
+  public boolean isSceneOneScene() {
+    return currentScene.equals(uiSceneMap[0][0]);
   }
-  //Methods for grabbing information from SPFZFILE Preferences file
+
+  public boolean isLandScene() {
+    return currentScene.equals(uiSceneMap[0][1]);
+  }
+
+  public boolean isArcadeSelectScene() {
+    return currentScene.equals(uiSceneMap[1][0]);
+  }
+
+  public boolean isCharacterSelectScene() {
+    return currentScene.equals(uiSceneMap[1][1]);
+  }
+
+  public boolean isStageSelectScene() {
+    return currentScene.equals(uiSceneMap[2][1]);
+  }
+
+  /*
+   ************************* STAGE SELECT METHODS **********************************
+   */
+  public String selectedStage() {
+    return selectedStage;
+  }
+
+  public void setStageTexture() {
+    Pixmap pixmap, pixmap2;
+    String layer = "Default";
+    SimpleImageVO stageImage = new SimpleImageVO();
+    //texWidth - needs to be the size of full stage width,
+    //texHeight - needs to be size of full stage height
+
+    pixmap = new Pixmap(Gdx.files.internal(stagePath));
+
+    /*pixmap2 = new Pixmap((int) texWidth, (int) texHeight, pixmap.getFormat());
+
+    pixmap2.drawPixmap(pixmap, 0, 0, pixmap.getWidth(), pixmap.getHeight(), 0, 0, pixmap2.getWidth(),
+      pixmap2.getHeight());
+    stageback = new Texture(pixmap2);*/
+
+    //pixmap2.dispose();
+    pixmap.dispose();
+    stageImage.layerName = layer;
+    stageImage.zIndex = 0;
+
+    stageImage.scaleX = 1f;
+    stageImage.scaleY = 1f;
+
+    // stageImage.x = 200f;
+    // stageImage.y = -120f;
+    stageImage.x = -240f;
+    stageImage.y = 0f;
+
+    landscapeSSL.entityFactory.createEntity(rootWrapper.getEntity(), stageImage);
+  }
+  /*
+   ******************* PREFERENCE FILE RETRIEVAL METHODS **************************
+   */
 
   public int getPixelToWorldSize() {
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);

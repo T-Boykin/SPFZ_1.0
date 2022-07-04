@@ -287,7 +287,13 @@ public class SPFZMenuAction
   }
   //CHARACTER AND STAGE SELECT MENU ACTIONS
 
-  public void processOkButton() {
+  public void processOkButton(String currentScene) {
+    switch (currentScene)
+    {
+      case "stageselscn":
+        resManager.loadStageResource(resManager.selectedStage());
+        break;
+    }
   }
 
   public void processBackButton() {

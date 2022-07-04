@@ -631,8 +631,7 @@ public class SPFZMenuButtonListeners
 
               @Override
               public void run() {
-                ok.play(1.0f);
-                createstage();
+                menu_action.processOkButton("stageselscn");
               }
             })));
 

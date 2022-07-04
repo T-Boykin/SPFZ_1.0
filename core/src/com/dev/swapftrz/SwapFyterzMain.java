@@ -1,8 +1,8 @@
 package com.dev.swapftrz;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.input.GestureDetector;
@@ -16,7 +16,6 @@ import com.dev.swapftrz.resource.SPFZParticleDrawableLogic;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
 import com.dev.swapftrz.stage.SPFZStage;
-import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.utils.ComponentRetriever;
@@ -28,14 +27,13 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   private final AndroidInterfaceLIBGDX android;
   private final SPFZMenu spfzmenu;
 
-  boolean transition, flingup, flingdown, optionsup, adjustbright, adjustsound, credpress;
-  ComponentMapper<ActionComponent> ac = ComponentMapper.getFor(ActionComponent.class);
+  boolean transition, sliderProcessing, flingup, flingdown, adjustBrightness, adjustsound, credpress;
+  //ComponentMapper<ActionComponent> ac = ComponentMapper.getFor(ActionComponent.class);
 
   float soundamount, brightamount;
 
   private final GestureDetector gd;
-  // private static final InputMultiplexer im = new InputMultiplexer();
-
+  private final InputMultiplexer im = new InputMultiplexer();
 
   // ItemWrapper grabs all of the entities created within the Overlap2d
   // Application
@@ -102,8 +100,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
       case RUNNING:
         break;
     }
-    //grab status of the game
-    //startup, startUpComplete,
+
     resourceManager.setCurrentOrientation();
   }
 
@@ -132,7 +129,13 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   }
 
   public void runningProcessing() {
-    spfzmenu.processTimedBackgroundTasks();
+    if (resourceManager.isInMenu())
+      spfzmenu.processTimedBackgroundTasks();
+    else if (resourceManager.stageObject() != null && stage == null)
+      stage = resourceManager.stageObject();
+
+    if (stage != null)
+      stageProcessing();
   }
 
   public void pauseProcessing() {
@@ -143,6 +146,25 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   }
 
+  //house stage Method for stageProcessing
+  public void stageProcessing() {
+    stage.runProcesses();
+  }
+
+  public void mainMenuSwipeProcessing(float velocityY) {
+    //store 1000 into preferences fileS
+    if (velocityY > 1000f && !credpress && !transition)
+    {
+      flingup = true;
+      flingdown = false;
+    }
+    else if (velocityY < -1000f && !credpress && !transition)
+    {
+      flingdown = true;
+      flingup = false;
+    }
+  }
+
   @Override
   public boolean fling(float velocityX, float velocityY, int button) {
     // The fling process controls when the user can go to the credits or back to
@@ -151,19 +173,9 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     // at the main menu,
     // and if the user has not pressed any of the constellations.
 
-    if (!optionsup && spfzmenu.isLandscape() && ac != null && resourceManager.currentScene() == "landscene")
-    {
-      if (velocityY > 1000f && !credpress && !transition)
-      {
-        flingup = true;
-        flingdown = false;
-      }
-      else if (velocityY < -1000f && !credpress && !transition)
-      {
-        flingdown = true;
-        flingup = false;
-      }
-    }
+    if (resourceManager.isLandScene())
+      mainMenuSwipeProcessing(velocityY);
+
     return true;
   }
 
@@ -251,9 +263,125 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
     istraining = true;
   }*/
 
+  public void buttonSliderProcessiing() {
+    TransformComponent transcomp = new TransformComponent();
+    TransformComponent transcomponent = new TransformComponent();
+    DimensionsComponent dimcompon = new DimensionsComponent();
+    DimensionsComponent dimcomponent = new DimensionsComponent();
+    Vector2 dimwh = new Vector2();
+    Vector2 dimwhs = new Vector2();
+    Vector3 vec3 = new Vector3();
+    Vector3 transpar = new Vector3(0, 0, 0);
+    String option;
+    int MAX_VOL = 1;
+    int MAX_BRIGHT = 255;
+    float fullbarpercent;
+
+    if (spfzmenu.isPortrait())
+      option = "optionscreen";
+    else
+      option = "optdialog";
+
+    if (adjustBrightness)
+    {
+      transcomponent = ComponentRetriever.get(root.getChild(option).getChild("brightslider").getEntity(),
+        TransformComponent.class);
+      dimcomponent = ComponentRetriever.get(root.getChild(option).getChild("brightslider").getEntity(),
+        DimensionsComponent.class);
+      transcomp = ComponentRetriever.get(root.getChild(option).getChild("brightbar").getEntity(),
+        TransformComponent.class);
+      dimcompon = ComponentRetriever.get(root.getChild(option).getChild("brightbar").getEntity(),
+        DimensionsComponent.class);
+    }
+    else
+    {
+      transcomponent = ComponentRetriever.get(root.getChild(option).getChild("soundslider").getEntity(),
+        TransformComponent.class);
+      dimcomponent = ComponentRetriever.get(root.getChild(option).getChild("soundslider").getEntity(),
+        DimensionsComponent.class);
+      transcomp = ComponentRetriever.get(root.getChild(option).getChild("soundbar").getEntity(),
+        TransformComponent.class);
+      dimcompon = ComponentRetriever.get(root.getChild(option).getChild("soundbar").getEntity(),
+        DimensionsComponent.class);
+    }
+
+    transpar.x = ComponentRetriever.get(root.getChild(option).getEntity(), TransformComponent.class).x;
+    transpar.y = ComponentRetriever.get(root.getChild(option).getEntity(), TransformComponent.class).y;
+
+    spfzmenu.camera().update();
+    vec3.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+    spfzmenu.camera().unproject(vec3);
+
+    dimwh.x = dimcomponent.width * transcomponent.scaleX;
+    dimwh.y = dimcomponent.height * transcomponent.scaleY;
+    dimwhs.x = dimcompon.width * transcomp.scaleX;
+    dimwhs.y = dimcompon.height * transcomp.scaleY;
+
+    // bar full percentage
+    fullbarpercent = dimwhs.x;
+
+    if (transcomponent.x + transpar.x >= (transcomp.x + transpar.x - (dimwh.x * .5f))
+      && (transpar.x + transcomponent.x + (dimwh.x * .5f)) <= (transpar.x + transcomp.x + dimwhs.x))
+    {
+      // transcomponent.x = (vec3.x - (dimwh.x / 2)) - transpar.x;
+      transcomponent.x = (vec3.x - (dimwh.x * .5f)) - transpar.x;
+    }
+
+    // If the Slider(transcomponent.x + parent entity.x) value is less
+    // than
+    // the beginning of the bar(transcomp.x + parent entity.x),
+    // set the slider to the beginning of the bar
+
+    //if (transcomponent.x + transpar.x < (transcomp.x + transpar.x - (dimwh.x * .5f)))
+    if (transcomponent.x + transpar.x < (transcomp.x + transpar.x - (dimwh.x * .5f)))
+    {
+      // transcomponent.x = transcomp.x - (dimwh.x / 2);
+      transcomponent.x = transcomp.x - (dimwh.x * .5f);
+    }
+
+    // If the end of the Slider(transcomponent.x + parent entity.x +
+    // slider
+    // width) value is less than the end of the bar(transcomp.x + parent
+    // entity.x + bar width),
+    // set the slider to the end of the slider to the end of the bar
+
+    if ((transpar.x + transcomponent.x + (dimwh.x * .5f)) > (transpar.x + transcomp.x + dimwhs.x))
+    {
+      transcomponent.x = transcomp.x + dimwhs.x - (dimwh.x * .5f) - .5f;
+    }
+
+    // Adjust brightness or sound with the new slider value
+
+    if (adjustBrightness)
+    {
+      brightamount = 100 * (((dimwh.x * .5f) + transcomponent.x) - transcomp.x) / fullbarpercent;
+
+      brightamount = (brightamount * .01f) * MAX_BRIGHT;
+
+
+      if (brightamount >= 5f && brightamount <= MAX_BRIGHT)
+      {
+
+        //adjustBrightness(brightamount);
+      }
+    }
+
+    if (adjustsound)
+    {
+      soundamount = 100 * (((dimwh.x * .5f) + transcomponent.x) - transcomp.x) / fullbarpercent;
+
+      soundamount = (soundamount * .01f) * MAX_VOL;
+
+
+      if (soundamount >= 0f && soundamount <= MAX_VOL)
+      {
+        //mainmenu.setVolume(soundamount);
+      }
+    }
+  }
+
   @Override
   public boolean tap(float x, float y, int count, int button) {
-
     return false;
   }
 
@@ -270,185 +398,15 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
   @Override
   public boolean touchDragged(int screenX, int screenY, int pointer) {
     //Slider processing
-    if (optionsup)
-    {
-      TransformComponent transcomp = new TransformComponent();
-      TransformComponent transcomponent = new TransformComponent();
-      DimensionsComponent dimcompon = new DimensionsComponent();
-      DimensionsComponent dimcomponent = new DimensionsComponent();
-      Vector2 dimwh = new Vector2();
-      Vector2 dimwhs = new Vector2();
-      Vector3 vec3 = new Vector3();
-      Vector3 transpar = new Vector3(0, 0, 0);
-      String option = new String();
+    if (sliderProcessing)
+      buttonSliderProcessiing();
 
-      if (spfzmenu.isPortrait())
-      {
-        option = "optionscreen";
-      }
-      else
-      {
-        option = "optdialog";
-      }
-
-      if (adjustbright)
-      {
-        transcomponent = ComponentRetriever.get(root.getChild(option).getChild("brightslider").getEntity(),
-          TransformComponent.class);
-        dimcomponent = ComponentRetriever.get(root.getChild(option).getChild("brightslider").getEntity(),
-          DimensionsComponent.class);
-        transcomp = ComponentRetriever.get(root.getChild(option).getChild("brightbar").getEntity(),
-          TransformComponent.class);
-        dimcompon = ComponentRetriever.get(root.getChild(option).getChild("brightbar").getEntity(),
-          DimensionsComponent.class);
-      }
-      else
-      {
-        transcomponent = ComponentRetriever.get(root.getChild(option).getChild("soundslider").getEntity(),
-          TransformComponent.class);
-        dimcomponent = ComponentRetriever.get(root.getChild(option).getChild("soundslider").getEntity(),
-          DimensionsComponent.class);
-        transcomp = ComponentRetriever.get(root.getChild(option).getChild("soundbar").getEntity(),
-          TransformComponent.class);
-        dimcompon = ComponentRetriever.get(root.getChild(option).getChild("soundbar").getEntity(),
-          DimensionsComponent.class);
-      }
-      if (adjustsound)
-      {
-        transcomponent = ComponentRetriever.get(root.getChild(option).getChild("soundslider").getEntity(),
-          TransformComponent.class);
-        dimcomponent = ComponentRetriever.get(root.getChild(option).getChild("soundslider").getEntity(),
-          DimensionsComponent.class);
-        transcomp = ComponentRetriever.get(root.getChild(option).getChild("soundbar").getEntity(),
-          TransformComponent.class);
-        dimcompon = ComponentRetriever.get(root.getChild(option).getChild("soundbar").getEntity(),
-          DimensionsComponent.class);
-      }
-      else
-      {
-        transcomponent = ComponentRetriever.get(root.getChild(option).getChild("brightslider").getEntity(),
-          TransformComponent.class);
-        dimcomponent = ComponentRetriever.get(root.getChild(option).getChild("brightslider").getEntity(),
-          DimensionsComponent.class);
-        transcomp = ComponentRetriever.get(root.getChild(option).getChild("brightbar").getEntity(),
-          TransformComponent.class);
-        dimcompon = ComponentRetriever.get(root.getChild(option).getChild("brightbar").getEntity(),
-          DimensionsComponent.class);
-      }
-
-      transpar.x = ComponentRetriever.get(root.getChild(option).getEntity(), TransformComponent.class).x;
-      transpar.y = ComponentRetriever.get(root.getChild(option).getEntity(), TransformComponent.class).y;
-
-      int MAX_VOL = 1;
-      int MAX_BRIGHT = 255;
-      float fullbarpercent;
-
-
-      if (spfzmenu.isPortrait())
-      {
-        viewportport.getCamera().update();
-        vec3.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-        viewportport.unproject(vec3);
-      }
-      else
-      {
-        viewportland.getCamera().update();
-        vec3.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-        viewportland.unproject(vec3);
-      }
-
-      if (adjustbright || adjustsound)
-      {
-        dimwh.x = dimcomponent.width * transcomponent.scaleX;
-        dimwh.y = dimcomponent.height * transcomponent.scaleY;
-        dimwhs.x = dimcompon.width * transcomp.scaleX;
-        dimwhs.y = dimcompon.height * transcomp.scaleY;
-
-        // bar full percentage
-        fullbarpercent = dimwhs.x;
-
-        if (transcomponent.x + transpar.x >= (transcomp.x + transpar.x - (dimwh.x * .5f))
-          && (transpar.x + transcomponent.x + (dimwh.x * .5f)) <= (transpar.x + transcomp.x + dimwhs.x))
-        {
-          // transcomponent.x = (vec3.x - (dimwh.x / 2)) - transpar.x;
-          transcomponent.x = (vec3.x - (dimwh.x * .5f)) - transpar.x;
-        }
-
-        // If the Slider(transcomponent.x + parent entity.x) value is less
-        // than
-        // the beginning of the bar(transcomp.x + parent entity.x),
-        // set the slider to the beginning of the bar
-
-        //if (transcomponent.x + transpar.x < (transcomp.x + transpar.x - (dimwh.x * .5f)))
-        if (transcomponent.x + transpar.x < (transcomp.x + transpar.x - (dimwh.x * .5f)))
-        {
-          // transcomponent.x = transcomp.x - (dimwh.x / 2);
-          transcomponent.x = transcomp.x - (dimwh.x * .5f);
-        }
-
-        // If the end of the Slider(transcomponent.x + parent entity.x +
-        // slider
-        // width) value is less than the end of the bar(transcomp.x + parent
-        // entity.x + bar width),
-        // set the slider to the end of the slider to the end of the bar
-
-        if ((transpar.x + transcomponent.x + (dimwh.x * .5f)) > (transpar.x + transcomp.x + dimwhs.x))
-        {
-          transcomponent.x = transcomp.x + dimwhs.x - (dimwh.x * .5f) - .5f;
-        }
-
-        // Adjust brightness or sound with the new slider value
-
-        if (adjustbright)
-        {
-          brightamount = 100 * (((dimwh.x * .5f) + transcomponent.x) - transcomp.x) / fullbarpercent;
-
-          brightamount = (brightamount * .01f) * MAX_BRIGHT;
-
-
-          if (brightamount >= 5f && brightamount <= MAX_BRIGHT)
-          {
-
-            //adjustBrightness(brightamount);
-          }
-        }
-
-        if (adjustsound)
-        {
-          soundamount = 100 * (((dimwh.x * .5f) + transcomponent.x) - transcomp.x) / fullbarpercent;
-
-          soundamount = (soundamount * .01f) * MAX_VOL;
-
-
-          if (soundamount >= 0f && soundamount <= MAX_VOL)
-          {
-            //mainmenu.setVolume(soundamount);
-          }
-        }
-
-      }
-    }
     return true;
   }
 
   @Override
   public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-
     return true;
-  }
-
-  /**
-   * Method returns SceneLoader based on Screen orientation
-   */
-  public SPFZSceneLoader update(String orientation) {
-    if (orientation == ("portrait"))
-    {
-      return port;
-    }
-    else
-    {
-      return land;
-    }
   }
 
   @Override
@@ -463,5 +421,14 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   public SPFZState stateOfGame() {
     return state;
+  }
+
+  public void setStage(SPFZStage stage) {
+    this.stage = stage;
+  }
+
+  public void setSliderProcessing(boolean sliderTouched, boolean slider) {
+    sliderProcessing = sliderTouched;
+    adjustBrightness = slider;
   }
 }

@@ -6,9 +6,11 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Timer;
 import com.dev.swapftrz.resource.LifeSystem;
+import com.dev.swapftrz.resource.LifeTextureComponent;
 import com.dev.swapftrz.resource.SPFZO2DMethods;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SpecialSystem;
+import com.dev.swapftrz.resource.SpecialTexComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TintComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
@@ -169,71 +171,24 @@ class SPFZStageHUD extends SPFZO2DMethods
     SpecialSystem Specsystem = new SpecialSystem(stage.getBatch(), stage.getCamera(),
       stage);
 
-    for (int i = 0; i < processed.size(); i++)
-    {
-      // CharAttributes healthgetter = new CharAttributes(null);
-
-      if (i < 3)
-      {
-        // p1health += healthgetter.getHealth();
-        p1health += 1000;
-      }
-      else
-      {
-        // p2health += healthgetter.getHealth();
-        p2health += 1000;
-      }
-    }
-
-    startp1 = p1health;
-    startp2 = p2health;
-
+    //total health calculation here
+    //set p1 and p2 total health
 
     stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-      .add(new LifeTextureComponent(health1, outline1, startp1, stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
+      .add(new LifeTextureComponent(stage, true, stage.player1().getHealth(),
+        stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
         stageWrapper.getChild("ctrlandhud").getChild("healthout1").getEntity(), true));
 
     stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
-      .add(new LifeTextureComponent(health2, outline2, startp2,
+      .add(new LifeTextureComponent(stage, false, stage.player2().getHealth(),
         stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity(),
         stageWrapper.getChild("ctrlandhud").getChild("healthout2").getEntity(), false));
 
     stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
-      .add(new SpecialTexComponent(specmeter1, exdots1, superout1, 0,
-        stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity(),
-        stageWrapper.getChild("ctrlandhud").getChild("fillone").getEntity(),
-        stageWrapper.getChild("ctrlandhud").getChild("sprmtrone").getEntity(), true));
+      .add(new SpecialTexComponent(stage, true, stage.player1().getMeter()));
 
     stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity()
-      .add(new SpecialTexComponent(specmeter2, exdots2, superout2, 0,
-        stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity(),
-        stageWrapper.getChild("ctrlandhud").getChild("filltwo").getEntity(),
-        stageWrapper.getChild("ctrlandhud").getChild("sprmtrtwo").getEntity(), false));
-
-    Entity healthreg = stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity();
-
-   /* p1HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-      .getComponent(LifeTextureComponent.class).width;
-
-    p2HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-      .getComponent(LifeTextureComponent.class).width;
-
-    begpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
-      .getComponent(LifeTextureComponent.class).width;*/
-   /*p1HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-      .getComponent(DimensionsComponent.class).width;
-
-    p2HPpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-            .getComponent(DimensionsComponent.class).width;
-
-    begpercent = stageItemWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
-            .getComponent(DimensionsComponent.class).width;*/
-    p1HPpercent = healthreg.getComponent(LifeTextureComponent.class).width;
-    p2HPpercent = healthreg.getComponent(LifeTextureComponent.class).width;
-    begpercent = healthreg.getComponent(LifeTextureComponent.class).width;
-
-    begsuperpct = stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
-      .getComponent(SpecialTexComponent.class).width;
+      .add(new SpecialTexComponent(stage, false, stage.player2().getMeter()));
 
     stage.stageSSL().engine.addSystem(lifesystem);
     lifesystem.priority = 50;
@@ -252,124 +207,26 @@ class SPFZStageHUD extends SPFZO2DMethods
 
       Actions.addAction(roundimg, Actions.scaleTo(1f, 0f, .3f, Interpolation.elastic));
 
-      if (finishedrd && gameover)
-      {
-         if (p1rdcount == 2 && p2rdcount != 2)
-         {
-            if (access.isArcade)
-            {
-               roundtext.getComponent(LabelComponent.class).setText("YOU WIN");
-            }
-            else
-            {
-               roundtext.getComponent(LabelComponent.class).setText("PLAYER ONE WINS");
-            }
-         }
-         else if (p2rdcount == 2 && p1rdcount != 2)
-         {
-            if (access.isArcade)
-            {
-               roundtext.getComponent(LabelComponent.class).setText("YOU LOSE");
-            }
-            else
-            {
-               roundtext.getComponent(LabelComponent.class).setText("PLAYER TWO WINS");
-            }
-         }
-         else if (p1rdcount == 2 && p2rdcount == 2)
-         {
-            if (access.isArcade)
-            {
-               roundtext.getComponent(LabelComponent.class).setText("DRAW GAME\n YOU LOSE");
-            }
-            else
-            {
-               roundtext.getComponent(LabelComponent.class).setText("DRAW GAME");
-            }
-         }
-
-         Actions.addAction(roundtext, Actions.sequence(Actions.fadeIn(3f), Actions.run(new Runnable()
-         {
-
-            @Override
-            public void run() {
-               access.paused = false;
-               // access.getscreenshot();
-               access.pause();
-
-            }
-         })));
-      }
-
-      else
-      {
-         Actions.addAction(roundtext,
-           Actions.sequence(Actions.fadeIn(1.5f), Actions.fadeOut(.3f), Actions.run(new Runnable()
-           {
-
-              @Override
-              public void run() {
-                 // Entity roundtext =
-                 // stageItemWrapper.getChild("ctrlandhud").getChild("roundtext").getEntity();;
-
-                 // Entity fightimg =
-                 // stageItemWrapper.getChild("ctrlandhud").getChild("fightimg").getEntity();
-
-                 // Actions.addAction(fightimg,
-                 // Actions.sequence(Actions.scaleTo(1f, 1f, .3f,
-                 // Interpolation.elastic), Actions.delay(.5f), Actions.scaleTo(1f,
-                 // 0f, .4f, Interpolation.elastic)));
-
-                 // roundtext.getComponent(LabelComponent.class).setText("FIGHT");
-                 // Actions.addAction(roundtext, Actions.fadeIn(.8f));
-
-              }
-
-           })));
-         Actions.addAction(roundimg, Actions.sequence(Actions.scaleTo(1f, 1f, .4f, Interpolation.elastic),
-           Actions.delay(1f), Actions.scaleTo(1f, 0f, .4f, Interpolation.elastic), Actions.run(new Runnable()
-           {
-
-              @Override
-              public void run() {
-                 // Entity roundtext =
-                 // stageItemWrapper.getChild("ctrlandhud").getChild("roundtext").getEntity();;
-
-                 Entity fightimg = stageWrapper.getChild("ctrlandhud").getChild("fightimg").getEntity();
-
-                 Actions.addAction(fightimg, Actions.sequence(Actions.scaleTo(1f, 1f, .3f, Interpolation.elastic),
-                   Actions.delay(.5f), Actions.scaleTo(1f, 0f, .4f, Interpolation.elastic)));
-
-                 // roundtext.getComponent(LabelComponent.class).setText("FIGHT");
-                 // Actions.addAction(roundtext, Actions.fadeIn(.8f));
-
-              }
-
-           })));
-      }
+    //Round Text logic - tied to Label Component
    }
 
    private void prefighttimer() {
 
-      // This method contains the actions to perform at the beginning of each
-      // round
-      Timer.schedule(new Timer.Task()
-      {
+     // This method contains the actions to perform at the beginning of each
+     // round
+     Timer.schedule(new Timer.Task()
+     {
 
-         @Override
-         public void run() {
-            Entity pausebtn = stageWrapper.getChild("ctrlandhud").getChild("pausebutton").getEntity();
-            Entity roundtext = stageWrapper.getChild("ctrlandhud").getChild("roundtext").getEntity();
+       @Override
+       public void run() {
+         Entity pausebtn = stageWrapper.getChild("ctrlandhud").getChild("pausebutton").getEntity();
+         Entity roundtext = stageWrapper.getChild("ctrlandhud").getChild("roundtext").getEntity();
 
-            standby = false;
-            initcheck = true;
-            // check = 500;
-
-            pausebtn.getComponent(
-              TransformComponent.class).originY = pausebtn.getComponent(DimensionsComponent.class).height * .5f;
-            Actions.addAction(pausebtn, Actions.scaleTo(1f, 1f, .3f, Interpolation.circle));
-            Actions.addAction(roundtext, Actions.fadeOut(.3f));
-         }
-      }, 3);
+         pausebtn.getComponent(
+           TransformComponent.class).originY = pausebtn.getComponent(DimensionsComponent.class).height * .5f;
+         Actions.addAction(pausebtn, Actions.scaleTo(1f, 1f, .3f, Interpolation.circle));
+         Actions.addAction(roundtext, Actions.fadeOut(.3f));
+       }
+     }, 3);
    }
 }

@@ -14,7 +14,7 @@ import java.util.List;
 public class SPFZStage extends Stage
 {
   private SPFZResourceManager resManager;
-  private SPFZSceneLoader stageSSL;
+  private final SPFZSceneLoader stageSSL, pauseSSL;
   private final SPFZStageCamera stageCamera;
   private final SPFZStageAnimation stageAnimation;
   private SPFZStageHUD stageHUD;
@@ -26,6 +26,7 @@ public class SPFZStage extends Stage
 
   public SPFZStage(List<String> characters, SPFZResourceManager resManager) {
     this.resManager = resManager;
+    resManager.loadStageResource();
     GROUND = resManager.getStageGround();
     WALLJUMPBOUNDARY = resManager.getWallJumpBoundary();
     CHARACTER_SPACING = resManager.getStageStartSpacing();
@@ -37,6 +38,7 @@ public class SPFZStage extends Stage
     stageHUD = new SPFZStageHUD(this, resManager);
     stageAnimation = new SPFZStageAnimation(this);
     stageStatus = new SPFZStageStatus();
+    pauseSSL = resManager.getPauseSSL();
     spfzPlayer1 = new SPFZPlayer(this);
     spfzPlayer2 = new SPFZPlayer(this);
     spfzPlayer1.setOpponent(spfzPlayer2);
@@ -51,6 +53,21 @@ public class SPFZStage extends Stage
     stageHUD.setTimerTexture(false);
     stageHUD.setHUDCharacterNames(characters);
     stageHUD.preFightFade();
+  }
+
+  public void runProcesses() {
+    if (stageStatus.isGameOver())
+      stageStatus = stageStatus;
+
+    if (stageStatus.isEndOfRound())
+      stageStatus = stageStatus;
+
+    if (stageStatus.isGamePause())
+      stageStatus = stageStatus;
+
+    if (stageStatus.isRoundStart())
+      stageStatus = stageStatus;
+
   }
 
   @Override
@@ -94,5 +111,13 @@ public class SPFZStage extends Stage
 
   public SPFZPlayer player2() {
     return spfzPlayer2;
+  }
+
+  public void setStageStatus(SPFZStageStatus stageStatus) {
+    this.stageStatus = stageStatus;
+  }
+
+  public SPFZStageStatus statusOfStage() {
+    return stageStatus;
   }
 }

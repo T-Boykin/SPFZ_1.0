@@ -35,8 +35,8 @@ public class SPFZPlayer implements IScript, Attribs, BufferandInput
   public boolean isRight, isUp, isDown, isLeft, isPunch, isKick;
 
   public boolean special, swap, hit, blk, dblk, dash, left, right, isJumping, jumpdir, attacking, attacked, confirm, walljump,
-    blocking, punchstuck, kickstuck, runscript, cancel, pushed,
-    createbox, projact, pausefrm, inair, stwlk, ltstuck, ownatk, projhit, bouncer, wallb, invul;
+    blocking, punchstuck, kickstuck, runscript, cancel, pushed, createbox, projact, pausefrm, inair, stwlk, ltstuck, ownatk,
+    projhit, bouncer, wallb, invul;
 
   CharacterAttirbutes characterAttributes;
 
@@ -44,8 +44,8 @@ public class SPFZPlayer implements IScript, Attribs, BufferandInput
   Vector2 walkandjump, dashpoints;
 
   float ground, wallJumpBoundary, stun, tempfdur, gravity, jumpspeed, walkspeed, dashspeed, tempspeed, tempdist, tempdur,
-    pauseTime,
-    stateTime = 0, intpush, spectime = 0, swaptime = 0, duration = .13f, distance = 1f, startpt, adjustX, adjustY;
+    pauseTime, health, meter, stateTime = 0, intpush, spectime = 0, swaptime = 0, duration = .13f, distance = 1f, startpt,
+    adjustX, adjustY;
 
   private SPFZPlayer opponent;
   private float[] cameraBoundaries = {}, stageBoundaries = {};
@@ -55,8 +55,7 @@ public class SPFZPlayer implements IScript, Attribs, BufferandInput
   private List<List<ArrayList<Double>>> characterData = new ArrayList<List<ArrayList<Double>>>();
   private List<HashMap<String, int[]>> animations = new ArrayList<HashMap<String, int[]>>();
   private List<ArrayList<String>> specials = new ArrayList<ArrayList<String>>();
-  private int currentCharacter;
-  int combocount, currentframe, buff, dashdir, lastcount, buffsize = 60, move, input, lastfps;
+  int combocount, currentframe, lastcount, move, input, lastfps;
 
   int[] activeframes;
 
@@ -2614,5 +2613,17 @@ public class SPFZPlayer implements IScript, Attribs, BufferandInput
 
   public List<ArrayList<String>> specials() {
     return specials;
+  }
+
+  public void setTotalHealth(float health) {
+    this.health = health;
+  }
+
+  public float getHealth() {
+    return health;
+  }
+
+  public float getMeter() {
+    return meter;
   }
 }

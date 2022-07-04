@@ -19,6 +19,24 @@ public class SPFZStageAction
     stage_status.setGamePause();
   }
 
+  public void processResume() {
+  }
+
+  public void processRestart() {
+  }
+
+  public void processCharacterSelect() {
+  }
+
+  public void processMainMenu() {
+  }
+
+  public void processYes() {
+  }
+
+  public void processNo() {
+  }
+
   public void processRightButton(boolean pressed) {
     player.isRight = pressed;
   }
