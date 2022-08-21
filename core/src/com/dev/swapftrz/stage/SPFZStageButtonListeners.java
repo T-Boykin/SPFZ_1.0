@@ -116,7 +116,6 @@ class SPFZStageButtonListeners
     }
   };
 
-
   private final SPFZStageComponent.ButtonListener rightButtonListener = new SPFZStageComponent.ButtonListener()
   {
     @Override

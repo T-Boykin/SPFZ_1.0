@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -18,6 +19,8 @@ import com.badlogic.gdx.utils.Json;
 import com.dev.swapftrz.menu.SPFZMenuCamera;
 import com.dev.swapftrz.stage.SPFZStage;
 import com.dev.swapftrz.stage.SPFZStageCamera;
+import com.uwsoft.editor.renderer.components.TintComponent;
+import com.uwsoft.editor.renderer.components.label.LabelComponent;
 import com.uwsoft.editor.renderer.data.CompositeItemVO;
 import com.uwsoft.editor.renderer.data.CompositeVO;
 import com.uwsoft.editor.renderer.data.ProjectInfoVO;
@@ -32,6 +35,7 @@ import com.uwsoft.editor.renderer.utils.ItemWrapper;
 import com.uwsoft.editor.renderer.utils.MySkin;
 
 import java.io.File;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,76 +44,48 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
-{
+public class SPFZResourceManager implements IResourceRetriever, IResourceLoader {
+  private static final String packResolutionName = "orig", preferencesFile = "spfzfile";
 
-  protected float resMultiplier;
   private final SPFZDBOperations dbOperations;
-  private AssetManager assetManager = new AssetManager();
-  // public boolean setup;
-  // public int init = 0;
-  private static final String packResolutionName = "orig";
-  private static final String preferencesFile = "spfzfile";
+  private final SPFZMenuCamera spfzMCamera;
+  private final SPFZStageCamera spfzSCamera;
   public final byte ANDROID = 0, DESKTOP = 1, IOS = 2;
-  public static final String LANDSCAPE = "landscape";
-  public static final String PORTRAIT = "portrait";
+  public static final String LANDSCAPE = "landscape", PORTRAIT = "portrait";
   //private final AndroidInterfaceLIBGDX android;
-  private SPFZStage stage;
-  private int appDevice;
-  private String currentScene, previousScene, selectedStage, stagePath;
   // public String particleEffectsPath = "particles";
-
   // public String fontsPath = "freetypefonts";
-  private int uiLevel = 0;
+
   private String[][] uiSceneMap = {{"sceneone", "landscene"}, {"arcadeselscn", "charselscn"}, {"arcstory", "stageselscn"},
     {"stagescene"}};
-  //Timers managed within arrays, 1st Timer for CreditHints, 2nd Time for Ads, 3rd for MainMenu Light
-  private float[][] timersAndStops = {{0, 5f}, {0, 7f}, {0, 1.1f}};
-  // "charselscene" };
 
+
+  private List<String> particlenames;
+  private List<String> fontpairs;
+  private int uiLevel = 0, appDevice;
+  private AssetManager assetManager = new AssetManager();
+  private SPFZStage stage;
+  private String currentScene, previousScene, selectedStage, stagePath;
+  private Connection connection;
   protected ProjectInfoVO projectVO = new ProjectInfoVO();
-  protected String orientation;
-  protected boolean inMenu;
   protected ArrayList<String> preparedSceneNames = new ArrayList<>();
   protected HashMap<String, SceneVO> loadedSceneVOs = new HashMap<>();
   protected HashSet<String> spriteAnimNamesToLoad = new HashSet<>();
   protected HashSet<String> particleEffectNamesToLoad = new HashSet<>();
-
   protected HashSet<FontSizePair> fontsToLoad = new HashSet<>();
-
-  protected TextureAtlas mainPack;
+  protected HashMap<String, TextureAtlas> skeletonAtlases = new HashMap<>(), spriteAnimations = new HashMap<>();
   protected HashMap<String, ParticleEffect> particleEffects = new HashMap<>();
-
-  protected HashMap<String, TextureAtlas> skeletonAtlases = new HashMap<>();
   protected HashMap<String, FileHandle> skeletonJSON = new HashMap<>();
-  protected HashMap<String, TextureAtlas> spriteAnimations = new HashMap<>();
   protected HashMap<FontSizePair, BitmapFont> bitmapFonts = new HashMap<>();
   protected SPFZSceneLoader portraitSSL, landscapeSSL, stagePauseSSL;
+  protected String orientation;
   protected ItemWrapper rootWrapper;
-  private final SPFZMenuCamera spfzMCamera;
-  private final SPFZStageCamera spfzSCamera;
-
-
-  //Resolutions
-  //Map<String, Integer> resolutionWidth = new HashMap<String, Integer>();
-  //Map<String, Integer> resolutionHeight = new HashMap<String, Integer>();
-
-  // fontpairs = new ArrayList<String>(fontsToLoad.);
-  List<String> particlenames;
-  List<String> fontpairs;
-  // private final Pool<ParticleEffect>
-
-  // String fontpath;
-  // String fontimagepath;
-  // String partstr;
-  // String invalidfnt = "Sim";
-  // String invalidfnt2 = "Aha";
-  // String invalidfnt3 = "LCD";
+  protected TextureAtlas mainPack;
+  protected float resMultiplier;
 
   public SPFZResourceManager() {
     portraitSSL = new SPFZSceneLoader(this);
     landscapeSSL = new SPFZSceneLoader(this);
-    //stagePauseSL = new SPFZSceneLoader(this, appMain);
     dbOperations = new SPFZDBOperations(this);
     spfzMCamera = new SPFZMenuCamera(this);
     spfzSCamera = new SPFZStageCamera(this);
@@ -702,6 +678,8 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     setRootWrapper(landscapeSSL.getRoot());
   }
 
+  public void createPauseScene() { stagePauseSSL.loadScene("pausescene", spfzSCamera.getViewport()); }
+
   public SPFZSceneLoader getStagePauseSSL() {
     return stagePauseSSL;
   }
@@ -814,22 +792,49 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return stage;
   }
 
+  /*
+   *************************** UNIVERSAL METHODS **********************************
+   */
 
+  public void activateParticleEffect(String particleEffect) {
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1;
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).startEffect();
+  }
+
+  public void activateParticleEffect(String particleEffect, int multiplyer) {
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).worldMultiplyer = multiplyer;
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).startEffect();
+  }
+
+  public void changeLabelText(String characterObject, String newText) {
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(LabelComponent.class).setText(newText);
+  }
+
+  public void changeLabelTextColor(String characterObject, Color color) {
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(TintComponent.class).color = color;
+  }
+
+  public void changeLabel(String characterObject, String newText, Color color) {
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(LabelComponent.class).setText(newText);
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(TintComponent.class).color = color;
+  }
   /*
    *************************** MAIN MENU METHODS **********************************
    */
-  public boolean isTimeToReset(int timer) {
-    return timersAndStops[timer][0] == 0;
-  }
 
-  public void runTimers() {
-    for (int i = 0; i < timersAndStops.length; i++)
-    {
-      timersAndStops[i][0] += Gdx.graphics.getDeltaTime();
+  public Entity createObject(String object, String layerName) {
+    Entity objectEntity = getCurrentSSL().loadFromLibrary(object, layerName);
 
-      if (timersAndStops[i][0] > timersAndStops[i][1])
-        timersAndStops[i][0] = 0f;
-    }
+
+    return objectEntity;
   }
 
   public boolean isSceneOneScene() {
@@ -1031,5 +1036,20 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
 
     return spfzprefs.getFloat("walljumpbound");
+  }
+
+
+  /* ********************** SQL CHARACTER INFORMATION RETRIEVAL *********************/
+
+  public List<ArrayList<Double>> dbRetrieveCharacterFrameData(String character) {
+    return dbOperations.retrieveAttacksAndAnimationsData(connection, character);
+  }
+  /* ********************************************************************************/
+
+  public Connection getDBConnection() {
+    if (connection == null)
+      connection = dbOperations.createDBConnection();
+
+    return connection;
   }
 }

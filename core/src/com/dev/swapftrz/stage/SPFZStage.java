@@ -3,6 +3,7 @@ package com.dev.swapftrz.stage;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.dev.swapftrz.fyter.SPFZPlayer;
+import com.dev.swapftrz.menu.SPFZMenu;
 import com.dev.swapftrz.resource.LifeSystem;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
@@ -17,14 +18,16 @@ public class SPFZStage extends Stage
   private final SPFZSceneLoader stageSSL, pauseSSL;
   private final SPFZStageCamera stageCamera;
   private final SPFZStageAnimation stageAnimation;
+  private final SPFZMenu spfzMenu;
   private SPFZStageHUD stageHUD;
   private SPFZStageStatus stageStatus;
   private ItemWrapper stageWrapper;
-  private float[] cameraBoundaries = {}, stageBoundaries = {};
+  private float[] cameraBoundaries = { }, stageBoundaries = { };
   private final float GROUND, WALLJUMPBOUNDARY, CHARACTER_SPACING;
   private final SPFZPlayer spfzPlayer1, spfzPlayer2;
 
-  public SPFZStage(List<String> characters, SPFZResourceManager resManager) {
+  public SPFZStage(SPFZMenu spfzMenu, List<String> characters, SPFZResourceManager resManager) {
+    this.spfzMenu = spfzMenu;
     this.resManager = resManager;
     resManager.loadStageResource();
     GROUND = resManager.getStageGround();
@@ -39,8 +42,8 @@ public class SPFZStage extends Stage
     stageAnimation = new SPFZStageAnimation(this);
     stageStatus = new SPFZStageStatus();
     pauseSSL = resManager.getPauseSSL();
-    spfzPlayer1 = new SPFZPlayer(this);
-    spfzPlayer2 = new SPFZPlayer(this);
+    spfzPlayer1 = new SPFZPlayer(this, resManager, characters, true);
+    spfzPlayer2 = new SPFZPlayer(this, resManager, characters, false);
     spfzPlayer1.setOpponent(spfzPlayer2);
     spfzPlayer2.setOpponent(spfzPlayer1);
     initStage(characters);
@@ -81,6 +84,8 @@ public class SPFZStage extends Stage
     return stageSSL;
   }
 
+  public SPFZStageCamera camera() { return stageCamera; }
+
   public ItemWrapper stageWrapper() {
     return stageWrapper;
   }
@@ -117,7 +122,11 @@ public class SPFZStage extends Stage
     this.stageStatus = stageStatus;
   }
 
-  public SPFZStageStatus statusOfStage() {
-    return stageStatus;
-  }
+  public boolean gameOver() { return stageStatus.isGameOver(); }
+
+  public boolean gamePaused() { return stageStatus.isGamePause(); }
+
+  public boolean roundStarted() { return stageStatus.isRoundStart(); }
+
+  public boolean endOfRound() { return stageStatus.isEndOfRound(); }
 }

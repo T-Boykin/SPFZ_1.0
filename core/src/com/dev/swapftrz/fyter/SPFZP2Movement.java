@@ -34,7 +34,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
     jumpdir, attacking, attacked, blocking, ownatk, projhit, projact, confirm, walljump, kickstuck, punchstuck,
     reflect, dash, bounced, roll, invul;
 
-  CharacterAttirbutes spfzp2vals;
+  CharacterAttributes spfzp2vals;
 
   SPFZStage stage;
   Vector2 walkandjump;
@@ -918,7 +918,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
   {
     ComponentMapper<MainItemComponent> mc = ComponentMapper.getFor(MainItemComponent.class);
     mc.get(entity);
-    spfzp2vals = new CharacterAttirbutes(mc.get(entity).itemIdentifier, stage.player2data.size());
+    //spfzp2vals = new CharacterAttributes(mc.get(entity).itemIdentifier);
 
     spfzsr = new ShapeRenderer();
     spfzhitbox = new ShapeRenderer();

@@ -1,30 +1,41 @@
 package com.dev.swapftrz.fyter;
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.math.Interpolation;
 import com.dev.swapftrz.resource.SPFZParticleComponent;
 import com.dev.swapftrz.stage.SPFZStage;
 import com.uwsoft.editor.renderer.components.MainItemComponent;
+import com.uwsoft.editor.renderer.components.NodeComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.components.ZIndexComponent;
+import com.uwsoft.editor.renderer.components.label.LabelComponent;
+import com.uwsoft.editor.renderer.components.sprite.SpriteAnimationComponent;
+import com.uwsoft.editor.renderer.components.sprite.SpriteAnimationStateComponent;
 import com.uwsoft.editor.renderer.data.CompositeItemVO;
+import com.uwsoft.editor.renderer.data.FrameRange;
 import com.uwsoft.editor.renderer.scripts.IScript;
+import com.uwsoft.editor.renderer.systems.action.Actions;
+import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-class SPFZFyterAnimation
-{
+class SPFZFyterAnimation {
   private SPFZStage stage;
   private SPFZPlayer spfzPlayer, opponent;
-  private List<List<ArrayList<Double>>> characterData;
+  private List<ArrayList<Double>> characterData;
   private List<HashMap<String, int[]>> animations;
   private List<ArrayList<String>> specials;
+  private String[] loopAnimations = { };
+  private SpriteAnimationComponent spfzAnimation;
+  private SpriteAnimationStateComponent spfzAnimationState;
   //SPFZBuffer may need to be used here
 
-  public SPFZFyterAnimation(SPFZPlayer spfzPlayer, SPFZStage stage, List<List<ArrayList<Double>>> characterData,
+  public SPFZFyterAnimation(SPFZPlayer spfzPlayer, SPFZStage stage, List<ArrayList<Double>> characterData,
                             List<HashMap<String, int[]>> animations, List<ArrayList<String>> specials) {
     this.stage = stage;
     this.spfzPlayer = spfzPlayer;
@@ -34,19 +45,132 @@ class SPFZFyterAnimation
     this.specials = specials;
   }
 
+  public void processAnimation() {
+
+  }
+
+  public void characterAnimationSetup(Entity character) {
+    NodeComponent characterNodeComponent = ComponentRetriever.get(character, NodeComponent.class);
+    spfzAnimation = ComponentRetriever.get(characterNodeComponent.children.get(0), SpriteAnimationComponent.class);
+    spfzAnimationState = ComponentRetriever.get(characterNodeComponent.children.get(0),
+      SpriteAnimationStateComponent.class);
+    setAnimationFrameRanges();
+  }
+
+  public void setAnimationFrameRanges() {
+    for (int i = 0; i < animations.size() - 1; i++) {
+
+    }
+  }
+
+  public void animation() {
+
+    if (spfzrect.y <= ground) {
+      ground();
+
+      if (lastanim != spfzAnimation.currentAnimation) {
+        boolean loopfound = false;
+        for (String anim : loopanims) {
+          if (spfzAnimation.currentAnimation == anim) {
+            loopfound = true;
+          }
+        }
+
+        if (loopfound) {
+
+          if (spfzAnimation.currentAnimation != null) {
+            spfzAnimationState.set(spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation), spfzAnimation.fps,
+              Animation.PlayMode.LOOP);
+          }
+        }
+        else {
+          if (spfzAnimation.currentAnimation != null) {
+            spfzAnimationState.set(spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation), spfzAnimation.fps,
+              Animation.PlayMode.NORMAL);
+          }
+        }
+        if (!loopfound) {
+          stateTime = 0;
+        }
+        lastanim = spfzAnimation.currentAnimation;
+      }
+    }
+    else {
+      inair();
+
+      if (lastanim != spfzAnimation.currentAnimation) {
+        stateTime = 0;
+        boolean loopfound = false;
+        for (String anim : loopanims) {
+          if (spfzAnimation.currentAnimation == anim) {
+            loopfound = true;
+          }
+        }
+
+        if (loopfound) {
+
+          if (spfzAnimation.currentAnimation != null) {
+            spfzAnimationState.set(spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation), spfzAnimation.fps,
+              Animation.PlayMode.LOOP);
+          }
+        }
+        else {
+          if (spfzAnimation.currentAnimation != null) {
+            spfzAnimationState.set(spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation), spfzAnimation.fps,
+              Animation.PlayMode.NORMAL);
+          }
+        }
+
+        lastanim = spfzAnimation.currentAnimation;
+
+      }
+
+      if (!attacking && !hitboxsize.isZero()) {
+        hitboxsize.setZero();
+      }
+    }
+
+    checkputp1();
+
+    if (runscript) {
+      if (spfzAnimation.currentAnimation == "IDLE") {
+        setneutral();
+      }
+    }
+
+    // grab the current frame of animation
+    currentframe = spfzAnimationState.currentAnimation.getKeyFrameIndex(stateTime);
+
+    if (spfzAnimationState.currentAnimation.isAnimationFinished(stateTime) && spfzAnimation.currentAnimation != "SATKD"
+      && spfzAnimation.currentAnimation != "SBLK" && spfzAnimation.currentAnimation != "CBLK"
+      && spfzAnimation.currentAnimation != "ABLK") {
+      if (spfzAnimation.currentAnimation != "FTRANS") {
+        if (attacking && !spfzAnimationState.paused) {
+          attacking = false;
+        }
+        if (spfzrect.y <= ground) {
+          setneutral();
+        }
+      }
+      else {
+        stwlk = true;
+      }
+    }
+    if (spfzAnimationState.currentAnimation.getPlayMode() == Animation.PlayMode.NORMAL && !spfzAnimationState.paused) {
+      stateTime += Gdx.graphics.getDeltaTime();
+    }
+
+  }
+
   public void checkstun(int player) {
     float fd;
-    if (((Attribs) arrscripts.get(player)).attacked())
-    {
+    if (((Attribs) arrscripts.get(player)).attacked()) {
       anim = "stun";
     }
-    else
-    {
-      if (((Attribs) arrscripts.get(player)).attributes().y == GROUND)
-      {
+    else {
+      if (((Attribs) arrscripts.get(player)).attributes().y == GROUND) {
         anim = "block";
-        if (spfzp2move.isDown)
-        {
+        if (opponent.isDown) {
           anim = "dblock";
         }
       }
@@ -61,82 +185,150 @@ class SPFZFyterAnimation
 
   public void checkneutral() {
 
-    if (spfzPlayer1.center() > spfzp2move.center()
-      || spfzPlayer1.setrect().x + spfzPlayer1.setrect().width > spfzp2move.center())
-    {
-      if (spfzPlayer1.setrect().x + (spfzPlayer1.setrect().width * .5f) > spfzp2move.setrect().x
-        + (spfzp2move.setrect().width * .5f))
-      {
-        spfzPlayer1.attributes().x += 1.2f;
-        spfzp2move.attributes().x -= 1.2f;
+    if (spfzPlayer.center() > opponent.center()
+      || spfzPlayer.setrect().x + spfzPlayer.setrect().width > opponent.center()) {
+      if (spfzPlayer.setrect().x + (spfzPlayer.setrect().width * .5f) > opponent.setrect().x
+        + (opponent.setrect().width * .5f)) {
+        spfzPlayer.attributes().x += 1.2f;
+        opponent.attributes().x -= 1.2f;
       }
-      else
-      {
-        spfzPlayer1.attributes().x -= 1.2f;
-        spfzp2move.attributes().x += 1.2f;
+      else {
+        spfzPlayer.attributes().x -= 1.2f;
+        opponent.attributes().x += 1.2f;
       }
     }
 
-    if (spfzp2move.center() > spfzPlayer1.center()
-      || spfzp2move.setrect().x + spfzp2move.setrect().width > spfzPlayer1.center())
-    {
-      if (spfzp2move.setrect().x + (spfzp2move.setrect().width * .5f) > spfzPlayer1.setrect().x
-        + (spfzPlayer1.setrect().width * .5f))
-      {
-        spfzp2move.attributes().x += 1.2f;
-        spfzPlayer1.attributes().x -= 1.2f;
+    if (opponent.center() > spfzPlayer.center()
+      || opponent.setrect().x + opponent.setrect().width > spfzPlayer.center()) {
+      if (opponent.setrect().x + (opponent.setrect().width * .5f) > spfzPlayer.setrect().x
+        + (spfzPlayer.setrect().width * .5f)) {
+        opponent.attributes().x += 1.2f;
+        spfzPlayer.attributes().x -= 1.2f;
       }
-      else
-      {
-        spfzp2move.attributes().x -= 1.2f;
-        spfzPlayer1.attributes().x += 1.2f;
+      else {
+        opponent.attributes().x -= 1.2f;
+        spfzPlayer.attributes().x += 1.2f;
       }
     }
 
   }
 
+  public void attackMove() {
+    //set the durations of the 3 stages of movement as well as the amount to push or pull the character.
+    float strtupmov = 0;
+    float actmov = 0;
+    float recovmov = 0;
+
+    float firstdur = rtnFrametime(characterData.get(currentCharacter).get(ACTSTARTBOX).get(move).floatValue() - (float) spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation).startFrame);
+    float seconddur = rtnFrametime(characterData.get(currentCharacter).get(ACTENDBOX).get(move).floatValue() - characterData.get(currentCharacter).get(ACTSTARTBOX).get(move).floatValue());
+    float thirddur = rtnFrametime(spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation).endFrame - characterData.get(currentCharacter).get(ACTENDBOX).get(move).floatValue());
+
+    if (characterData.get(currentCharacter).get(BACK_START).get(move).doubleValue() == 1) {
+      strtupmov = characterData.get(currentCharacter).get(BMOVE).get(move).floatValue();
+
+      if (spfzattribute.scaleX > 0) {
+        strtupmov *= -1f;
+      }
+
+    }
+    if (characterData.get(currentCharacter).get(FWD_START).get(move).doubleValue() == 1) {
+      strtupmov = characterData.get(currentCharacter).get(FMOVE).get(move).floatValue();
+
+      if (spfzattribute.scaleX < 0) {
+        strtupmov *= -1f;
+      }
+    }
+
+    if (characterData.get(currentCharacter).get(BACK_START).get(move).doubleValue() == 0 &&
+      characterData.get(currentCharacter).get(FWD_START).get(move).doubleValue() == 0) {
+      strtupmov = 0;
+      //firstdur = 0;
+    }
+
+    if (characterData.get(currentCharacter).get(BACK_ACTIVE).get(move).doubleValue() == 1) {
+      actmov = characterData.get(currentCharacter).get(BMOVE).get(move).floatValue();
+
+      if (spfzattribute.scaleX > 0) {
+        actmov *= -1f;
+      }
+    }
+    if (characterData.get(currentCharacter).get(FWD_ACTIVE).get(move).doubleValue() == 1) {
+      actmov = characterData.get(currentCharacter).get(FMOVE).get(move).floatValue();
+
+      if (spfzattribute.scaleX < 0) {
+        actmov *= -1f;
+      }
+    }
+
+    if (characterData.get(currentCharacter).get(BACK_ACTIVE).get(move).doubleValue() == 0 &&
+      characterData.get(currentCharacter).get(FWD_ACTIVE).get(move).doubleValue() == 0) {
+      actmov = 0;
+      //seconddur = 0;
+    }
+
+    if (characterData.get(currentCharacter).get(BACK_RECOV).get(move).doubleValue() == 1) {
+      recovmov = characterData.get(currentCharacter).get(BMOVE).get(move).floatValue();
+
+      if (spfzattribute.scaleX > 0) {
+        recovmov *= -1f;
+      }
+    }
+    if (characterData.get(currentCharacter).get(FWD_RECOV).get(move).doubleValue() == 1) {
+      recovmov = characterData.get(currentCharacter).get(FMOVE).get(move).floatValue();
+
+      if (spfzattribute.scaleX < 0) {
+        recovmov *= -1f;
+      }
+    }
+
+    if (characterData.get(currentCharacter).get(BACK_RECOV).get(move).doubleValue() == 0 &&
+      characterData.get(currentCharacter).get(FWD_RECOV).get(move).doubleValue() == 0) {
+      recovmov = 0;
+      //thirddur = 0;
+    }
+
+    Actions.addAction(spfzentity,
+      Actions.sequence(
+        Actions.moveBy(strtupmov, 0, firstdur, Interpolation.sineOut),
+        Actions.moveBy(actmov, 0, seconddur, Interpolation.sineOut),
+        Actions.moveBy(recovmov, 0, thirddur, Interpolation.sineOut)));
+    createbox = true;
+  }
+
   public void controlcrossing() {
-    close = true;
 
     // /////////////////////////////////////////PLAYER ONE ON THE RIGHT
     // SIDE //////////////////////////////////////////////////////
     // /////////////////////////////////////////PLAYER TWO ON THE LEFT
     // SIDE //////////////////////////////////////////////////////
 
-    neutral = true;
     // check to see if the players have both stopped moving that way they can be
     // readjusted
     for (int j = 0; j < 2; j++)
     {
-      if (spfzPlayer1.p1movement.get(j) || spfzp2move.p2movement.get(j))
-      {
+      if (spfzPlayer.p1movement.get(j) || opponent.p2movement.get(j)) {
         neutral = false;
       }
     }
     // leave as is for now. was neutral
-    if (neutral || (spfzPlayer1.attributes().y > spfzPlayer1.charGROUND() || spfzp2move.attributes().y > spfzp2move.charGROUND()))
-    {
+    if (neutral || (spfzPlayer.attributes().y > spfzPlayer.charGROUND() || opponent.attributes().y > opponent.charGROUND())) {
       checkneutral();
     }
 
-    if (!spfzPlayer1.dash)
-    {
-      if (p1xattr > p2xattr)
-      {
+    if (!spfzPlayer.dash) {
+      if (p1xattr > p2xattr) {
 
         // /////////////////////////////////////// PLAYER ONE MOVING TO THE
         // LEFT //////////////////////////////////////////////////////
 
-        if (spfzPlayer1.p1movement.get(0))
-        {
+        if (spfzPlayer.p1movement.get(0)) {
           P1SRightMLeft();
         }
 
         // /////////////////////////////////////// PLAYER ONE MOVING TO THE
         // RIGHT //////////////////////////////////////////////////////
 
-        else if (spfzPlayer1.p1movement.get(1))
-        {
+        else if (spfzPlayer.p1movement.get(1)) {
           P1SRightMRight();
         }
       }
@@ -151,48 +343,40 @@ class SPFZFyterAnimation
 
         // ///////////////////////////////// PLAYER ONE MOVING TO THE RIGHT
         // //////////////////////////////////////////////////////
-        if (spfzPlayer1.p1movement.get(1))
-        {
+        if (spfzPlayer.p1movement.get(1)) {
           P1SLeftMRight();
         }
 
         // ///////////////////////////////// PLAYER ONE MOVING TO THE LEFT
         // //////////////////////////////////////////////////////
 
-        else if (spfzPlayer1.p1movement.get(0))
-        {
+        else if (spfzPlayer.p1movement.get(0)) {
           P1SLeftMLeft();
         }
       }
     }
     else
     {
-      if (spfzPlayer1.dash)
-      {
-        if (spfzPlayer1.dashdir == 0)
-        {
-          if (stageCamera.position.x <= camboundary[0] + 1 && spfzp2move.attributes().x <= stageboundary[0])
-          {
-            spfzPlayer1.attributes().x += 0f;
-            spfzp2move.attributes().x += 0f;
+      if (spfzPlayer.dash) {
+        if (spfzPlayer.dashdir == 0) {
+          if (stageCamera.position.x <= camboundary[0] + 1 && opponent.attributes().x <= stageboundary[0]) {
+            spfzPlayer.attributes().x += 0f;
+            opponent.attributes().x += 0f;
           }
-          else
-          {
-            spfzp2move.attributes().x -= (spfzPlayer1.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
-            spfzPlayer1.attributes().x -= (spfzPlayer1.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
+          else {
+            opponent.attributes().x -= (spfzPlayer.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
+            spfzPlayer.attributes().x -= (spfzPlayer.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
           }
         }
         else
         {
-          if (stageCamera.position.x + 1 >= camboundary[1] && spfzp2move.attributes().x + 1 >= stageboundary[1])
-          {
-            spfzPlayer1.attributes().x += 0f;
-            spfzp2move.attributes().x += 0f;
+          if (stageCamera.position.x + 1 >= camboundary[1] && opponent.attributes().x + 1 >= stageboundary[1]) {
+            spfzPlayer.attributes().x += 0f;
+            opponent.attributes().x += 0f;
           }
-          else
-          {
-            spfzp2move.attributes().x += (spfzPlayer1.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
-            spfzPlayer1.attributes().x += (spfzPlayer1.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
+          else {
+            opponent.attributes().x += (spfzPlayer.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
+            spfzPlayer.attributes().x += (spfzPlayer.moveandjump().x * .400f) * Gdx.graphics.getDeltaTime();
           }
         }
       }
@@ -202,26 +386,20 @@ class SPFZFyterAnimation
 
   public void setface() {
 
-    if (spfzPlayer1.center() < spfzp2move.center())
-    {
-      if (spfzPlayer1.attributes().scaleX < 0 && !faceright1)
-      {
+    if (spfzPlayer.center() < opponent.center()) {
+      if (spfzPlayer.attributes().scaleX < 0 && !faceright1) {
         faceright1 = true;
       }
-      if (spfzp2move.attributes().scaleX > 0 && !faceleft2)
-      {
+      if (opponent.attributes().scaleX > 0 && !faceleft2) {
         faceleft2 = true;
       }
     }
 
-    if (spfzPlayer1.center() > spfzp2move.center())
-    {
-      if (spfzPlayer1.attributes().scaleX > 0 && !faceleft1 && spfzPlayer1.setrect().y <= GROUND)
-      {
+    if (spfzPlayer.center() > opponent.center()) {
+      if (spfzPlayer.attributes().scaleX > 0 && !faceleft1 && spfzPlayer.setrect().y <= GROUND) {
         faceleft1 = true;
       }
-      if (spfzp2move.attributes().scaleX < 0 && !faceright2 && spfzp2move.setrect().y <= GROUND)
-      {
+      if (opponent.attributes().scaleX < 0 && !faceright2 && opponent.setrect().y <= GROUND) {
         faceright2 = true;
       }
     }
@@ -237,11 +415,10 @@ class SPFZFyterAnimation
     if (faceright1)
     {
       faceleft1 = false;
-      if (spfzPlayer1.attributes().y <= spfzPlayer1.charGROUND() && spfzPlayer1.attributes().scaleX < 0)
-      {
+      if (spfzPlayer.attributes().y <= spfzPlayer.charGROUND() && spfzPlayer.attributes().scaleX < 0) {
 
-        spfzPlayer1.attributes().scaleX *= -1f;
-        spfzPlayer1.attributes().x -= spfzPlayer1.dimrect.width - (spfzPlayer1.adjustX + (spfzPlayer1.setrect().width * .5f));
+        spfzPlayer.attributes().scaleX *= -1f;
+        spfzPlayer.attributes().x -= spfzPlayer.dimrect.width - (spfzPlayer.adjustX + (spfzPlayer.setrect().width * .5f));
         faceright1 = false;
 
       }
@@ -249,11 +426,10 @@ class SPFZFyterAnimation
     if (faceleft1)
     {
       faceright1 = false;
-      if (spfzPlayer1.attributes().y <= spfzPlayer1.charGROUND() && spfzPlayer1.attributes().scaleX > 0)
-      {
-        spfzPlayer1.attributes().scaleX *= -1f;
+      if (spfzPlayer.attributes().y <= spfzPlayer.charGROUND() && spfzPlayer.attributes().scaleX > 0) {
+        spfzPlayer.attributes().scaleX *= -1f;
 
-        spfzPlayer1.attributes().x += spfzPlayer1.dimrect.width - (spfzp2move.adjustX + (spfzp2move.setrect().width * .5f));
+        spfzPlayer.attributes().x += spfzPlayer.dimrect.width - (opponent.adjustX + (opponent.setrect().width * .5f));
         faceleft1 = false;
       }
     }
@@ -262,19 +438,17 @@ class SPFZFyterAnimation
   public void setfacingp2() {
     if (faceright2)
     {
-      if (spfzp2move.attributes().y <= spfzp2move.charGROUND() && spfzp2move.attributes().scaleX < 0)
-      {
-        spfzp2move.attributes().scaleX *= -1f;
-        spfzp2move.attributes().x -= spfzp2move.dimrect.width - (spfzp2move.adjustX + (spfzp2move.setrect().width * .5f));
+      if (opponent.attributes().y <= opponent.charGROUND() && opponent.attributes().scaleX < 0) {
+        opponent.attributes().scaleX *= -1f;
+        opponent.attributes().x -= opponent.dimrect.width - (opponent.adjustX + (opponent.setrect().width * .5f));
         faceright2 = false;
       }
     }
     if (faceleft2)
     {
-      if (spfzp2move.attributes().y <= spfzp2move.charGROUND() && spfzp2move.attributes().scaleX > 0)
-      {
-        spfzp2move.attributes().scaleX *= -1f;
-        spfzp2move.attributes().x += spfzp2move.dimrect.width - (spfzp2move.adjustX + (spfzp2move.setrect().width * .5f));
+      if (opponent.attributes().y <= opponent.charGROUND() && opponent.attributes().scaleX > 0) {
+        opponent.attributes().scaleX *= -1f;
+        opponent.attributes().x += opponent.dimrect.width - (opponent.adjustX + (opponent.setrect().width * .5f));
         faceleft2 = false;
       }
     }
@@ -282,64 +456,55 @@ class SPFZFyterAnimation
 
   public void P1SRightMLeft() {
     // player 2 is moving left
-    if (spfzp2move.p2movement.get(0))
-    {
+    if (opponent.p2movement.get(0)) {
 
-      if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x -= spfzPlayer1.moveandjump().x * Gdx.graphics.getDeltaTime();
+      if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+        opponent.attributes().x -= spfzPlayer.moveandjump().x * Gdx.graphics.getDeltaTime();
 
       }
 
-      else if (spfzPlayer1.moveandjump().x < spfzp2move.moveandjump().x)
-      {
+      else if (spfzPlayer.moveandjump().x < opponent.moveandjump().x) {
 
-        spfzp2move.attributes().x -= spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x -= opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
 
       }
 
     }
     // player 2 is moving right
-    else if (spfzp2move.p2movement.get(1))
-    {
+    else if (opponent.p2movement.get(1)) {
       // if player one walkspeed is greater than player 2's walkspeed
-      if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x -= (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+      if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+        opponent.attributes().x -= (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
-        spfzPlayer1.attributes().x -= (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+        spfzPlayer.attributes().x -= (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
 
       }
       // force player one to move to the left since player 2's walkspeed is
       // faster
-      else if (spfzPlayer1.moveandjump().x < spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x += (spfzp2move.moveandjump().x - spfzPlayer1.moveandjump().x)
+      else if (spfzPlayer.moveandjump().x < opponent.moveandjump().x) {
+        opponent.attributes().x += (opponent.moveandjump().x - spfzPlayer.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
-        spfzPlayer1.attributes().x += (spfzp2move.moveandjump().x - spfzPlayer1.moveandjump().x)
+        spfzPlayer.attributes().x += (opponent.moveandjump().x - spfzPlayer.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
 
       }
-      else
-      {
-        spfzp2move.attributes().x += 0f;
-        spfzPlayer1.attributes().x += 0f;
+      else {
+        opponent.attributes().x += 0f;
+        spfzPlayer.attributes().x += 0f;
       }
     }
     // if player 2 is neutral
     else
     {
 
-      if (stageCamera.position.x <= camboundary[0] + 1 && spfzp2move.attributes().x <= stageboundary[0])
-      {
-        spfzPlayer1.attributes().x += 0f;
+      if (stageCamera.position.x <= camboundary[0] + 1 && opponent.attributes().x <= stageboundary[0]) {
+        spfzPlayer.attributes().x += 0f;
       }
-      else
-      {
+      else {
 
-        spfzp2move.attributes().x -= (spfzPlayer1.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
-        spfzPlayer1.attributes().x -= (spfzPlayer1.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x -= (spfzPlayer.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
+        spfzPlayer.attributes().x -= (spfzPlayer.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
 
       }
     }
@@ -347,182 +512,154 @@ class SPFZFyterAnimation
 
   public void P1SRightMRight() {
     // if player 2 is moving left
-    if (spfzp2move.p2movement.get(0))
-    {
-      spfzPlayer1.attributes().x += spfzPlayer1.moveandjump().x * Gdx.graphics.getDeltaTime();
-      spfzp2move.attributes().x += spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+    if (opponent.p2movement.get(0)) {
+      spfzPlayer.attributes().x += spfzPlayer.moveandjump().x * Gdx.graphics.getDeltaTime();
+      opponent.attributes().x += opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
 
     }
     // if player 2 is moving right
-    else if (spfzp2move.p2movement.get(1))
-    {
+    else if (opponent.p2movement.get(1)) {
 
-      if (spfzPlayer1.moveandjump().x < spfzp2move.moveandjump().x)
-      {
-        spfzPlayer1.attributes().x += spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
-        spfzp2move.attributes().x += spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+      if (spfzPlayer.moveandjump().x < opponent.moveandjump().x) {
+        spfzPlayer.attributes().x += opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x += opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
 
-        if (spfzp2move.attributes().x <= stageboundary[1] - (spfzp2move.setrect().width * .33f))
-        {
+        if (opponent.attributes().x <= stageboundary[1] - (opponent.setrect().width * .33f)) {
 
         }
       }
-      else if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-      {
-        if (spfzp2move.attributes().x <= stageboundary[1] - (spfzp2move.setrect().width * .33f))
-        {
+      else if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+        if (opponent.attributes().x <= stageboundary[1] - (opponent.setrect().width * .33f)) {
 
         }
-        else
-        {
-          spfzPlayer1.attributes().x += spfzPlayer1.moveandjump().x * Gdx.graphics.getDeltaTime();
-          spfzp2move.attributes().x += spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+        else {
+          spfzPlayer.attributes().x += spfzPlayer.moveandjump().x * Gdx.graphics.getDeltaTime();
+          opponent.attributes().x += opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
         }
 
       }
     }
     else
     {
-      spfzPlayer1.attributes().x += spfzPlayer1.moveandjump().x * Gdx.graphics.getDeltaTime();
+      spfzPlayer.attributes().x += spfzPlayer.moveandjump().x * Gdx.graphics.getDeltaTime();
 
     }
   }
 
   public void P1SLeftMLeft() {
     // if player 2 is moving to the left
-    if (spfzp2move.p2movement.get(0))
-    {
-      if (spfzPlayer1.attributes().x <= stageboundary[0] + (spfzPlayer1.setrect().width * .33f))
-      {
-        spfzp2move.attributes().x += 0f;
+    if (opponent.p2movement.get(0)) {
+      if (spfzPlayer.attributes().x <= stageboundary[0] + (spfzPlayer.setrect().width * .33f)) {
+        opponent.attributes().x += 0f;
       }
-      else
-      {
-        if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-        {
-          spfzp2move.attributes().x -= spfzPlayer1.moveandjump().x * Gdx.graphics.getDeltaTime();
-          spfzPlayer1.attributes().x -= spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+      else {
+        if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+          opponent.attributes().x -= spfzPlayer.moveandjump().x * Gdx.graphics.getDeltaTime();
+          spfzPlayer.attributes().x -= opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
         }
-        else if (spfzPlayer1.moveandjump().x < spfzp2move.moveandjump().x)
-        {
-          spfzPlayer1.attributes().x += -(spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime());
-          spfzp2move.attributes().x += -(spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime());
+        else if (spfzPlayer.moveandjump().x < opponent.moveandjump().x) {
+          spfzPlayer.attributes().x += -(opponent.moveandjump().x * Gdx.graphics.getDeltaTime());
+          opponent.attributes().x += -(opponent.moveandjump().x * Gdx.graphics.getDeltaTime());
         }
 
       }
     }
 
     // if player 2 is moving to right
-    else if (spfzp2move.p2movement.get(1))
-    {
+    else if (opponent.p2movement.get(1)) {
 
       // if player one walkspeed is greater than player 2's walkspeed
-      if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x -= (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+      if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+        opponent.attributes().x -= (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
-        spfzPlayer1.attributes().x -= (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+        spfzPlayer.attributes().x -= (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
       }
       // force player one to move to the left since player 2's walkspeed is
       // faster
-      else if (spfzPlayer1.moveandjump().x < spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x -= (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+      else if (spfzPlayer.moveandjump().x < opponent.moveandjump().x) {
+        opponent.attributes().x -= (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
-        spfzp2move.attributes().x -= (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+        opponent.attributes().x -= (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
       }
-      else
-      {
-        spfzp2move.attributes().x -= 0f;
-        spfzp2move.attributes().x -= 0f;
+      else {
+        opponent.attributes().x -= 0f;
+        opponent.attributes().x -= 0f;
       }
     }
 
     else
     {
-      spfzPlayer1.attributes().x -= spfzPlayer1.moveandjump().x * Gdx.graphics.getDeltaTime();
+      spfzPlayer.attributes().x -= spfzPlayer.moveandjump().x * Gdx.graphics.getDeltaTime();
     }
   }
 
   public void P1SLeftMRight() {
     // if player 2 is moving to the left
-    if (spfzp2move.p2movement.get(0))
-    {
+    if (opponent.p2movement.get(0)) {
       // if player one walkspeed is greater than player 2's walkspeed
-      if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x += (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+      if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+        opponent.attributes().x += (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
-        spfzPlayer1.attributes().x += (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+        spfzPlayer.attributes().x += (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
       }
       // force player one to move to the left since player 2's walkspeed is
       // faster
-      else if (spfzPlayer1.moveandjump().x < spfzp2move.moveandjump().x)
-      {
-        spfzp2move.attributes().x += (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+      else if (spfzPlayer.moveandjump().x < opponent.moveandjump().x) {
+        opponent.attributes().x += (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
-        spfzp2move.attributes().x += (spfzPlayer1.moveandjump().x - spfzp2move.moveandjump().x)
+        opponent.attributes().x += (spfzPlayer.moveandjump().x - opponent.moveandjump().x)
           * Gdx.graphics.getDeltaTime();
       }
 
     }
 
     // if player 2 is neutral
-    else if (!spfzp2move.p2movement.get(0) && !spfzp2move.p2movement.get(1))
-    {
+    else if (!opponent.p2movement.get(0) && !opponent.p2movement.get(1)) {
 
-      if (stageCamera.position.x + 1 >= camboundary[1] && spfzp2move.attributes().x + 1 >= stageboundary[1])
-      {
-        spfzPlayer1.attributes().x += 0f;
+      if (stageCamera.position.x + 1 >= camboundary[1] && opponent.attributes().x + 1 >= stageboundary[1]) {
+        spfzPlayer.attributes().x += 0f;
       }
-      else
-      {
+      else {
 
-        spfzp2move.attributes().x += (spfzPlayer1.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
-        spfzPlayer1.attributes().x += (spfzPlayer1.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x += (spfzPlayer.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
+        spfzPlayer.attributes().x += (spfzPlayer.moveandjump().x * .125f) * Gdx.graphics.getDeltaTime();
 
       }
     }
     // if player 2 is moving to right
-    else if (spfzp2move.p2movement.get(1))
-    {
-      if (spfzp2move.moveandjump().x < spfzPlayer1.moveandjump().x)
-      {
+    else if (opponent.p2movement.get(1)) {
+      if (opponent.moveandjump().x < spfzPlayer.moveandjump().x) {
 
-        spfzp2move.attributes().x += (spfzPlayer1.moveandjump().x * .25f) * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x += (spfzPlayer.moveandjump().x * .25f) * Gdx.graphics.getDeltaTime();
 
       }
-      else if (spfzp2move.moveandjump().x > spfzPlayer1.moveandjump().x)
-      {
-        spfzp2move.attributes().x += spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+      else if (opponent.moveandjump().x > spfzPlayer.moveandjump().x) {
+        opponent.attributes().x += opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
 
       }
     }
   }
 
   public void newcrossing() {
-    if (spfzPlayer1.center() < spfzp2move.center())
-    {
-      if (spfzPlayer1.moveandjump().x > spfzp2move.moveandjump().x)
-      {
-        spfzPlayer1.attributes().x -= spfzPlayer1.moveandjump().x / 5 * Gdx.graphics.getDeltaTime();
+    if (spfzPlayer.center() < opponent.center()) {
+      if (spfzPlayer.moveandjump().x > opponent.moveandjump().x) {
+        spfzPlayer.attributes().x -= spfzPlayer.moveandjump().x / 5 * Gdx.graphics.getDeltaTime();
 
-        spfzp2move.attributes().x += spfzPlayer1.moveandjump().x / 5 * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x += spfzPlayer.moveandjump().x / 5 * Gdx.graphics.getDeltaTime();
       }
-      else
-      {
-        spfzPlayer1.attributes().x -= spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
-        spfzp2move.attributes().x += spfzp2move.moveandjump().x * Gdx.graphics.getDeltaTime();
+      else {
+        spfzPlayer.attributes().x -= opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
+        opponent.attributes().x += opponent.moveandjump().x * Gdx.graphics.getDeltaTime();
       }
     }
   }
 
   public void pausechar() {
-    spfzPlayer1.tempfdur = spfzPlayer1.spfzanimationstate.currentAnimation.getFrameDuration();
-    spfzPlayer1.spfzanimationstate.currentAnimation.setFrameDuration(5f);
+    spfzPlayer.tempfdur = spfzPlayer.spfzanimationstate.currentAnimation.getFrameDuration();
+    spfzPlayer.spfzanimationstate.currentAnimation.setFrameDuration(5f);
   }
 
   public void switchp1() {
@@ -530,18 +667,16 @@ class SPFZFyterAnimation
     p1spec -= 100f;
     sigp1lock = true;
     strt1 = true;
-    spfzPlayer1.attacking = false;
-    if (spfzPlayer1.attributes().scaleX > 0)
-    {
-      facing = spfzPlayer1.attributes().scaleX;
+    spfzPlayer.attacking = false;
+    if (spfzPlayer.attributes().scaleX > 0) {
+      facing = spfzPlayer.attributes().scaleX;
     }
-    else
-    {
-      facing = spfzPlayer1.attributes().scaleX * -1;
+    else {
+      facing = spfzPlayer.attributes().scaleX * -1;
     }
-    p1xattr = spfzPlayer1.attributes().x;
+    p1xattr = spfzPlayer.attributes().x;
 
-    p1yattr = spfzPlayer1.attributes().y;
+    p1yattr = spfzPlayer.attributes().y;
 
     CompositeItemVO player1char1;
     CompositeItemVO player1char2;
@@ -598,34 +733,31 @@ class SPFZFyterAnimation
 
     // Ensure collision box is setup correctly
 
-    if (facing > 0)
-    {
+    if (facing > 0) {
 
-      spfzPlayer1.setrect().set(spfzPlayer1.setrect().x + spfzPlayer1.adjustX,
-        spfzPlayer1.attributes().y + spfzPlayer1.adjustY, spfzPlayer1.setrect().width,
-        spfzPlayer1.setrect().height);
+      spfzPlayer.setrect().set(spfzPlayer.setrect().x + spfzPlayer.adjustX,
+        spfzPlayer.attributes().y + spfzPlayer.adjustY, spfzPlayer.setrect().width,
+        spfzPlayer.setrect().height);
     }
-    else
-    {
-      spfzPlayer1.setrect().set(spfzPlayer1.setrect().x - spfzPlayer1.adjustX,
-        spfzPlayer1.attributes().y + spfzPlayer1.adjustY, spfzPlayer1.setrect().width, spfzPlayer1.setrect().height);
+    else {
+      spfzPlayer.setrect().set(spfzPlayer.setrect().x - spfzPlayer.adjustX,
+        spfzPlayer.attributes().y + spfzPlayer.adjustY, spfzPlayer.setrect().width, spfzPlayer.setrect().height);
 
     }
-    spfzPlayer1.attributes().scaleX = facing;
+    spfzPlayer.attributes().scaleX = facing;
 
     // Start swap particle effect
 
     if (stage.stageWrapper().getChild("p1swap").getChild("swapp1").getEntity()
-      .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
-    {
+      .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0) {
       stage.stageWrapper().getChild("p1swap").getChild("swapp1").getEntity()
         .getComponent(SPFZParticleComponent.class).pooledeffects
         .removeValue(stage.stageWrapper().getChild("p1swap").getChild("swapp1").getEntity()
           .getComponent(SPFZParticleComponent.class).pooledeffects.get(0), true);
     }
-    stage.stageWrapper().getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = spfzPlayer1.center();
-    stage.stageWrapper().getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = spfzPlayer1.attributes().y
-      + spfzPlayer1.setrect().height * .5f;
+    stage.stageWrapper().getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = spfzPlayer.center();
+    stage.stageWrapper().getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = spfzPlayer.attributes().y
+      + spfzPlayer.setrect().height * .5f;
     stage.stageWrapper().getChild("p1swap").getChild("swapp1").getEntity()
       .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
     stage.stageWrapper().getChild("p1swap").getChild("swapp1").getEntity().getComponent(TransformComponent.class).scaleX = 1f;
@@ -640,22 +772,381 @@ class SPFZFyterAnimation
 
   getChild("swapp1").
 
-  getEntity()
-      .
+  getEntity().
 
   getComponent(SPFZParticleComponent .class).pooledeffects !=null)
 
   {
     if (root.getChild("p1swap").getChild("swapp1").getEntity()
-      .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
-    {
+      .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0) {
       if ((!root.getChild("p1swap").getChild("swapp1").getEntity()
-        .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete()) && stage.strt1)
-      {
-        root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = stage.spfzplayer1.center();
-        root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = stage.spfzplayer1.attributes().y
-          + stage.spfzplayer1.dimensions().height / 2;
+        .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete()) && stage.strt1) {
+        root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).x = stage.spfzPlayer.center();
+        root.getChild("p1swap").getEntity().getComponent(TransformComponent.class).y = stage.spfzPlayer.attributes().y
+          + stage.spfzPlayer.dimensions().height / 2;
       }
     }
+  }
+
+  public void airatkedanim() {
+  }
+
+  public void airatkanim() {
+
+    //spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+    // Normal has connected.
+    if (spfzAnimationState.paused && cancelled == 0 || pausefrm) {
+      // using this process to get the exact frame in order to setup the
+      // recovery animation
+      if (!pausefrm) {
+        pauseframe = currentframe;
+        pausefrm = true;
+        pauseTime = 0;
+      }
+      cancel = true;
+
+      if (!attacking) {
+        confirm = false;
+      }
+      if (special && isPunch && cancelled == 0 && cancel) {
+        cancelled = 1;
+      }
+      // .10 will need to be a value coming in from the file
+      // if (pauseTime >= .08f)
+      if (pauseTime >= rtnFrametime(10f)) {
+        confirm = false;
+        pauseTime = 0f;
+        spfzAnimationState.paused = false;
+        pausefrm = false;
+        if (cancelled != 1) {
+          if (spfzAnimation.currentAnimation != null && spfzAnimation.currentAnimation != "recovery") {
+            spfzAnimationState.set(
+              new FrameRange("recovery", pauseframe,
+                spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation).endFrame),
+              60, Animation.PlayMode.NORMAL);
+            stateTime = 0;
+            spfzAnimation.currentAnimation = "recovery";
+            lastanim = spfzAnimation.currentAnimation;
+            cancel = false;
+          }
+          // set recovery frame animation here
+
+        }
+      }
+
+      // pauseTime += .015f;
+      pauseTime += rtnFrametime(5);
+    }
+  }
+
+  public void airmvmtanim() {
+    // check jumping and jump direction variables
+    if (isJumping) {
+      //spfzanimation.fps = 15;
+      // if jumpdir true, means jumping in right diagonal
+      if (jumpdir) {
+        if (spfzattribute.scaleX > 0) {
+          spfzAnimation.currentAnimation = "FJMP";
+        }
+        else {
+          spfzAnimation.currentAnimation = "BJMP";
+          if (walljump) {
+            spfzAnimation.currentAnimation = "WJMP";
+          }
+        }
+      }
+      else {
+        if (spfzattribute.scaleX > 0) {
+          spfzAnimation.currentAnimation = "BJMP";
+          if (walljump) {
+            spfzAnimation.currentAnimation = "WJMP";
+          }
+        }
+        else {
+          spfzAnimation.currentAnimation = "FJMP";
+        }
+      }
+    }
+    else {
+      spfzAnimation.currentAnimation = "NJMP";
+    }
+  }
+
+  public void grdatkedanim() {
+    //////////// ATTACKED
+    if (spfzAnimation.currentAnimation == "IDLE" || spfzAnimation.currentAnimation == "movement" || attacked) {
+      attacking = false;
+    }
+
+    if (ownatk) {
+      confirm = true;
+      ownatk = false;
+    }
+    // Check if player one is attacked
+    if (((Attribs) stage.arrscripts.get(opponent.currentCharacter)).getboxconfirm() && !ownatk) {
+      // This combo counter is the combo counter for player 2
+      hit = true;
+      stun = 0;
+      lastcount = combocount;
+      intpush = 1;
+      attacking = false;
+      // if (!stage.spfzp2move.projact)
+      // {
+      // stage.spfzp2move.spfzanimationstate.paused = true;
+      // }
+      if (blocking) {
+        if (spfzrect.y == ground) {
+          if (isDown) {
+            spfzAnimation.currentAnimation = "CBLK";
+          }
+          else {
+            spfzAnimation.currentAnimation = "SBLK";
+          }
+        }
+        else {
+          spfzAnimation.currentAnimation = "ABLK";
+        }
+      }
+      else {
+        spfzAnimation.currentAnimation = "SATKD";
+      }
+      setstun();
+      stateTime = 0;
+    }
+
+    if (stateTime >= stun) {
+      attacked = false;
+      spfzAnimation.currentAnimation = "IDLE";
+      stateTime = 0;
+      pushed = false;
+      if (blocking) {
+        blocking = false;
+      }
+
+      if (combocount != 0) {
+        LabelComponent combocount1;
+        combocount1 = stage.access.root.getChild("ctrlandhud").getChild("combocount1").getEntity()
+          .getComponent(LabelComponent.class);
+
+        Entity Hit = stage.access.root.getChild("ctrlandhud").getChild("p2himg").getEntity();
+        Entity cc = stage.access.root.getChild("ctrlandhud").getChild("p2cc").getEntity();
+
+        Actions.addAction(Hit, Actions.scaleTo(stage.SCALE_TEXT, 0, .3f, Interpolation.elastic));
+        Actions.addAction(cc, Actions.scaleTo(stage.SCALE_TEXT, 0, .3f, Interpolation.elastic));
+
+        combocount1.setText(" ");
+        combocount = 0;
+      }
+
+      if (stateTime != 0) {
+        stateTime = 0;
+      }
+    }
+    else {
+      if (pushed && !hit) {
+
+      }
+      else {
+        hit = false;
+      }
+
+      if ((spfzAnimation.currentAnimation == "SATKD" || spfzAnimation.currentAnimation == "SBLK"
+        || spfzAnimation.currentAnimation == "ABLK" || spfzAnimation.currentAnimation == "CBLK")
+        && stateTime < stun) {
+        // modifier from file
+        float pushback = 2f;
+        float progress = Math.min(pushback, intpush * pushback);
+
+        pushback = progress;
+
+        if (intpush > 0f) {// .03 will be modifier from file
+          intpush -= .03f;
+        }
+
+        // pushback after hit
+        if (spfzattribute.scaleX > 0) {
+          if (stage.camera().position.x <= stageBoundaries[0] + 1 && spfzrect.x <= stageBoundaries[0]) {
+            spfzattribute.x -= pushback;
+          }
+          else {
+            spfzattribute.x -= pushback;
+          }
+        }
+        // pushback if facing the opposite direction
+        else {
+          if (stage.camera().position.x + 1 >= cameraBoundaries[1] && spfzrect.x >= stageBoundaries[1]) {
+            spfzattribute.x += pushback;
+          }
+          else {
+            spfzattribute.x += pushback;
+          }
+        }
+
+        pushed = true;
+
+      }
+      else {
+        stun = 0;
+
+      }
+    }
+
+    // once the animation is complete, return the character back to the
+    // neutral state
+    if (spfzAnimationState.currentAnimation.isAnimationFinished(stateTime) && spfzAnimation.currentAnimation != "SATKD"
+      && spfzAnimation.currentAnimation != "SBLK" && spfzAnimation.currentAnimation != "ABLK"
+      && spfzAnimation.currentAnimation != "CBLK") {
+
+      attacking = false;
+      spfzAnimation.currentAnimation = "IDLE";
+      spfzAnimationState.set(spfzAnimation.frameRangeMap.get("IDLE"), characterAttributes.animFPS.get(characterAttributes.anims.indexOf(spfzAnimation.currentAnimation)), Animation.PlayMode.LOOP);
+      stateTime = 0;
+    }
+
+    // stateTime += Gdx.graphics.getDeltaTime();
+  }
+
+  public void grdatkanim() {
+    //spfzanimation.fps = 60;
+    if (cancel && !hitboxsize.isZero()) {
+      hitboxsize.setZero();
+    }
+    // Normal has connected.
+    if (spfzAnimationState.paused && cancelled == 0 || pausefrm) {
+      // using this process to get the exact frame in order to setup the
+      // recovery animation
+      if (!pausefrm) {
+        pauseframe = currentframe;
+        pausefrm = true;
+        pauseTime = 0;
+      }
+      cancel = true;
+      // pauseTime += .015f;
+
+      if (!attacking) {
+        confirm = false;
+      }
+      if (special && isPunch && cancelled == 0 && cancel) {
+        cancelled = 1;
+      }
+      // .10 will need to be a value coming in from the file
+      // if (pauseTime >= .08f)
+      if (pauseTime >= rtnFrametime(25f)) {
+        if (stage.shake) {
+          stage.shake = false;
+        }
+        confirm = false;
+        pauseTime = 0f;
+        spfzAnimationState.paused = false;
+        pausefrm = false;
+        if (cancelled != 1) {
+          if (spfzAnimation.currentAnimation != null && spfzAnimation.currentAnimation != "recovery") {
+
+            spfzAnimationState.set(
+              new FrameRange("recovery", pauseframe,
+                spfzAnimation.frameRangeMap.get(spfzAnimation.currentAnimation).endFrame),
+              60, Animation.PlayMode.NORMAL);
+            stateTime = 0;
+            spfzAnimation.currentAnimation = "recovery";
+            lastanim = spfzAnimation.currentAnimation;
+            cancel = false;
+          }
+          // set recovery frame animation here
+
+        }
+      }
+      pauseTime += rtnFrametime(5);
+    }
+  }
+
+  public void grdmvmtanim() {
+    if (cancel) {
+      cancel = false;
+    }
+    //spfzanimation.fps = 16;
+    if (!isDown && !isUp && (isLeft || isRight || dash) && spfzrect.y == ground && !ltstuck) {
+
+      if (!stwlk) {
+
+        spfzAnimation.currentAnimation = "FTRANS";
+        //spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+      }
+      else {
+        if (!dash) {
+          //spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+          if (spfzrect.y <= ground) {
+            // spfzanimation.currentAnimation = "movement";
+            if (isLeft) {
+              if (spfzattribute.scaleX > 0) {
+                spfzAnimation.currentAnimation = "BWLK";
+              }
+              else {
+                spfzAnimation.currentAnimation = "FWLK";
+              }
+            }
+            else if (isRight) {
+              if (spfzattribute.scaleX > 0) {
+                spfzAnimation.currentAnimation = "FWLK";
+              }
+              else {
+                spfzAnimation.currentAnimation = "BWLK";
+              }
+            }
+            if (isLeft && isRight) {
+              spfzAnimation.currentAnimation = "IDLE";
+            }
+          }
+        }
+      }
+
+      if (dash) {
+        if (dashdir == 0 && spfzattribute.scaleX > 0 ||
+          dashdir == 1 && spfzattribute.scaleX < 0) {
+          spfzAnimation.currentAnimation = "BDASH";
+        }
+        else {
+          spfzAnimation.currentAnimation = "FDASH";
+        }
+        //spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+      }
+
+    }
+    else {
+      if (!dash) {
+        if (spfzrect.y <= ground) {
+          if (stwlk) {
+            if (spfzAnimation.currentAnimation != "STPTRANS") {
+              stateTime = 0;
+            }
+            spfzAnimation.currentAnimation = "STPTRANS";
+            //spfzanimation.fps = spfzp1vals.animFPS.get(spfzp1vals.anims.indexOf(spfzanimation.currentAnimation));
+            //stateTime += Gdx.graphics.getDeltaTime();
+            if (spfzAnimationState.currentAnimation.isAnimationFinished(stateTime)) {
+              stwlk = false;
+              setneutral();
+            }
+          }
+          else {
+            spfzAnimation.currentAnimation = "IDLE";
+          }
+        }
+
+        if (isDown) {
+          spfzAnimation.currentAnimation = "CRCH";
+        }
+      }
+    }
+  }
+
+  public int[] activeframes() { return activeframes; }
+
+  public SpriteAnimationComponent animationcomponent() { return spfzAnimation; }
+
+  public SpriteAnimationStateComponent animationstate() {
+    return spfzAnimationState;
+  }
+
+  public int currentframe() {
+    return spfzAnimationState.currentAnimation.getKeyFrameIndex(stateTime);
   }
 }

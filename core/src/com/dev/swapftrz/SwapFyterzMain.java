@@ -130,7 +130,7 @@ public class SwapFyterzMain extends ApplicationAdapter implements InputProcessor
 
   public void runningProcessing() {
     if (resourceManager.isInMenu())
-      spfzmenu.processTimedBackgroundTasks();
+      spfzmenu.processTimerTasks();
     else if (resourceManager.stageObject() != null && stage == null)
       stage = resourceManager.stageObject();
 

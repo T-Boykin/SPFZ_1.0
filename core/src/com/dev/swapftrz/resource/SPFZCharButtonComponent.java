@@ -3,20 +3,23 @@ package com.dev.swapftrz.resource;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.utils.Array;
 
-public class SPFZCharButtonComponent implements Component
-{
-	public boolean isTouched = false;
+public class SPFZCharButtonComponent implements Component {
+  public boolean isTouched = false;
+  private static String character;
 
   private Array<ButtonListener> listeners = new Array<ButtonListener>();
 
   public interface ButtonListener {
-      public void touchUp();
-      public void touchDown();
-      public void clicked();
+    public void touchUp();
+
+    public void touchDown();
+
+    public void clicked();
   }
 
-  public void addListener(ButtonListener listener) {
-      listeners.add(listener);
+  public void addListener(ButtonListener listener, String character) {
+    listeners.add(listener);
+    this.character = character;
   }
 
   public void removeListener(ButtonListener listener) {
@@ -36,13 +39,15 @@ public class SPFZCharButtonComponent implements Component
               listeners.get(i).touchDown();
               listeners.get(i).clicked();
           }
+        }
+    if (this.isTouched && !isTouched) {
+      for (int i = 0; i < listeners.size; i++) {
+        listeners.get(i).touchUp();
+        //listeners.get(i).clicked();
       }
-      if(this.isTouched && !isTouched) {
-          for(int i = 0; i < listeners.size; i++) {
-              listeners.get(i).touchUp();
-              //listeners.get(i).clicked();
-          }
-      }
-      this.isTouched = isTouched;
+    }
+    this.isTouched = isTouched;
   }
+
+  public static String getCharacter() { return character; }
 }
