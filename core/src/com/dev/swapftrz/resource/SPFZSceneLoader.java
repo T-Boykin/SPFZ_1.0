@@ -333,13 +333,11 @@ public class SPFZSceneLoader
     });
   }
 
-  public Entity loadFromLibrary(String libraryName)
-  {
+  public Entity loadFromLibrary(String libraryName) {
     ProjectInfoVO projectInfoVO = getRm().getProjectVO();
     CompositeItemVO compositeItemVO = projectInfoVO.libraryItems.get(libraryName);
 
-    if (compositeItemVO != null)
-    {
+    if (compositeItemVO != null) {
       //Entity entity = entityFactory.createEntity(null, compositeItemVO);
       Entity entity = entityFactory.createEntity(null, compositeItemVO);
       return entity;
@@ -348,8 +346,26 @@ public class SPFZSceneLoader
     return null;
   }
 
-  public CompositeItemVO loadVoFromLibrary(String libraryName)
-  {
+  public Entity loadFromLibrary(String libraryName, String layerName) {
+    ProjectInfoVO projectInfoVO = getRm().getProjectVO();
+    CompositeItemVO compositeItemVO = projectInfoVO.libraryItems.get(libraryName);
+    Entity entity;
+
+    if (compositeItemVO != null) {
+      if (!compositeItemVO.layerName.equals(layerName))
+        compositeItemVO.layerName = layerName;
+
+      entity = entityFactory.createEntity(null, compositeItemVO);
+      entityFactory.initAllChildren(engine, entity, compositeItemVO.composite);
+      engine.addEntity(entity);
+
+      return entity;
+    }
+
+    return null;
+  }
+
+  public CompositeItemVO loadVoFromLibrary(String libraryName) {
     ProjectInfoVO projectInfoVO = getRm().getProjectVO();
     CompositeItemVO compositeItemVO = projectInfoVO.libraryItems.get(libraryName);
 

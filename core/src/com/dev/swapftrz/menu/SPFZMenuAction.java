@@ -7,6 +7,7 @@ import com.dev.swapftrz.resource.SPFZButtonComponent;
 import com.dev.swapftrz.resource.SPFZButtonSystem;
 import com.dev.swapftrz.resource.SPFZResourceManager;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
+import com.dev.swapftrz.resource.SPFZStageButtonComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.utils.ComponentRetriever;
@@ -14,19 +15,23 @@ import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 /**
  * Class performs the button functionality for the Menu UI
  */
-public class SPFZMenuAction
-{
+public class SPFZMenuAction {
   private static final String MENU_BUTTON_TAG = "button";
   private final SPFZMenuButtonListeners menu_listeners;
   private final SPFZResourceManager resManager;
   private final SPFZMenuO2DMenuObjects menu_o2d;
   private final SPFZMenuAnimation menu_animation;
   private final SPFZMenuSound menu_sound;
+  private final SPFZMenu spfzMenu;
 
-  public SPFZMenuAction(SPFZResourceManager resManager, SPFZMenuO2DMenuObjects menu_o2d,
+  //1 Clear button hold 2 restart button hold
+  private float[][] buttonHoldTimers = {{0, 1f}, {0, 1f}};
+
+  public SPFZMenuAction(SPFZMenu spfzMenu, SPFZResourceManager resManager, SPFZMenuO2DMenuObjects menu_o2d,
                         SPFZMenuAnimation menu_animation, SPFZMenuSound menu_sound) {
 
     menu_listeners = new SPFZMenuButtonListeners(this);
+    this.spfzMenu = spfzMenu;
     this.resManager = resManager;
     this.menu_o2d = menu_o2d;
     this.menu_animation = menu_animation;
@@ -34,8 +39,14 @@ public class SPFZMenuAction
   }
   //UI component BUTTON FUNCTIONALITY
 
-  public void setMainMenuButtonComponents() {
+  //handles for multiple menus, main, pause, etc
+  public void setMenuButtonComponents() {
     resManager.getCurrentSSL().addComponentsByTagName(MENU_BUTTON_TAG, SPFZButtonComponent.class);
+  }
+
+  //TODO Make sure to change Stage select button tags to stageButton/stagebutton within Overlap2D
+  public void setStageSelectButtonComponents() {
+    resManager.getCurrentSSL().addComponentsByTagName(MENU_BUTTON_TAG, SPFZStageButtonComponent.class);
   }
 
   public void setMainMenuButtonListeners() {
@@ -73,9 +84,23 @@ public class SPFZMenuAction
     //ok, back, and clear buttons
   }
 
+  //consider making an SPFZStageButtonComponent
   public void setStageSelectButtonListeners() {
-    //back and ok buttons
-    //stage buttons
+    String[] stages = menu_o2d.stages(), stageSelectButtons = menu_o2d.stageSelectButtons();
+
+    for (int i = 0; i < stages.length - 1; i++)
+      resManager.rootWrapper().getChild(stageSelectButtons[i]).getComponent(SPFZStageButtonComponent.class)
+        .addListener(menu_listeners.stageSelectButtonListener(), stages[i]);
+  }
+
+  public void setClearButtonListener() {
+    resManager.rootWrapper().getChild(menu_o2d.CLEARBUTTON).getComponent(SPFZButtonComponent.class)
+      .addListener(menu_listeners.clearButtonListener());
+  }
+
+  public void setOkButtonListener() {
+    resManager.rootWrapper().getChild(menu_o2d.OKBUTTON).getComponent(SPFZButtonComponent.class)
+      .addListener(menu_listeners.okButtonListener());
   }
 
   public SPFZSceneLoader currentSSL() {
@@ -91,15 +116,20 @@ public class SPFZMenuAction
   //Don't forget to lock orientation when changing to next steps of scene
 
   public void processArcadeButton() {
+    spfzMenu.setIsArcade(true);
     setProcessing();
     menu_sound.playConfirmSound();
     menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> resManager.setLandscapeSSL("arcadeselscn"));
   }
 
-  public void processVsTrainingButton() {
+  public void processVsTrainingButton(boolean isTraining) {
+    spfzMenu.setIsTraining(isTraining);
     setProcessing();
     menu_sound.playConfirmSound();
-    menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> resManager.setLandscapeSSL("charselscene"));
+    menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> {
+      resManager.setLandscapeSSL("charselscene");
+      menu_animation.setCorrectCharacterSelectTitle(isTraining);
+    });
   }
 
   public void processHelpButton() {
@@ -287,13 +317,34 @@ public class SPFZMenuAction
   }
   //CHARACTER AND STAGE SELECT MENU ACTIONS
 
-  public void processOkButton() {
+  public void processOkButton(String currentScene) {
+    switch (currentScene)
+    {
+      case "stageselscn":
+        menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> { spfzMenu.createStage(); });
+        break;
+    }
   }
 
   public void processBackButton() {
+    menu_animation.fadeInAndOutPlusAction(resManager.rootWrapper(), () -> { spfzMenu.back(); });
   }
 
   public void processClearButton() {
+    //animate the clear button, animate the character disappearance, particle effect, etc
+
+  }
+
+  public void processClearButton(boolean clearButtonHeld) {
+    float currentHoldTime = buttonHoldTimers[0][0], endHoldTime = buttonHoldTimers[0][1];
+
+    if (!clearButtonHeld)
+      currentHoldTime = 0f;
+
+    if (currentHoldTime < endHoldTime) {
+      currentHoldTime += Gdx.graphics.getDeltaTime();
+      buttonHoldTimers[0][0] = currentHoldTime;
+    }
   }
 
   public void processYesButton() {
@@ -302,15 +353,15 @@ public class SPFZMenuAction
   public void processNoButton() {
   }
 
-  public void processSprite() {
+  public void processSprite(String character) {
     //if Arcade
     //setcharsprite(arrayOfChar?)
     //else
   }
 
   //STAGE SELECT
-  public void processStageSelect() {
+  public void processStageSelect(String stage) {
   }
 
-
+  public boolean clearAllTimerLimitReached() { return buttonHoldTimers[0][0] >= buttonHoldTimers[0][1]; }
 }

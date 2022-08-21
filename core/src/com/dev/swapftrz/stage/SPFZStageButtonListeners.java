@@ -35,6 +35,87 @@ class SPFZStageButtonListeners
     }
   };
 
+  private final SPFZStageComponent.ButtonListener resumeButtonListener = new SPFZStageComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+    }
+
+    @Override
+    public void touchDown() {
+    }
+
+    @Override
+    public void clicked() {
+      stage_action.processResume();
+    }
+  };
+
+  private final SPFZStageComponent.ButtonListener characterSelectButtonListener = new SPFZStageComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+    }
+
+    @Override
+    public void touchDown() {
+    }
+
+    @Override
+    public void clicked() {
+      stage_action.processCharacterSelect();
+    }
+  };
+
+  private final SPFZStageComponent.ButtonListener mainMenuButtonListener = new SPFZStageComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+    }
+
+    @Override
+    public void touchDown() {
+    }
+
+    @Override
+    public void clicked() {
+      stage_action.processMainMenu();
+    }
+  };
+
+  private final SPFZStageComponent.ButtonListener yesConfirmButtonListener = new SPFZStageComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+    }
+
+    @Override
+    public void touchDown() {
+    }
+
+    @Override
+    public void clicked() {
+      stage_action.processYes();
+    }
+  };
+
+
+  private final SPFZStageComponent.ButtonListener noConfirmButtonListener = new SPFZStageComponent.ButtonListener()
+  {
+    @Override
+    public void touchUp() {
+    }
+
+    @Override
+    public void touchDown() {
+    }
+
+    @Override
+    public void clicked() {
+      stage_action.processNo();
+    }
+  };
+
   private final SPFZStageComponent.ButtonListener rightButtonListener = new SPFZStageComponent.ButtonListener()
   {
     @Override

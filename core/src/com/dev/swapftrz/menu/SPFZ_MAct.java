@@ -3,8 +3,7 @@ package com.dev.swapftrz.menu;
 /**
  * Class contains all Menu action values necessary for the Swap Fyterz UI
  */
-class SPFZ_MAct
-{
+class SPFZ_MAct {
   public static final float
     LANDWIDTH_PORTHEIGHT = 640f,
     LANDHEIGHT_PORTWIDTH = 400f,
@@ -13,6 +12,7 @@ class SPFZ_MAct
     STAGE_MULTIPLIER = 1.75f,
     NORMAL_SCALE = 1f,
     SCALE_DOWN = .00001f,
+    ARCADE_SCALE = 1.25f,
 
   /* CAMERA MENU ACTIONS */
   ZOOM_CAMERA_IN = .40f,
@@ -139,4 +139,5 @@ class SPFZ_MAct
       {PMENU_POD_B_X2, PMENU_POD_B_Y2}}, {{PMENU_POD_TL_X3, PMENU_POD_TL_Y3}, {PMENU_POD_B_X3, PMENU_POD_B_Y3}},
       {{PMENU_POD_B_X4, PMENU_POD_B_Y4}}};
   }
+
 }

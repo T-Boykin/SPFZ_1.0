@@ -6,15 +6,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.utils.Timer;
 import com.dev.swapftrz.resource.SPFZO2DMethods;
-import com.dev.swapftrz.resource.SPFZParticleComponent;
 import com.dev.swapftrz.resource.SPFZSceneLoader;
 import com.uwsoft.editor.renderer.components.ActionComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
-import com.uwsoft.editor.renderer.components.TintComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
-import com.uwsoft.editor.renderer.components.label.LabelComponent;
 import com.uwsoft.editor.renderer.systems.action.Actions;
 import com.uwsoft.editor.renderer.systems.action.data.ActionData;
 import com.uwsoft.editor.renderer.systems.action.data.MoveByData;
@@ -535,7 +531,6 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
         Actions.addAction(mainlight, moveO2dObjTo(spfzmenu.camera().viewportWidth * .25f,
           spfzmenu.camera().viewportHeight / .5f, 1f, null));
     }
-
   }
 
   /**
@@ -568,11 +563,11 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
           Actions.parallel(Actions.moveBy(0, 20f, .5f), Actions.fadeOut(.5f)), Actions.moveBy(0, -20f, .01f)));
       }*/
 
-      if (!credpress)
+      /*if (!credpress)
       {
         Actions.addAction(landRoot.getChild("meconst").getChild("medraw").getEntity(),
           Actions.sequence(Actions.fadeIn(.3f), Actions.fadeOut(.3f), Actions.fadeIn(.3f), Actions.fadeOut(.3f)));
-      }
+      }*/
 
     }
     else
@@ -584,113 +579,6 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
     }
   }
 
-  /**
-   * Method adds the sprites to the character select screen
-   */
-  public void setcharsprites(String string, String button) {
-    String MAIN_LAYER = "Default";
-
-    for (int i = 0; i < charsselected.size(); i++)
-    {
-      // Check allows the same character to be selected on each side.
-      if (charsselected.get(i) == string && charsselected.get(2) == null || i >= 3 && charsselected.get(i) == string)
-      {
-        i = 6;
-        charpicked = true;
-      }
-      else
-      {
-
-        character = string;
-        if (charsselected.get(i) == null)
-        {
-
-          if (!charpicked)
-          {
-            charsselected.set(i, string);
-            charcomposites.set(i, update(view).loadVoFromLibrary(charsselected.get(i)));
-            charcomposites.set(i, update(view).loadVoFromLibrary(charsselected.get(i))).layerName = MAIN_LAYER;
-
-            // second half of character processing is commented out here but
-            // executes within the
-            // loadslot() method. The method executes when the character slot
-            // particle is finished
-
-            // charentities.set(i,
-            // update(view).entityFactory.createEntity(root.getEntity(),
-            // charcomposites.get(slot)));
-            // update(view).entityFactory.initAllChildren(update(view).getEngine(),
-            // charentities.get(i),
-            // charcomposites.get(i).composite);
-
-
-            switch (i)
-            {
-              case 0:
-                root.getChild("charonelbl").getEntity().getComponent(LabelComponent.class).setText(string);
-                root.getChild("charonelbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
-                root.getChild("firstcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-                root.getChild("firstcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
-                partstartone = true;
-                break;
-              case 1:
-                root.getChild("chartwolbl").getEntity().getComponent(LabelComponent.class).setText(string);
-                root.getChild("chartwolbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
-                root.getChild("secondcharpart").getEntity()
-                  .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-                root.getChild("secondcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
-                partstarttwo = true;
-                break;
-              case 2:
-                root.getChild("charthreelbl").getEntity().getComponent(LabelComponent.class).setText(string);
-                root.getChild("thirdcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-                root.getChild("thirdcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
-
-                root.getChild("charonelbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
-                root.getChild("chartwolbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
-
-                root.getChild("playerlbl").getEntity().getComponent(TintComponent.class).color = Color.RED;
-                partstartthree = true;
-                break;
-              case 3:
-                root.getChild("charfourlbl").getEntity().getComponent(LabelComponent.class).setText(string);
-                root.getChild("charfourlbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
-                root.getChild("fourthcharpart").getEntity()
-                  .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-                root.getChild("fourthcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
-                partstartfour = true;
-                break;
-              case 4:
-                root.getChild("charfivelbl").getEntity().getComponent(LabelComponent.class).setText(string);
-                root.getChild("charfivelbl").getEntity().getComponent(TintComponent.class).color = Color.GRAY;
-                root.getChild("fifthcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-                root.getChild("fifthcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
-                partstartfive = true;
-                break;
-              case 5:
-                root.getChild("charsixlbl").getEntity().getComponent(LabelComponent.class).setText(string);
-                root.getChild("sixthcharpart").getEntity().getComponent(SPFZParticleComponent.class).worldMultiplyer = 1f;
-                root.getChild("sixthcharpart").getEntity().getComponent(SPFZParticleComponent.class).startEffect();
-
-                root.getChild("charfourlbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
-                root.getChild("charfivelbl").getEntity().getComponent(TintComponent.class).color = Color.WHITE;
-                root.getChild("cpulbl").getEntity().getComponent(TintComponent.class).color = Color.BLUE;
-                partstartsix = true;
-                break;
-              default:
-                break;
-
-            }
-
-            i = 6;
-
-            animsel(root.getChild("charobject").getChild(button).getEntity());
-
-          }
-        }
-      }
-    }
-  }
 
   public void animsel(Entity entity) {
     float DURATION = .1f;
@@ -712,7 +600,48 @@ public class SPFZMenuAnimation extends SPFZO2DMethods
     Actions.addAction(entity,
       Actions.sequence(Actions.parallel(Actions.scaleTo(origX, increase, DURATION, Interpolation.swing)),
         Actions.scaleTo(origX, origY, DURATION, Interpolation.swing)));
+  }
 
+  //Character select opening animation
+  public void charselIntro() {
+    String[] slides = {"translideone", "translidetwo", "translidethree", "translidefour", "translidefive",
+      "translidesix", "translideseven", "translideeight", "translidenine", "translideten", "translideeleven",
+      "translidetwelve"};
+    // Character Select Transition
+    //transform = tc.get(rootEntityWrapper().getEntity());
+    //action = ac.get(rootEntityWrapper().getEntity());
+
+    for (int i = 0; i < 4; i++) {
+      Actions.addAction(getLandRoot().getChild(slides[i]).getEntity(), Actions.parallel(Actions.moveBy(800f, -800f, 1f),
+        Actions.sequence(Actions.color(Color.WHITE, .3f), Actions.color(Color.BLACK, .3f))));
+    }
+    for (int i = 4; i < 8; i++) {
+      Actions.addAction(getLandRoot().getChild(slides[i]).getEntity(), Actions.parallel(Actions.moveBy(-800f, -800f, 1f),
+        Actions.sequence(Actions.color(Color.BLACK, .3f), Actions.color(Color.RED, .3f))));
+    }
+
+    for (int i = 8; i < 12; i++) {
+      Actions.addAction(getLandRoot().getChild(slides[i]).getEntity(), Actions.parallel(Actions.moveBy(0, 800f, 1f),
+        Actions.sequence(Actions.color(Color.RED, .3f), Actions.color(Color.WHITE, .3f))));
+    }
+
+
+    Actions.addAction(getLandRoot().getChild("mainslide").getEntity(), Actions.fadeOut(1.5f));
+    // Actions.addAction(rootEntityWrapper().getChild("mainslide").getEntity(), Actions.sequence(Actions.color(Color.WHITE, .3f)));
+    //   Actions.fadeOut(1.5f)));
+  }
+
+  public void setCorrectCharacterSelectTitle(boolean isTraining) {
+    //process will determine which title will be set between Training Mode and Character Select Screen
+    if (isTraining) {
+      getLandRoot().getChild("csspng").getEntity().getComponent(TransformComponent.class).y = 351;
+      getLandRoot().getChild("tmpng").getEntity().getComponent(TransformComponent.class).y = 420;
+    }
+    else {
+      getLandRoot().getChild("tmpng").getEntity().getComponent(TransformComponent.class).y = 351;
+      getLandRoot().getChild("csspng").getEntity().getComponent(TransformComponent.class).y = 420;
+    }
 
   }
+
 }

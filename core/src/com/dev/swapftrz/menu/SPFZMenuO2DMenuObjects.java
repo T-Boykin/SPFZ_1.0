@@ -41,6 +41,17 @@ class SPFZMenuO2DMenuObjects
     INTROCIRCLE = "introcircle",
     SWYPEFRMBTM = "swypefrmbtm",
     SWYPEFRMTOP = "swypefrmtop",
+    STGONEBUTTON = "stageonebutton",
+    STGTWOBUTTON = "stagetwobutton",
+    STGTHREEBUTTON = "stagethreebutton",
+    STGFOURBUTTON = "stagefourbutton",
+    STGFIVEBUTTON = "stagefivebutton",
+    STGSIXBUTTON = "stagesixbutton",
+    STGSEVENBUTTON = "stagesevenbutton",
+    STGEIGHTBUTTON = "stageeightbutton",
+    STGNINEBUTTON = "stageninebutton",
+    CLEARBUTTON = "clearbutton",
+    OKBUTTON = "okaybutton",
 
   //Shared Menu objects
   SOUNDBTN = "soundbutton",
@@ -102,22 +113,47 @@ class SPFZMenuO2DMenuObjects
   }
 
   public String[] landMainMenuButtons() {
-    return new String[]{L_ARCBUTTON, L_VSBUTTON, L_TRNBUTTON, L_OPTBUTTON, L_HLPBUTTON,
+    return new String[] {L_ARCBUTTON, L_VSBUTTON, L_TRNBUTTON, L_OPTBUTTON, L_HLPBUTTON,
       SOUNDBTN, BRIGHTBTN, EXITBTN, YESBTN, NOBTN, THIRTY, NINETY, B_SLIDER, S_SLIDER};
   }
 
   public String[] portMainMenuButtons() {
-    return new String[]{P_ARCBUTTON, P_VSBUTTON, P_TRNBUTTON, P_HLPBUTTON, P_OPTBUTTON, BRIGHTBTN,
+    return new String[] {P_ARCBUTTON, P_VSBUTTON, P_TRNBUTTON, P_HLPBUTTON, P_OPTBUTTON, BRIGHTBTN,
       SOUNDBTN, EXITBTN, YESBTN, NOBTN, THIRTY, SIXTY, NINETY, B_SLIDER,
       S_SLIDER, "revert"};
   }
 
+  public String[] stageSelectButtons() {
+    return new String[] {STGONEBUTTON, STGTWOBUTTON, STGTHREEBUTTON, STGFOURBUTTON, STGFIVEBUTTON, STGSIXBUTTON,
+      STGSEVENBUTTON, STGEIGHTBUTTON, STGNINEBUTTON};
+  }
+
   public String[] portMenuScreenImages() {
-    return new String[]{CHARSELHELP, PAUSEHELP};
+    return new String[] {CHARSELHELP, PAUSEHELP};
   }
 
   public String[] portPods() {
-    return new String[]{POD_TOPRIGHT, POD_BOTTOMRIGHT, POD_TOPLEFT, POD_BOTTOM};
+    return new String[] {POD_TOPRIGHT, POD_BOTTOMRIGHT, POD_TOPLEFT, POD_BOTTOM};
   }
 
+  public String[] platformLabels() {
+    return new String[] {"charonelbl", "chartwolbl", "charthreelbl", "charfourlbl",
+      "charfivelbl", "charsixlbl"};
+  }
+
+  public String[] platformSelectParticles() {
+    return new String[] {"firstcharpart", "secondcharpart", "thirdcharpart",
+      "fourthcharpart",
+      "fifthcharpart", "sixthcharpart"};
+  }
+
+  public String[] platformNullParticles() {
+    return new String[] {"firstnullpart", "secondnullpart", "thirdnullpart",
+      "fourthnullpart", "fifthnullpart", "sixthnullpart"};
+  }
+
+  public String[] stages() {
+    return new String[] {"halloweenstage", "cathedralstage", "clubstage", "egyptstage", "futurestage",
+      "gargoyle", "junglestage", "skullstage", "undergrounstage"};
+  }
 }

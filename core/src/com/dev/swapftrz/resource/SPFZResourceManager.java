@@ -7,7 +7,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -15,12 +17,16 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Json;
 import com.dev.swapftrz.menu.SPFZMenuCamera;
+import com.dev.swapftrz.stage.SPFZStage;
 import com.dev.swapftrz.stage.SPFZStageCamera;
+import com.uwsoft.editor.renderer.components.TintComponent;
+import com.uwsoft.editor.renderer.components.label.LabelComponent;
 import com.uwsoft.editor.renderer.data.CompositeItemVO;
 import com.uwsoft.editor.renderer.data.CompositeVO;
 import com.uwsoft.editor.renderer.data.ProjectInfoVO;
 import com.uwsoft.editor.renderer.data.ResolutionEntryVO;
 import com.uwsoft.editor.renderer.data.SceneVO;
+import com.uwsoft.editor.renderer.data.SimpleImageVO;
 import com.uwsoft.editor.renderer.data.SpriteAnimationVO;
 import com.uwsoft.editor.renderer.resources.FontSizePair;
 import com.uwsoft.editor.renderer.resources.IResourceLoader;
@@ -29,6 +35,7 @@ import com.uwsoft.editor.renderer.utils.ItemWrapper;
 import com.uwsoft.editor.renderer.utils.MySkin;
 
 import java.io.File;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,78 +44,48 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
-{
+public class SPFZResourceManager implements IResourceRetriever, IResourceLoader {
+  private static final String packResolutionName = "orig", preferencesFile = "spfzfile";
 
-  protected float resMultiplier;
   private final SPFZDBOperations dbOperations;
-  private AssetManager assetManager = new AssetManager();
-  // public boolean setup;
-  // public int init = 0;
-  private static final String packResolutionName = "orig";
-  private static final String preferencesFile = "spfzfile";
+  private final SPFZMenuCamera spfzMCamera;
+  private final SPFZStageCamera spfzSCamera;
   public final byte ANDROID = 0, DESKTOP = 1, IOS = 2;
-  public static final String LANDSCAPE = "landscape";
-  public static final String PORTRAIT = "portrait";
+  public static final String LANDSCAPE = "landscape", PORTRAIT = "portrait";
   //private final AndroidInterfaceLIBGDX android;
-
-  private int appDevice;
-  private String currentScene, previousScene;
   // public String particleEffectsPath = "particles";
-
   // public String fontsPath = "freetypefonts";
-  private int uiLevel = 0;
+
   private String[][] uiSceneMap = {{"sceneone", "landscene"}, {"arcadeselscn", "charselscn"}, {"arcstory", "stageselscn"},
     {"stagescene"}};
-  //Timers managed within arrays, 1st Timer for CreditHints, 2nd Time for Ads, 3rd for MainMenu Light
-  private float[][] timersAndStops = {{0, 5f}, {0, 7f}, {0, 1.1f}};
-  // "charselscene" };
 
+
+  private List<String> particlenames;
+  private List<String> fontpairs;
+  private int uiLevel = 0, appDevice;
+  private AssetManager assetManager = new AssetManager();
+  private SPFZStage stage;
+  private String currentScene, previousScene, selectedStage, stagePath;
+  private Connection connection;
   protected ProjectInfoVO projectVO = new ProjectInfoVO();
-  protected String orientation;
-  protected boolean inMenu;
   protected ArrayList<String> preparedSceneNames = new ArrayList<>();
   protected HashMap<String, SceneVO> loadedSceneVOs = new HashMap<>();
   protected HashSet<String> spriteAnimNamesToLoad = new HashSet<>();
   protected HashSet<String> particleEffectNamesToLoad = new HashSet<>();
-
   protected HashSet<FontSizePair> fontsToLoad = new HashSet<>();
-
-  protected TextureAtlas mainPack;
+  protected HashMap<String, TextureAtlas> skeletonAtlases = new HashMap<>(), spriteAnimations = new HashMap<>();
   protected HashMap<String, ParticleEffect> particleEffects = new HashMap<>();
-
-  protected HashMap<String, TextureAtlas> skeletonAtlases = new HashMap<>();
   protected HashMap<String, FileHandle> skeletonJSON = new HashMap<>();
-  protected HashMap<String, TextureAtlas> spriteAnimations = new HashMap<>();
   protected HashMap<FontSizePair, BitmapFont> bitmapFonts = new HashMap<>();
-  protected SPFZSceneLoader portraitSSL;
-  protected SPFZSceneLoader landscapeSSL;
-  protected SPFZSceneLoader stagePauseSSL;
+  protected SPFZSceneLoader portraitSSL, landscapeSSL, stagePauseSSL;
+  protected String orientation;
   protected ItemWrapper rootWrapper;
-  private final SPFZMenuCamera spfzMCamera;
-  private final SPFZStageCamera spfzSCamera;
-
-
-  //Resolutions
-  //Map<String, Integer> resolutionWidth = new HashMap<String, Integer>();
-  //Map<String, Integer> resolutionHeight = new HashMap<String, Integer>();
-
-  // fontpairs = new ArrayList<String>(fontsToLoad.);
-  List<String> particlenames;
-  List<String> fontpairs;
-  // private final Pool<ParticleEffect>
-
-  // String fontpath;
-  // String fontimagepath;
-  // String partstr;
-  // String invalidfnt = "Sim";
-  // String invalidfnt2 = "Aha";
-  // String invalidfnt3 = "LCD";
+  protected TextureAtlas mainPack;
+  protected float resMultiplier;
 
   public SPFZResourceManager() {
     portraitSSL = new SPFZSceneLoader(this);
     landscapeSSL = new SPFZSceneLoader(this);
-    //stagePauseSL = new SPFZSceneLoader(this, appMain);
     dbOperations = new SPFZDBOperations(this);
     spfzMCamera = new SPFZMenuCamera(this);
     spfzSCamera = new SPFZStageCamera(this);
@@ -670,6 +647,17 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return landscapeSSL;
   }
 
+  public SPFZSceneLoader getPauseSSL() {
+    return stagePauseSSL;
+  }
+
+  public void loadStageResource(String stage) {
+    String stagep = "stages/" + stage + ".png";
+
+    assetManager.load(stagep, Texture.class);
+    assetManager.finishLoading();
+  }
+
   public void setBackToPrevousScene() {
     setLandscapeSSL(previousScene);
     uiLevel--;
@@ -690,6 +678,8 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     setRootWrapper(landscapeSSL.getRoot());
   }
 
+  public void createPauseScene() { stagePauseSSL.loadScene("pausescene", spfzSCamera.getViewport()); }
+
   public SPFZSceneLoader getStagePauseSSL() {
     return stagePauseSSL;
   }
@@ -705,6 +695,11 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
   public void setRootWrapper(Entity rootEntity) {
     this.rootWrapper.getEntity().removeAll();
     this.rootWrapper = new ItemWrapper(rootEntity);
+  }
+
+  public void removePauseMenuResources() {
+    stagePauseSSL.engine.removeAllEntities();
+    stagePauseSSL.entityFactory.clean();
   }
 
   public ItemWrapper rootWrapper() {
@@ -732,21 +727,17 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     return orientation;
   }
 
-  public Camera getMenuCam() {
-    return spfzMCamera.menuCamera();
+  public SPFZMenuCamera getMenuCam() {
+    return spfzMCamera;
   }
 
-  public Camera getStageCam() {
-    return spfzSCamera.stageCamera();
+  public SPFZStageCamera getStageCam() {
+    return spfzSCamera;
   }
 
   public boolean isInMenu() {
-    return inMenu;
-  }
-
-  public void setInMenu(boolean inMenu) {
-    if (this.inMenu != inMenu)
-      this.inMenu = inMenu;
+    return isLandScene() || isSceneOneScene() ||
+      isArcadeSelectScene() || isCharacterSelectScene();
   }
 
   public ProjectInfoVO projectVO() {
@@ -788,20 +779,124 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     initAllResources();
   }
 
-  public void runTimers() {
-    for (int i = 0; i < timersAndStops.length; i++)
-    {
-      timersAndStops[i][0] += Gdx.graphics.getDeltaTime();
-
-      if (timersAndStops[i][0] > timersAndStops[i][1])
-        timersAndStops[i][0] = 0f;
-    }
+  //to be executed when OK button is hit on Stage Select Screen
+  public void loadStageResource() {
+    stagePauseSSL = new SPFZSceneLoader(this);
   }
 
-  public boolean isTimeToReset(int timer) {
-    return timersAndStops[timer][0] == 0;
+  public void setStage(SPFZStage stage) {
+    this.stage = stage;
   }
-  //Methods for grabbing information from SPFZFILE Preferences file
+
+  public SPFZStage stageObject() {
+    return stage;
+  }
+
+  /*
+   *************************** UNIVERSAL METHODS **********************************
+   */
+
+  public void activateParticleEffect(String particleEffect) {
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).worldMultiplyer = 1;
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).startEffect();
+  }
+
+  public void activateParticleEffect(String particleEffect, int multiplyer) {
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).worldMultiplyer = multiplyer;
+    rootWrapper.getChild(particleEffect).getEntity()
+      .getComponent(SPFZParticleComponent.class).startEffect();
+  }
+
+  public void changeLabelText(String characterObject, String newText) {
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(LabelComponent.class).setText(newText);
+  }
+
+  public void changeLabelTextColor(String characterObject, Color color) {
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(TintComponent.class).color = color;
+  }
+
+  public void changeLabel(String characterObject, String newText, Color color) {
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(LabelComponent.class).setText(newText);
+    rootWrapper.getChild(characterObject).getEntity()
+      .getComponent(TintComponent.class).color = color;
+  }
+  /*
+   *************************** MAIN MENU METHODS **********************************
+   */
+
+  public Entity createObject(String object, String layerName) {
+    Entity objectEntity = getCurrentSSL().loadFromLibrary(object, layerName);
+
+
+    return objectEntity;
+  }
+
+  public boolean isSceneOneScene() {
+    return currentScene.equals(uiSceneMap[0][0]);
+  }
+
+  public boolean isLandScene() {
+    return currentScene.equals(uiSceneMap[0][1]);
+  }
+
+  public boolean isArcadeSelectScene() {
+    return currentScene.equals(uiSceneMap[1][0]);
+  }
+
+  public boolean isCharacterSelectScene() {
+    return currentScene.equals(uiSceneMap[1][1]);
+  }
+
+  public boolean isStageSelectScene() {
+    return currentScene.equals(uiSceneMap[2][1]);
+  }
+
+  /*
+   ************************* STAGE SELECT METHODS **********************************
+   */
+  public String selectedStage() {
+    return selectedStage;
+  }
+
+  public void setStageTexture() {
+    Pixmap pixmap, pixmap2;
+    String layer = "Default";
+    SimpleImageVO stageImage = new SimpleImageVO();
+    //texWidth - needs to be the size of full stage width,
+    //texHeight - needs to be size of full stage height
+
+    pixmap = new Pixmap(Gdx.files.internal(stagePath));
+
+    /*pixmap2 = new Pixmap((int) texWidth, (int) texHeight, pixmap.getFormat());
+
+    pixmap2.drawPixmap(pixmap, 0, 0, pixmap.getWidth(), pixmap.getHeight(), 0, 0, pixmap2.getWidth(),
+      pixmap2.getHeight());
+    stageback = new Texture(pixmap2);*/
+
+    //pixmap2.dispose();
+    pixmap.dispose();
+    stageImage.layerName = layer;
+    stageImage.zIndex = 0;
+
+    stageImage.scaleX = 1f;
+    stageImage.scaleY = 1f;
+
+    // stageImage.x = 200f;
+    // stageImage.y = -120f;
+    stageImage.x = -240f;
+    stageImage.y = 0f;
+
+    landscapeSSL.entityFactory.createEntity(rootWrapper.getEntity(), stageImage);
+  }
+  /*
+   ******************* PREFERENCE FILE RETRIEVAL METHODS **************************
+   */
 
   public int getPixelToWorldSize() {
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
@@ -941,5 +1036,20 @@ public class SPFZResourceManager implements IResourceRetriever, IResourceLoader
     Preferences spfzprefs = Gdx.app.getPreferences(preferencesFile);
 
     return spfzprefs.getFloat("walljumpbound");
+  }
+
+
+  /* ********************** SQL CHARACTER INFORMATION RETRIEVAL *********************/
+
+  public List<ArrayList<Double>> dbRetrieveCharacterFrameData(String character) {
+    return dbOperations.retrieveAttacksAndAnimationsData(connection, character);
+  }
+  /* ********************************************************************************/
+
+  public Connection getDBConnection() {
+    if (connection == null)
+      connection = dbOperations.createDBConnection();
+
+    return connection;
   }
 }

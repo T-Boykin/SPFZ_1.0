@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.dev.swapftrz.resource.SPFZParticleComponent;
+import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.components.label.LabelComponent;
 import com.uwsoft.editor.renderer.systems.action.Actions;
@@ -15,21 +16,31 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-class SPFZFyterCollision
-{
+class SPFZFyterCollision {
    private final ItemWrapper stageWrapper;
+   private SPFZPlayer spfzPlayer, opponent;
+   private List<ArrayList<Double>> characterData;
+   final int ACTSTARTBOX = 4;
+   final int ACTENDBOX = 5;
+   final int BOXX = 6;
+   final int BOXY = 7;
+   final int BOXWIDTH = 8;
+   final int BOXHEIGHT = 9;
 
-   public SPFZFyterCollision(SPFZPlayer spfzPlayer, ItemWrapper stageWrapper, List<List<ArrayList<Double>>> characterData,
+   public SPFZFyterCollision(SPFZPlayer spfzPlayer, ItemWrapper stageWrapper, List<ArrayList<Double>> characterData,
                              List<HashMap<String, int[]>> animations, List<ArrayList<String>> specials) {
       this.stageWrapper = stageWrapper;
+      this.spfzPlayer = spfzPlayer;
+      this.characterData = characterData;
+      opponent = spfzPlayer.opponent();
    }
 
-   public void collision(int i) {
+
+   public void processCollisionBoxes(int i) {
 
       setcollisionboxes(i);
       //boxes = Gdx.input.isKeyJustPressed(Input.Keys.B);
-      if (boxes)
-      {
+      if (boxes) {
          showcollisionboxes(i);
       }
 
@@ -37,8 +48,7 @@ class SPFZFyterCollision
       // other
       close = false;
 
-      if (spfzPlayer1.setrect().overlaps(spfzp2move.setrect()))
-      {
+      if (spfzPlayer.setrect().overlaps(opponent.setrect())) {
          // needs to be just a variable stating that the objects are within close
          // range so we
          // will need to alter the speeds
@@ -69,8 +79,7 @@ class SPFZFyterCollision
         .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0)
       {
          if (stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
-           .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete())
-         {
+           .getComponent(SPFZParticleComponent.class).pooledeffects.get(0).isComplete()) {
             stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).x = 0;
             stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).y = -20f;
             stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
@@ -80,8 +89,7 @@ class SPFZFyterCollision
 
          }
       }
-      if (spfzPlayer1.attacking() || spfzPlayer1.projact || spfzp2move.attacking())
-      {
+      if (spfzPlayer.attacking() || spfzPlayer.projact || opponent.attacking()) {
          hitboxprocessing();
       }
 
@@ -91,101 +99,87 @@ class SPFZFyterCollision
       Vector2 hitconfirm = new Vector2();
 
       // If player one attacked player 2
-      if (spfzPlayer1.sethitbox().overlaps(spfzp2move.setcharbox()) && spfzPlayer1.attacking && !spfzPlayer1.getboxconfirm()
-        || spfzPlayer1.projconfirm())
-      {
-         if (spfzPlayer1.hitboxsize.x > 0 || spfzPlayer1.projconfirm())
-         {
-            spfzPlayer1.hitboxconfirm(true);
-            spfzPlayer1.wallb = false;
-            if (spfzPlayer1.bouncer)
-            {
-               spfzp2move.bounced = true;
-               spfzPlayer1.wallb = true;
-               spfzPlayer1.bouncer = false;
+      if (spfzPlayer.sethitbox().overlaps(opponent.setcharbox()) && spfzPlayer.attacking && !spfzPlayer.getboxconfirm()
+        || spfzPlayer.projconfirm()) {
+         if (spfzPlayer.hitboxsize.x > 0 || spfzPlayer.projconfirm()) {
+            spfzPlayer.hitboxconfirm(true);
+            spfzPlayer.wallb = false;
+            if (spfzPlayer.bouncer) {
+               opponent.bounced = true;
+               spfzPlayer.wallb = true;
+               spfzPlayer.bouncer = false;
             }
-            spfzPlayer1.sethitbox().getCenter(hitconfirm);
+            spfzPlayer.sethitbox().getCenter(hitconfirm);
 
-            hitconfirm.set((spfzp2move.setcharbox().x + spfzPlayer1.sethitbox().x + spfzPlayer1.sethitbox().width) * .5f,
+            hitconfirm.set((opponent.setcharbox().x + spfzPlayer.sethitbox().x + spfzPlayer.sethitbox().width) * .5f,
               hitconfirm.y);
 
             //somehow extra call to hit() method is allowing the
             //pushback to work. Need to correct logic elsewhere
-            spfzp2move.hit();
+            opponent.hit();
 
-            if (spfzp2move.hit())
-            {
-               spfzp2move.attacked = true;
-               spfzp2move.blocking = false;
+            if (opponent.hit()) {
+               opponent.attacked = true;
+               opponent.blocking = false;
             }
-            else
-            {
-               spfzp2move.attacked = false;
-               spfzp2move.blocking = true;
+            else {
+               opponent.attacked = false;
+               opponent.blocking = true;
             }
-            if (!spfzPlayer1.projconfirm())
-            {
+            if (!spfzPlayer.projconfirm()) {
                pausechar();
             }
             checkstun(p2);
 
             float tempflip;
-            if (spfzPlayer1.center() < spfzp2move.center())
-            {
+            if (spfzPlayer.center() < opponent.center()) {
                tempflip = 1f;
             }
-            else
-            {
+            else {
                tempflip = -1f;
             }
 
             //Set particle effects to appropriate scaling based on hitboxsize that the opponent was attacked by
             stageWrapper.getChild("p1hit").getChild("p1confirm").getEntity()
               .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-            stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzPlayer1.hitboxsize.y / 50f) * tempflip;
+            stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzPlayer.hitboxsize.y / 50f) * tempflip;
             stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).scaleY =
-              (spfzPlayer1.hitboxsize.y / 50f) * tempflip;
+              (spfzPlayer.hitboxsize.y / 50f) * tempflip;
 
 
             stageWrapper.getChild("p1block").getChild("p1bconfirm").getEntity()
               .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-            stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzPlayer1.hitboxsize.y / 50f) * tempflip;
-            stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleY = (spfzPlayer1.hitboxsize.y / 50f) * tempflip;
+            stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzPlayer.hitboxsize.y / 50f) * tempflip;
+            stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).scaleY = (spfzPlayer.hitboxsize.y / 50f) * tempflip;
 
-            if (spfzPlayer1.attributes().y > spfzPlayer1.charGROUND())
-            {
+            if (spfzPlayer.attributes().y > spfzPlayer.charGROUND()) {
                stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
                stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
 
             }
-            else
-            {
+            else {
                stageWrapper.getChild("p1block").getEntity().getComponent(TransformComponent.class).rotation = 0;
                stageWrapper.getChild("p1hit").getEntity().getComponent(TransformComponent.class).rotation = 0;
             }
 
             // Set the positioning of the particle effects and handle hit events
-            if (spfzp2move.attacked)
-            {
-               if (spfzPlayer1.projconfirm())
-               {
-                  if (spfzPlayer1.projectile.spfzattribute.scaleX > 0)
-                  {
+            if (opponent.attacked) {
+               if (spfzPlayer.projconfirm()) {
+                  if (spfzPlayer.projectile.spfzattribute.scaleX > 0) {
                      stageWrapper.getChild("p1hit").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       + spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       + spfzPlayer.projectile.spfzdim.width;
                   }
-                  else
-                  {
+                  else {
                      stageWrapper.getChild("p1hit").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       - spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       - spfzPlayer.projectile.spfzdim.width;
                   }
 
                   stageWrapper.getChild("p1hit").getEntity()
-                    .getComponent(TransformComponent.class).y = spfzPlayer1.projectile.spfzattribute.y
-                    + spfzPlayer1.projectile.spfzdim.height * .5f;
-                  spfzPlayer1.projectile.hit = false;
+                    .getComponent(TransformComponent.class).y = spfzPlayer.projectile.spfzattribute.y
+                    + spfzPlayer.projectile.spfzdim.height * .5f;
+                  spfzPlayer.projectile.hit = false;
                }
                else
                {
@@ -202,15 +196,13 @@ class SPFZFyterCollision
                {
                   Entity Hit = stageWrapper.getChild("ctrlandhud").getChild("p1himg").getEntity();
                   Entity cc = stageWrapper.getChild("ctrlandhud").getChild("p1cc").getEntity();
-                  spfzp2move.setcombonum(spfzp2move.combonum() + 1);
+                  opponent.setcombonum(opponent.combonum() + 1);
 
                   // Hit.getComponent(TransformComponent.class).originY =
                   // Hit.getComponent(DimensionsComponent.class).height * .5f;
-                  if (spfzp2move.combonum() >= 2)
-                  {
-                     if (spfzp2move.combonum() == 2 && Hit.getComponent(TransformComponent.class).scaleY == 0
-                       && cc.getComponent(TransformComponent.class).scaleY == 0)
-                     {
+                  if (opponent.combonum() >= 2) {
+                     if (opponent.combonum() == 2 && Hit.getComponent(TransformComponent.class).scaleY == 0
+                       && cc.getComponent(TransformComponent.class).scaleY == 0) {
 
                         Actions.addAction(Hit, Actions.scaleBy(0, SCALE_TEXT, .6f, Interpolation.elastic));
                         Actions.addAction(cc, Actions.scaleBy(0, SCALE_TEXT, .6f, Interpolation.elastic));
@@ -224,58 +216,52 @@ class SPFZFyterCollision
                      combocount1 = stageWrapper.getChild("ctrlandhud").getChild("combocount1").getEntity()
                        .getComponent(LabelComponent.class);
 
-                     // combocount1.setText(Integer.toString(spfzp2move.combonum()) + "
+                     // combocount1.setText(Integer.toString(opponent.combonum()) + "
                      // HITS");
 
-                     combocounter(parent, p2cntTEN, p2cntONE, spfzp2move.combonum());
+                     combocounter(parent, p2cntTEN, p2cntONE, opponent.combonum());
                   }
-                  else if (spfzp2move.combonum() == 1 && Hit.getComponent(TransformComponent.class).scaleY >= 0 &&
-                    cc.getComponent(TransformComponent.class).scaleY >= 0)
-                  {
+                  else if (opponent.combonum() == 1 && Hit.getComponent(TransformComponent.class).scaleY >= 0 &&
+                    cc.getComponent(TransformComponent.class).scaleY >= 0) {
                      Actions.removeActions(Hit);
                      Actions.removeActions(cc);
                      Actions.addAction(Hit, Actions.scaleBy(0, 0, .01f, Interpolation.elastic));
                      Actions.addAction(cc, Actions.scaleBy(0, 0, .01f, Interpolation.elastic));
                   }
-                  //else if(spfzp2move.combonum() == 1)
+                  //else if(opponent.combonum() == 1)
 
-                  if (spfzPlayer1.input == -1)
-                  {
+                  if (spfzPlayer.input == -1) {
                      p2health -= 200f;
                      p1spec += 120f;
                      p2spec += 120f;
 
                   }
-                  else
-                  {
-                     p2health -= player1data.get(p1).get(spfzPlayer1.HITDMG).get(spfzPlayer1.move).intValue();
-                     p1spec += player1data.get(p1).get(spfzPlayer1.HITMTR).get(spfzPlayer1.move).intValue();
-                     p2spec += player1data.get(p1).get(spfzPlayer1.HITMTR).get(spfzPlayer1.move).intValue() / 2;
+                  else {
+                     p2health -= player1data.get(p1).get(spfzPlayer.HITDMG).get(spfzPlayer.move).intValue();
+                     p1spec += player1data.get(p1).get(spfzPlayer.HITMTR).get(spfzPlayer.move).intValue();
+                     p2spec += player1data.get(p1).get(spfzPlayer.HITMTR).get(spfzPlayer.move).intValue() / 2;
                   }
                   damagedealt = true;
                }
             }
             else
             {
-               if (spfzPlayer1.projconfirm())
-               {
-                  if (spfzPlayer1.projectile.spfzattribute.scaleX > 0)
-                  {
+               if (spfzPlayer.projconfirm()) {
+                  if (spfzPlayer.projectile.spfzattribute.scaleX > 0) {
                      stageWrapper.getChild("p1block").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       + spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       + spfzPlayer.projectile.spfzdim.width;
                   }
-                  else
-                  {
+                  else {
                      stageWrapper.getChild("p1block").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       - spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       - spfzPlayer.projectile.spfzdim.width;
                   }
 
                   stageWrapper.getChild("p1block").getEntity()
-                    .getComponent(TransformComponent.class).y = spfzPlayer1.projectile.spfzattribute.y
-                    + spfzPlayer1.projectile.spfzdim.height * .5f;
-                  spfzPlayer1.projectile.hit = false;
+                    .getComponent(TransformComponent.class).y = spfzPlayer.projectile.spfzattribute.y
+                    + spfzPlayer.projectile.spfzdim.height * .5f;
+                  spfzPlayer.projectile.hit = false;
                }
                else
                {
@@ -291,94 +277,81 @@ class SPFZFyterCollision
       }
 
       // If player two attacked player 1
-      else if ((spfzp2move.sethitbox().overlaps(spfzPlayer1.setcharbox()) && spfzp2move.attacking()
-        && !spfzp2move.getboxconfirm()) || spfzp2move.projhit)
-      {
-         // spfzp2move.hit();
-         if (spfzp2move.hitboxsize.x > 0 || spfzp2move.projhit)
-         {
-            spfzp2move.hitboxconfirm(true);
-            spfzp2move.sethitbox().getCenter(hitconfirm);
+      else if ((opponent.sethitbox().overlaps(spfzPlayer.setcharbox()) && opponent.attacking()
+        && !opponent.getboxconfirm()) || opponent.projhit) {
+         // opponent.hit();
+         if (opponent.hitboxsize.x > 0 || opponent.projhit) {
+            opponent.hitboxconfirm(true);
+            opponent.sethitbox().getCenter(hitconfirm);
 
-            hitconfirm.set((spfzPlayer1.setcharbox().x + spfzp2move.sethitbox().x + spfzp2move.sethitbox().width) * .5f,
+            hitconfirm.set((spfzPlayer.setcharbox().x + opponent.sethitbox().x + opponent.sethitbox().width) * .5f,
               hitconfirm.y);
 
 
-            if (spfzPlayer1.hit())
-            {
-               spfzPlayer1.attacked = true;
-               spfzPlayer1.blocking = false;
+            if (spfzPlayer.hit()) {
+               spfzPlayer.attacked = true;
+               spfzPlayer.blocking = false;
             }
-            else
-            {
+            else {
                //spfzp1move.attacked = true;
-               spfzPlayer1.blocking = true;
+               spfzPlayer.blocking = true;
 
             }
 
-            if (spfzp2move.projhit)
-            {
-               spfzp2move.projhit = false;
+            if (opponent.projhit) {
+               opponent.projhit = false;
 
             }
 
             float tempflip;
-            if (spfzp2move.center() < spfzPlayer1.center())
-            {
+            if (opponent.center() < spfzPlayer.center()) {
                tempflip = 1f;
             }
-            else
-            {
+            else {
                tempflip = -1f;
             }
             //Set particle effects to appropriate scaling based on hitboxsize that the opponent was attacked by
             stageWrapper.getChild("p2hit").getChild("p2confirm").getEntity()
               .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-            stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp2move.hitboxsize.y / 100f) * tempflip;
+            stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleX = (opponent.hitboxsize.y / 100f) * tempflip;
             stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).scaleY =
-              (spfzp2move.hitboxsize.y / 100f) * tempflip;
+              (opponent.hitboxsize.y / 100f) * tempflip;
 
 
             stageWrapper.getChild("p2block").getChild("p2bconfirm").getEntity()
               .getComponent(SPFZParticleComponent.class).worldMultiplyer = tempflip;
-            stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleX = (spfzp2move.hitboxsize.y / 100f) * tempflip;
+            stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleX = (opponent.hitboxsize.y / 100f) * tempflip;
             stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).scaleY =
-              (spfzp2move.hitboxsize.y / 100f) * tempflip;
+              (opponent.hitboxsize.y / 100f) * tempflip;
 
-            if (spfzp2move.attributes().y > spfzp2move.charGROUND())
-            {
+            if (opponent.attributes().y > opponent.charGROUND()) {
                stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
                stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).rotation = -45 * tempflip;
 
             }
-            else
-            {
+            else {
                stageWrapper.getChild("p2hit").getEntity().getComponent(TransformComponent.class).rotation = 0;
                stageWrapper.getChild("p2block").getEntity().getComponent(TransformComponent.class).rotation = 0;
             }
 
             // Set the positioning of the particle effects and handle hit events
-            if (spfzPlayer1.attacked)
-            {
-               if (spfzPlayer1.projconfirm())
-               {
-                  if (spfzPlayer1.projectile.spfzattribute.scaleX > 0)
-                  {
+            if (spfzPlayer.attacked) {
+               if (spfzPlayer.projconfirm()) {
+                  if (spfzPlayer.projectile.spfzattribute.scaleX > 0) {
                      stageWrapper.getChild("p2hit").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       + spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       + spfzPlayer.projectile.spfzdim.width;
                   }
-                  else
-                  {
+                  else {
                      stageWrapper.getChild("p2hit").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       - spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       - spfzPlayer.projectile.spfzdim.width;
                   }
 
                   stageWrapper.getChild("p2hit").getEntity()
-                    .getComponent(TransformComponent.class).y = spfzPlayer1.projectile.spfzattribute.y
-                    + spfzPlayer1.projectile.spfzdim.height * .5f;
-                  spfzPlayer1.projectile.hit = false;
+                    .getComponent(TransformComponent.class).y = spfzPlayer.projectile.spfzattribute.y
+                    + spfzPlayer.projectile.spfzdim.height * .5f;
+                  spfzPlayer.projectile.hit = false;
                }
                else
                {
@@ -395,15 +368,13 @@ class SPFZFyterCollision
                {
                   Entity Hit = stageWrapper.getChild("ctrlandhud").getChild("p2himg").getEntity();
                   Entity cc = stageWrapper.getChild("ctrlandhud").getChild("p2cc").getEntity();
-                  spfzp2move.setcombonum(spfzp2move.combonum() + 1);
+                  opponent.setcombonum(opponent.combonum() + 1);
 
                   // Hit.getComponent(TransformComponent.class).originY =
                   // Hit.getComponent(DimensionsComponent.class).height * .5f;
-                  if (spfzp2move.combonum() >= 2)
-                  {
-                     if (spfzp2move.combonum() == 2 && Hit.getComponent(TransformComponent.class).scaleY == 0
-                       && cc.getComponent(TransformComponent.class).scaleY == 0)
-                     {
+                  if (opponent.combonum() >= 2) {
+                     if (opponent.combonum() == 2 && Hit.getComponent(TransformComponent.class).scaleY == 0
+                       && cc.getComponent(TransformComponent.class).scaleY == 0) {
 
                         Actions.addAction(Hit, Actions.scaleBy(0, SCALE_TEXT, .6f, Interpolation.elastic));
                         Actions.addAction(cc, Actions.scaleBy(0, SCALE_TEXT, .6f, Interpolation.elastic));
@@ -419,47 +390,42 @@ class SPFZFyterCollision
                        .getComponent(LabelComponent.class);
 
 
-                     combocounter(parent, p2cntTEN, p2cntONE, spfzp2move.combonum());
+                     combocounter(parent, p2cntTEN, p2cntONE, opponent.combonum());
                   }
 
 
-                  if (spfzp2move.move == -1)
-                  {
+                  if (opponent.move == -1) {
                      p1health -= 200f;
                      p2spec += 120f;
                      p2spec += 120f;
 
                   }
-                  else
-                  {
-                     //p1health -= player2data.get(p2).get(spfzp2move.HITDMG).get(spfzp2move.move).intValue();
-                     //p2spec += player2data.get(p2).get(spfzp2move.HITMTR).get(spfzp2move.move).intValue();
-                     //p1spec += player2data.get(p2).get(spfzp2move.HITMTR).get(spfzp2move.move).intValue() / 2;
+                  else {
+                     //p1health -= player2data.get(p2).get(opponent.HITDMG).get(opponent.move).intValue();
+                     //p2spec += player2data.get(p2).get(opponent.HITMTR).get(opponent.move).intValue();
+                     //p1spec += player2data.get(p2).get(opponent.HITMTR).get(opponent.move).intValue() / 2;
                   }
                   damagedealt = true;
                }
             }
             else
             {
-               if (spfzPlayer1.projconfirm())
-               {
-                  if (spfzPlayer1.projectile.spfzattribute.scaleX > 0)
-                  {
+               if (spfzPlayer.projconfirm()) {
+                  if (spfzPlayer.projectile.spfzattribute.scaleX > 0) {
                      stageWrapper.getChild("p2block").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       + spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       + spfzPlayer.projectile.spfzdim.width;
                   }
-                  else
-                  {
+                  else {
                      stageWrapper.getChild("p2block").getEntity()
-                       .getComponent(TransformComponent.class).x = spfzPlayer1.projectile.spfzattribute.x
-                       - spfzPlayer1.projectile.spfzdim.width;
+                       .getComponent(TransformComponent.class).x = spfzPlayer.projectile.spfzattribute.x
+                       - spfzPlayer.projectile.spfzdim.width;
                   }
 
                   stageWrapper.getChild("p2block").getEntity()
-                    .getComponent(TransformComponent.class).y = spfzPlayer1.projectile.spfzattribute.y
-                    + spfzPlayer1.projectile.spfzdim.height * .5f;
-                  spfzPlayer1.projectile.hit = false;
+                    .getComponent(TransformComponent.class).y = spfzPlayer.projectile.spfzattribute.y
+                    + spfzPlayer.projectile.spfzdim.height * .5f;
+                  spfzPlayer.projectile.hit = false;
                }
                else
                {
@@ -475,14 +441,53 @@ class SPFZFyterCollision
 
    }
 
+   public void createHitBox(int player, String animation) {
+      posofhitbox.setZero();
+      hitboxsize.setZero();
+      float boxX;
+      float boxY = spfzattribute.y + characterData.get(currentCharacter).get(BOXY).get(move).floatValue();
+      float sizeW;
+      float sizeH;
+
+      if (spfzattribute.scaleX > 0) {
+         boxX = this.center() + characterData.get(currentCharacter).get(BOXX).get(move).floatValue();
+         sizeW = characterData.get(currentCharacter).get(BOXWIDTH).get(move).floatValue();
+         sizeH = characterData.get(currentCharacter).get(BOXHEIGHT).get(move).floatValue();
+      }
+      else {
+         boxX = this.center() - characterData.get(currentCharacter).get(BOXX).get(move).floatValue() - characterData.get(currentCharacter).get(BOXWIDTH).get(move).floatValue();
+         sizeW = characterData.get(currentCharacter).get(BOXWIDTH).get(move).floatValue();
+         sizeH = characterData.get(currentCharacter).get(BOXHEIGHT).get(move).floatValue();
+      }
+      /*
+       * New hitbox logic:
+       *
+       * 1. get the animation based on user input
+       *
+       * 2. pass animation and character into process that will then pass back
+       * these values: - active frames beginning to end - hitbox size - hitbox
+       * position - amount of stun move will do
+       *
+       */
+
+      activeframes[0] = characterData.get(currentCharacter).get(ACTSTARTBOX).get(move).intValue() - spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame;
+      activeframes[1] = characterData.get(currentCharacter).get(ACTENDBOX).get(move).intValue() - spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation).startFrame;
+
+      posofhitbox.x = boxX;
+      posofhitbox.y = boxY + (spfzrect.y - boxY);
+      hitboxsize.x = sizeW;
+      hitboxsize.y = sizeH;
+
+
+   }
+
    public void setcollisionboxes(int i) {
       float reversebox;
       // temp reach will be the box length incoming
       float tempreach = 10;
 
       // used to determine how to position hitbox when facing left or right
-      if (((Attribs) arrscripts.get(i)).attributes().scaleX > 0)
-      {
+      if (((Attribs) arrscripts.get(i)).attributes().scaleX > 0) {
          reversebox = 0;
          tempreach *= 1;
       }
@@ -498,9 +503,8 @@ class SPFZFyterCollision
 
       sethitbox(i, reversebox, tempreach);
 
-      if (spfzp2move.reflect)
-      {
-         spfzp2move.setreflect();
+      if (opponent.reflect) {
+         opponent.setreflect();
       }
 
    }
@@ -549,8 +553,8 @@ class SPFZFyterCollision
    public void setcrossbox(int i) {
       // set character cross box
       ((Attribs) arrscripts.get(i)).setcross();
-      spfzPlayer1.dimrectangle();
-      spfzp2move.dimrectangle();
+      spfzPlayer.dimrectangle();
+      opponent.dimrectangle();
 
    }
 
@@ -566,8 +570,7 @@ class SPFZFyterCollision
 
       }
 
-      else
-      {
+      else {
          ((Attribs) arrscripts.get(i)).drawrect().setColor(Color.WHITE);
       }
 
@@ -577,20 +580,20 @@ class SPFZFyterCollision
 
       ((Attribs) arrscripts.get(i)).drawrect().end();
 
-      spfzPlayer1.spfzdimbox.setProjectionMatrix(stageCamera.combined);
-      spfzPlayer1.spfzdimbox.begin(ShapeRenderer.ShapeType.Line);
-      spfzPlayer1.spfzdimbox.setColor(Color.LIME);
-      spfzp2move.spfzdimbox.setProjectionMatrix(stageCamera.combined);
-      spfzp2move.spfzdimbox.begin(ShapeRenderer.ShapeType.Line);
-      spfzp2move.spfzdimbox.setColor(Color.LIME);
+      spfzPlayer.spfzdimbox.setProjectionMatrix(stageCamera.combined);
+      spfzPlayer.spfzdimbox.begin(ShapeRenderer.ShapeType.Line);
+      spfzPlayer.spfzdimbox.setColor(Color.LIME);
+      opponent.spfzdimbox.setProjectionMatrix(stageCamera.combined);
+      opponent.spfzdimbox.begin(ShapeRenderer.ShapeType.Line);
+      opponent.spfzdimbox.setColor(Color.LIME);
 
     /*spfzp1move.dimrectangle();
-    spfzp2move.dimrectangle();*/
-      spfzPlayer1.spfzdimbox.rect(spfzPlayer1.dimrect.x, spfzPlayer1.dimrect.y, spfzPlayer1.dimrect.width, spfzPlayer1.dimrect.height);
-      spfzp2move.spfzdimbox.rect(spfzp2move.dimrect.x, spfzp2move.dimrect.y, spfzp2move.dimrect.width, spfzp2move.dimrect.height);
+    opponent.dimrectangle();*/
+      spfzPlayer.spfzdimbox.rect(spfzPlayer.dimrect.x, spfzPlayer.dimrect.y, spfzPlayer.dimrect.width, spfzPlayer.dimrect.height);
+      opponent.spfzdimbox.rect(opponent.dimrect.x, opponent.dimrect.y, opponent.dimrect.width, opponent.dimrect.height);
 
-      spfzPlayer1.spfzdimbox.end();
-      spfzp2move.spfzdimbox.end();
+      spfzPlayer.spfzdimbox.end();
+      opponent.spfzdimbox.end();
    }
 
    public void sethitbox(int i, float reversebox, float tempreach) {
@@ -615,7 +618,7 @@ class SPFZFyterCollision
          {
             if (((Attribs) arrscripts.get(i)).attributes().y > GROUND)
             {
-               spfzPlayer1.inair = true;
+               spfzPlayer.inair = true;
             }
 
             ((Attribs) arrscripts.get(i)).sethitbox();
@@ -624,7 +627,7 @@ class SPFZFyterCollision
          {
             if (i == p1)
             {
-               spfzPlayer1.inair = false;
+               spfzPlayer.inair = false;
             }
             ((Attribs) arrscripts.get(i)).hitboxpos().setZero();
             ((Attribs) arrscripts.get(i)).hitboxsize().setZero();
@@ -636,9 +639,8 @@ class SPFZFyterCollision
 
    public void shwhitbox(int i) {
       // Projectile Hitboxes
-      if (spfzPlayer1.projectile != null)
-      {
-         spfzPlayer1.projectile.hitbox();
+      if (spfzPlayer.projectile != null) {
+         spfzPlayer.projectile.hitbox();
       }
       // Shows the hitbox for attacks.
       // if the character is attacking, and the current frame of animation is
@@ -674,20 +676,28 @@ class SPFZFyterCollision
       shwcrossbox(i);
       shwhitbox(i);
 
-      if (spfzp2move.reflect)
-      {
-         spfzp2move.shwreflect();
+      if (opponent.reflect) {
+         opponent.shwreflect();
       }
 
-      if (stage.arrscripts != null)
-      {
-         for (int i = 0; i < stage.arrscripts.size(); i++)
-         {
-            if (i == stage.p1 || i == stage.p2)
-            {
+      if (stage.arrscripts != null) {
+         for (int i = 0; i < stage.arrscripts.size(); i++) {
+            if (i == stage.p1 || i == stage.p2) {
                stage.collision(i);
             }
          }
       }
    }
+
+   public ShapeRenderer drawhitbox() { return spfzhitbox; }
+
+   public ShapeRenderer drawrect() { return spfzsr; }
+
+   public DimensionsComponent dimensions() {
+      return spfzdim;
+   }
+
+   public Vector2 hitboxsize() { return hitboxsize; }
+
+   public Vector2 hitboxpos() { return posofhitbox; }
 }

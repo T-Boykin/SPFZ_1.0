@@ -48,5 +48,4 @@ public class SPFZButtonComponent implements Component
       }
       this.isTouched = isTouched;
    }
-
 }
