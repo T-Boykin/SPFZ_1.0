@@ -74,16 +74,14 @@ public class SPFZStageCamera extends Camera
 
     if (!p1charzoom && !p2charzoom)
     {
-      if (((OrthographicCamera) stageCamera).zoom != 1f)
-      {
+      if (((OrthographicCamera) stageCamera()).zoom != 1f) {
         zoom(1f, .3f, movecamera.x, movecamera.y);
 
-        if (((OrthographicCamera) stageCamera).zoom > .998f)
-        {
-          ((OrthographicCamera) stageCamera).zoom = 1f;
+        if (((OrthographicCamera) stageCamera()).zoom > .998f) {
+          ((OrthographicCamera) stageCamera()).zoom = 1f;
         }
       }
-      stageCamera.position.lerp(movecamera, .3f);
+      stageCamera().position.lerp(movecamera, .3f);
       if (camcon == 3)
       {
         camcon = 0;
@@ -108,15 +106,13 @@ public class SPFZStageCamera extends Camera
 
             if (camcon != 2)
             {
-              if (((OrthographicCamera) stageCamera).zoom <= .26f)
-              {
+              if (((OrthographicCamera) stageCamera()).zoom <= .26f) {
                 camcon = 1;
               }
             }
             else
             {
-              if (((OrthographicCamera) stageCamera).zoom <= .26f)
-              {
+              if (((OrthographicCamera) stageCamera()).zoom <= .26f) {
                 camcon = 3;
               }
             }
@@ -126,8 +122,7 @@ public class SPFZStageCamera extends Camera
             if (camcon != 3)
             {
               access.Zoom(.75f, .1f, movecamera.x, movecamera.y);
-              if (((OrthographicCamera) stageCamera).zoom > .749f)
-              {
+              if (((OrthographicCamera) stageCamera()).zoom > .749f) {
                 camcon = 2;
               }
             }
@@ -163,15 +158,13 @@ public class SPFZStageCamera extends Camera
       float incrementx = MathUtils.random(1);
       float incrementy = MathUtils.random(5);
       float newx, newy = WORLD_HEIGHT * .5f;
-      if (rand == 0)
-      {
-        newx = stageCamera.position.x + incrementx;
-        newy = stageCamera.position.y + incrementy;
+      if (rand == 0) {
+        newx = stageCamera().position.x + incrementx;
+        newy = stageCamera().position.y + incrementy;
       }
-      else
-      {
-        newx = stageCamera.position.x - incrementx;
-        newy = stageCamera.position.y - incrementy;
+      else {
+        newx = stageCamera().position.x - incrementx;
+        newy = stageCamera().position.y - incrementy;
       }
       if (newy < WORLD_HEIGHT * .5f)
       {
@@ -185,28 +178,27 @@ public class SPFZStageCamera extends Camera
       // movecamera.set(newx, camY, 0);
       if (!player.bouncer)
       {
-        stageCamera.position.lerp(movecamera, 1f);
+        stageCamera().position.lerp(movecamera, 1f);
       }
     }
   }
 
   public void zoom(float targetzoom, float duration, float movex, float movey) {
     // set current vals to process interpolation smoothly
-    zoompoint = ((OrthographicCamera) viewportland.getCamera()).zoom;
+    zoompoint = ((OrthographicCamera) stageCamera()).zoom;
     endzoom = targetzoom;
     targetduration = startingduration = duration;
 
-    if (((OrthographicCamera) viewportland.getCamera()).zoom >= targetzoom && credpress
-      || ((OrthographicCamera) viewportland.getCamera()).zoom <= targetzoom && !credpress)
-    {
+    if (((OrthographicCamera) stageCamera()).zoom >= targetzoom && credpress
+      || ((OrthographicCamera) stageCamera()).zoom <= targetzoom && !credpress) {
       targetduration -= Gdx.graphics.getDeltaTime();
       float progress = targetduration < 0 ? 1 : 1f - targetduration / startingduration;
 
-      ((OrthographicCamera) viewportland.getCamera()).zoom = Interpolation.pow3Out.apply(zoompoint, endzoom, progress);
+      ((OrthographicCamera) stageCamera()).zoom = Interpolation.pow3Out.apply(zoompoint, endzoom, progress);
 
-      viewportland.getCamera().position.x = Interpolation.pow3Out.apply(viewportland.getCamera().position.x, movex,
+      stageCamera().position.x = Interpolation.pow3Out.apply(stageCamera().position.x, movex,
         progress);
-      viewportland.getCamera().position.y = Interpolation.pow3Out.apply(viewportland.getCamera().position.y, movey,
+      stageCamera().position.y = Interpolation.pow3Out.apply(stageCamera().position.y, movey,
         progress);
     }
     else if (stage != null)
@@ -216,12 +208,12 @@ public class SPFZStageCamera extends Camera
         targetduration -= Gdx.graphics.getDeltaTime();
         float progress = targetduration < 0 ? 1 : 1f - targetduration / startingduration;
 
-        ((OrthographicCamera) viewportland.getCamera()).zoom = Interpolation.pow5Out.apply(zoompoint, endzoom,
+        ((OrthographicCamera) stageCamera()).zoom = Interpolation.pow5Out.apply(zoompoint, endzoom,
           progress);
 
-        viewportland.getCamera().position.x = Interpolation.pow5Out.apply(viewportland.getCamera().position.x, movex,
+        stageCamera().position.x = Interpolation.pow5Out.apply(stageCamera().position.x, movex,
           progress);
-        viewportland.getCamera().position.y = Interpolation.pow5Out.apply(viewportland.getCamera().position.y, movey,
+        stageCamera().position.y = Interpolation.pow5Out.apply(stageCamera().position.y, movey,
           progress);
       }
     }

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class CharacterAttributes {
 
-  private SPFZResourceManager resManager;
+  private final SPFZResourceManager resManager;
   boolean charfound = false;
   private final int characterLimit = 3;
   int health, player;
@@ -95,11 +95,9 @@ public class CharacterAttributes {
     return chardims;
   }
 
-  public ArrayList<int[]> getmoveinputs() {
-    return inputs;
-  }
+  public List<ArrayList<int[]>> getAllMoveInputs() { return inputs; }
 
-  public HashMap<String, int[]> getAnimations() {
+  public List<HashMap<String, int[]>> getAllAnimations() {
     return animations;
   }
 }

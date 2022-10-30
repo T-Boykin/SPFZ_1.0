@@ -237,11 +237,11 @@ class SPFZStageAnimation
 
          // center stage and characters
 
-         stageCamera.position.set(CENTER);
-         stageCamera.update();
 
-         if (stageCamera.position.idt(CENTER))
-         {
+         stage.camera().position.set(CENTER);
+         stage.camera().update();
+
+         if (stage.camera().position.idt(CENTER)) {
             stage.player1().setPos();
             spfzp2move.setPos();
          }

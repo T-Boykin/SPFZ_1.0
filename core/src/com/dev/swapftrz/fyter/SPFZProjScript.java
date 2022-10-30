@@ -167,7 +167,7 @@ public class SPFZProjScript implements IScript {
   }
 
 
-  public TransformComponent getspfzattribute() {
+  public TransformComponent transformAttributes() {
     return spfzattribute;
   }
 
