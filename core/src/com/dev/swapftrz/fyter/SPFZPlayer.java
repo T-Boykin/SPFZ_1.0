@@ -31,8 +31,8 @@ import java.util.List;
 public class SPFZPlayer implements IScript, BufferandInput {
   public boolean isRight, isUp, isDown, isLeft, isPunch, isKick;
 
-  public boolean special, swap, hit, blk, dblk, dash, left, right, isJumping, jumpdir, attacking, attacked, confirm, walljump,
-    blocking, punchstuck, kickstuck, runscript, cancel, pushed, createbox, projact, pausefrm, inair, stwlk, ltstuck, ownatk,
+  public boolean special, swap, hit, dash, left, right, jumpdir, confirm, walljump,
+    punchstuck, kickstuck, runscript, cancel, pushed, createbox, projact, pausefrm, stwlk, ltstuck, ownatk,
     projhit, bouncer, wallb, invul, playerOne;
 
   SPFZStage stage;
@@ -50,16 +50,14 @@ public class SPFZPlayer implements IScript, BufferandInput {
   private final CharacterAttributes characterAttributes;
   private final SPFZFyterAnimation spfzFyterAnimation;
   private final SPFZFyterCollision spfzFyterCollision;
+  private final SPFZResourceManager resManager;
   private SPFZBuffer buffer;
   private SPFZProjectile spfzProjectile;
-  private SPFZResourceManager resManager;
   private List<List<ArrayList<Double>>> characterFrameData = new ArrayList<List<ArrayList<Double>>>();
   private HashMap<String, float[]> characterAttributeData = new HashMap<>();
   private List<HashMap<String, int[]>> animations = new ArrayList<HashMap<String, int[]>>();
   private List<ArrayList<String>> specials = new ArrayList<ArrayList<String>>();
-  int combocount, currentframe, lastcount, move, input, lastfps, slot, slotIndex;
-
-  int[] activeframes;
+  private int combocount, currentframe, lastcount, move, input, lastfps, slot, slotIndex;
 
   final int BLKSTN = 0;
   final int HITSTN = 1;
@@ -83,14 +81,19 @@ public class SPFZPlayer implements IScript, BufferandInput {
   Entity spfzentity;
 
   ActionComponent spfzaction;
-  TransformComponent spfzattribute;
-  DimensionsComponent spfzdim;
+  private TransformComponent spfzAttribute;
+  DimensionsComponent spfzDim;
 
   float intpol;
 
-  Rectangle spfzrect, spfzhitrect, spfzcharrect, crossrect, dimrect;
+  private enum PlayerStatus {
+    NEUTRAL, WALKING, DASHING, JUMPING, INAIR,
+    ATTACKING, ATTACKED, BLOCKING
+  }
 
-  ShapeRenderer spfzsr, spfzhitbox, spfzcharbox, spfzdimbox;
+  Rectangle spfzRect, spfzhitrect, spfzCharRect, crossrect, dimRect;
+
+  ShapeRenderer spfzsr, spfzHitbox, spfzCharBox, spfzdimbox;
   short cancelled, speccount;
 
   int pauseframe;
@@ -101,12 +104,10 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
   Vector2 hitboxsize, posofhitbox;
 
+  PlayerStatus playerStatus;
   //SPFZProjScript projectile;
 
-  private enum playerStatus {
-    NEUTRAL, WALKING, DASHING, JUMPING, INAIR,
-    ATTACKING, ATTACKED, BLOCKING
-  }
+
 
   public SPFZPlayer(SPFZStage stage, SPFZResourceManager resManager, List<String> characters, boolean playerOne) {
     this.stage = stage;
@@ -236,27 +237,30 @@ public class SPFZPlayer implements IScript, BufferandInput {
       cameraPositionX = stage.camera().position.x;
 
     // If the player has reached the left bound facing right
-    if (spfzrect.x <= cameraPositionX - halfViewportWidth && spfzattribute.scaleX > 0) {
-      spfzattribute.x = cameraPositionX - charX() - halfViewportWidth;
+    if (spfzRect.x <= cameraPositionX - halfViewportWidth && spfzAttribute.scaleX > 0) {
+      spfzAttribute.x = cameraPositionX - charX() - halfViewportWidth;
     }
     // If the player has reached the right bound facing right
-    else if (spfzrect.x + spfzrect.width >= cameraPositionX + halfViewportWidth && spfzattribute.scaleX > 0) {
-      spfzattribute.x = cameraPositionX + halfViewportWidth - (spfzrect.width);
+    else if (spfzRect.x + spfzRect.width >= cameraPositionX + halfViewportWidth && spfzAttribute.scaleX > 0) {
+      spfzAttribute.x = cameraPositionX + halfViewportWidth - (spfzRect.width);
     }
 
     // If the player has reached the right bound facing left
-    if (spfzrect.x + spfzrect.width >= cameraPositionX + halfViewportWidth && spfzattribute.scaleX < 0) {
-      spfzattribute.x = cameraPositionX + halfViewportWidth - (spfzrect.width + charX());
+    if (spfzRect.x + spfzRect.width >= cameraPositionX + halfViewportWidth && spfzAttribute.scaleX < 0) {
+      spfzAttribute.x = cameraPositionX + halfViewportWidth - (spfzRect.width + charX());
     }
 
     // If the player has reached the left bound facing left
-    else if (spfzrect.x - spfzrect.width <= cameraPositionX - halfViewportWidth && spfzattribute.scaleX < 0) {
-      spfzattribute.x = cameraPositionX - halfViewportWidth + spfzrect.width;
+    else if (spfzRect.x - spfzRect.width <= cameraPositionX - halfViewportWidth && spfzAttribute.scaleX < 0) {
+      spfzAttribute.x = cameraPositionX - halfViewportWidth + spfzRect.width;
     }
   }
 
   public float center() {
-    return setrect().x + spfzrect.width * .5f;
+    if (isFacingRight())
+      return setrect().x + spfzRect.width * .5f;
+    else
+      return setrect().x - spfzRect.width * .5f;
   }
 
   public int combonum() {
@@ -271,10 +275,6 @@ public class SPFZPlayer implements IScript, BufferandInput {
     return confirm;
   }
 
-  public TransformComponent getspfzattribute() {
-    return spfzattribute;
-  }
-
   public float getWalkspeed() {
     return walkspeed;
   }
@@ -287,21 +287,20 @@ public class SPFZPlayer implements IScript, BufferandInput {
   public void init(Entity entity) {
     buffer.setCommandInputs(characterAttributes.inputs.get(slotIndex));
     spfzsr = new ShapeRenderer();
-    spfzhitbox = new ShapeRenderer();
-    spfzcharbox = new ShapeRenderer();
+    spfzHitbox = new ShapeRenderer();
+    spfzCharBox = new ShapeRenderer();
     spfzdimbox = new ShapeRenderer();
 
     //spfzrect = new Rectangle();
-    spfzrect = new Rectangle(characterAttributes.getCharDims());
-    adjustX = spfzrect.x;
-    adjustY = spfzrect.y;
+    spfzRect = new Rectangle(characterAttributes.getCharDims());
+    adjustX = spfzRect.x;
+    adjustY = spfzRect.y;
     spfzhitrect = new Rectangle();
-    spfzcharrect = new Rectangle();
-    dimrect = new Rectangle();
+    spfzCharRect = new Rectangle();
+    dimRect = new Rectangle();
     crossrect = new Rectangle();
     hitboxsize = new Vector2();
     posofhitbox = new Vector2();
-    activeframes = new int[] {0, 0};
     hitboxsize = new Vector2(0, 0);
     posofhitbox = new Vector2(0, 0);
     spfzentity = entity;
@@ -311,7 +310,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
     gravity = characterAttributes.getGravity();
     jumpspeed = characterAttributes.getJump();
     walkspeed = characterAttributes.getWalkspeed();
-    buffer.setCommandInputs(characterAttributes.getmoveinputs());
+    buffer.setCommandInputs(characterAttributes.getAllMoveInputs().get(slotIndex));
     dashspeed = characterAttributes.getdashadv();
     //tempspeed = walkandjump.x;
 
@@ -320,31 +319,29 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
   public void jumplogic(float delta) {
     // Apply gravity for spfzattribute calculations
-    if (setrect().y > ground) {
-      if (!spfzanimationstate.paused) {
+    if (setrect().y > ground)
+      if (!spfzanimationstate.paused)
         walkandjump.y += gravity * delta;
-      }
-    }
+
     // assign the new jump value to the spfzattribute attribute to
     // apply gravity to the spfzattribute
-    if (!spfzanimationstate.paused) {
-      spfzattribute.y += walkandjump.y;
-    }
+    if (!spfzanimationstate.paused)
+      spfzAttribute.y += walkandjump.y;
 
-    if (isJumping) {
-      if (spfzrect.y > ground) {
-        if (spfzrect.y > ground + wallJumpBoundary
+    if (isJumping()) {
+      if (spfzRect.y > ground) {
+        if (spfzRect.y > ground + wallJumpBoundary
           && (stage.camera().position.x <= cameraBoundaries[0] + 1 || stage.camera().position.x + 1 >= cameraBoundaries[1])
-          && ((spfzattribute.x + adjustX <= stageBoundaries[0] && spfzattribute.scaleX > 0)
-          || spfzattribute.x - adjustX + 1 >= stageBoundaries[1] && spfzattribute.scaleX < 0)) {
-          if (isLeft && isUp && !isRight && spfzattribute.scaleX < 0
-            || isRight && isUp && !isLeft && spfzattribute.scaleX > 0) {
+          && ((spfzAttribute.x + adjustX <= stageBoundaries[0] && spfzAttribute.scaleX > 0)
+          || spfzAttribute.x - adjustX + 1 >= stageBoundaries[1] && spfzAttribute.scaleX < 0)) {
+          if (isLeft && isUp && !isRight && spfzAttribute.scaleX < 0
+            || isRight && isUp && !isLeft && spfzAttribute.scaleX > 0) {
             // Needs modification, character keeps riding up on wall
             walljump = true;
-            spfzattribute.y += walkandjump.y;
+            spfzAttribute.y += walkandjump.y;
           }
         }
-        else if (spfzrect.y < ground + wallJumpBoundary) {
+        else if (spfzRect.y < ground + wallJumpBoundary) {
           walljump = false;
         }
         // if Jump direction is true(right) it will advance the player
@@ -357,14 +354,14 @@ public class SPFZPlayer implements IScript, BufferandInput {
           if (walljump) {
             if (!spfzanimationstate.paused) {
 
-              spfzattribute.x += walkandjump.x * .0150f;
+              spfzAttribute.x += walkandjump.x * .0150f;
             }
             // code for wall jump particle effect
           }
           else {
             if (!spfzanimationstate.paused) {
 
-              spfzattribute.x += walkandjump.x * .0150f;
+              spfzAttribute.x += walkandjump.x * .0150f;
 
             }
           }
@@ -374,26 +371,26 @@ public class SPFZPlayer implements IScript, BufferandInput {
             // wall jump particle effect will be here
 
             if (!spfzanimationstate.paused) {
-              spfzattribute.x -= walkandjump.x * .0150f;
+              spfzAttribute.x -= walkandjump.x * .0150f;
             }
           }
           else {
             if (!spfzanimationstate.paused) {
-              spfzattribute.x -= walkandjump.x * .0150f;
+              spfzAttribute.x -= walkandjump.x * .0150f;
             }
           }
         }
       }
       else {
-        if (!isUp && (!isRight || !isLeft) && isJumping) {
-          isJumping = false;
+        if (!isUp && (!isRight || !isLeft) && isJumping()) {
+          setNeutralStatus();
         }
       }
     }
 
     // If spfzattribute has reached the boundary of the ground, set to the
     // boundary of the ground
-    if (spfzrect.y < ground) {
+    if (isOnGround()) {
 
       if (stage.stageWrapper().getChild("p1land").getChild("landp1").getEntity()
         .getComponent(SPFZParticleComponent.class).pooledeffects.size != 0) {
@@ -410,33 +407,29 @@ public class SPFZPlayer implements IScript, BufferandInput {
         .getComponent(TransformComponent.class).scaleX = 1f;
       stage.stageWrapper().getChild("p1land").getChild("landp1").getEntity().getComponent(SPFZParticleComponent.class)
         .startEffect();
-      attacking = false;
+      setNeutralStatus();
       confirm = false;
       hitboxsize.setZero();
       walkandjump.y = 0;
-      spfzattribute.y = charGROUND();
+      spfzAttribute.y = charGROUND();
     }
 
   }
 
-  public float charX() {
-    return spfzrect.x - spfzattribute.x;
-  }
+  public boolean isOnGround() { return spfzRect.y <= ground; }
 
-  public float charY() {
-    return spfzrect.y - spfzattribute.y;
-  }
+  public float charX() { return spfzRect.x - spfzAttribute.x; }
 
-  public float charGROUND() {
-    return ground - (spfzrect.y - spfzattribute.y);
-  }
+  public float charY() { return spfzRect.y - spfzAttribute.y; }
+
+  public float charGROUND() { return ground - (spfzRect.y - spfzAttribute.y); }
 
   public void kick() {
     spfzanimation.currentAnimation = null;
 
     if (swap && meter >= 100f) {
       // if height restriction or on ground allow,
-      if (spfzrect.y == ground && projact || spfzrect.y >= ground + 30f) {
+      if (spfzRect.y == ground && projact || spfzRect.y >= ground + 30f) {
         swap = false;
         isPunch = false;
         spectime = 0;
@@ -452,9 +445,9 @@ public class SPFZPlayer implements IScript, BufferandInput {
     else {
       move = -1;
 
-      if (spfzattribute.scaleX > 0) {
-        if (!special || spfzrect.y > ground) {
-          if (spfzrect.y == ground) {
+      if (spfzAttribute.scaleX > 0) {
+        if (!special || spfzRect.y > ground) {
+          if (spfzRect.y == ground) {
             if (isLeft) {
               input = 9;
               if (isDown) {
@@ -482,10 +475,10 @@ public class SPFZPlayer implements IScript, BufferandInput {
             }
           }
           else {
-            // if isJumping is true, means we are jumping either
+            // if isJumping() is true, means we are jumping either
             // forwards or
             // backwards.
-            if (isJumping) {
+            if (isJumping()) {
               // if jumpdir is true, means we are jumping forwrds,
               // otherwise, we
               // are jumping backwards
@@ -504,9 +497,9 @@ public class SPFZPlayer implements IScript, BufferandInput {
         }
       }
       else {
-        if (!special || spfzrect.y > ground) {
+        if (!special || spfzRect.y > ground) {
           // Ground Kicks
-          if (spfzrect.y == ground) {
+          if (spfzRect.y == ground) {
             if (isLeft) {
               input = 11;
               if (isDown) {
@@ -532,10 +525,10 @@ public class SPFZPlayer implements IScript, BufferandInput {
           }
           // Air Kicks
           else {
-            // if isJumping is true, means we are jumping either
+            // if isJumping() is true, means we are jumping either
             // forwards or
             // backwards.
-            if (isJumping) {
+            if (isJumping()) {
               // if jumpdir is true, means we are jumping
               // backwards, otherwise,
               // we are jumping forwards
@@ -555,7 +548,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
       }
 
-      attacking = true;
+      setAttackingStatus();
       // if the move is not null technically
       // move = characterAttributes.moveset.indexOf(stage.normals[input]);
 
@@ -569,12 +562,12 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
     }
 
-    attacking = true;
-    if (spfzanimation.currentAnimation != null) {
+    setAttackingStatus();
+
+    if (spfzanimation.currentAnimation != null)
       spfzanimationstate.set(spfzanimation.frameRangeMap.get(spfzanimation.currentAnimation),
         characterAttributes.animFPS.get(slotIndex)
           .get(characterAttributes.anims.indexOf(spfzanimation.currentAnimation)), Animation.PlayMode.NORMAL);
-    }
   }
 
   public boolean invul() {
@@ -592,14 +585,14 @@ public class SPFZPlayer implements IScript, BufferandInput {
     if (cancelled == 1) {
       isPunch = true;
       special = true;
-      attacking = false;
+      //attacking = false; special move
       punchstuck = false;
       kickstuck = false;
       spfzanimationstate.paused = false;
 
     }
-    if (isPunch && !attacked && !dash) {
-      if (attacking) {
+    if (isPunch && !isAttacked() && !isDashing()) {
+      if (isAttacking()) {
         punchstuck = true;
       }
       if (!punchstuck) {
@@ -612,8 +605,8 @@ public class SPFZPlayer implements IScript, BufferandInput {
         punchstuck = false;
       }
     }
-    if (isKick && !attacked && !dash) {
-      if (attacking) {
+    if (isKick && !isAttacked() && !dash) {
+      if (isAttacking()) {
         if (!swap) {
           kickstuck = true;
         }
@@ -635,14 +628,14 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
 
     if ((spfzanimation.currentAnimation == "BDASH" || spfzanimation.currentAnimation == "FDASH") ||
-      dash && spfzrect.y == ground) {
+      dash && spfzRect.y == ground) {
       float totalFrames = currTotalFrames();
       float totalFrmTime = rtnFrametime(totalFrames);
 
       float progress = stateTime / totalFrmTime;
 
       if (startpt == 0) {
-        startpt = spfzattribute.x;
+        startpt = spfzAttribute.x;
         dashpoints = new Vector2(startpt, 0);
       }
 
@@ -657,7 +650,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
         }
       }*/
 
-      spfzattribute.x = dashpoints.x;
+      spfzAttribute.x = dashpoints.x;
 
       if (spfzanimationstate.currentAnimation.isAnimationFinished(stateTime)) {
         walkandjump.x = tempspeed;
@@ -692,9 +685,9 @@ public class SPFZPlayer implements IScript, BufferandInput {
     bouncer = false;
     move = -1;
 
-    if (spfzattribute.scaleX > 0) {
-      if (!special || spfzrect.y > ground) {
-        if (spfzrect.y == ground) {
+    if (spfzAttribute.scaleX > 0) {
+      if (!special || spfzRect.y > ground) {
+        if (spfzRect.y == ground) {
           if (isLeft) {
 
             input = 6;
@@ -721,10 +714,10 @@ public class SPFZPlayer implements IScript, BufferandInput {
           }
         }
         else {
-          // if isJumping is true, means we are jumping either
+          // if isJumping() is true, means we are jumping either
           // forwards or
           // backwards.
-          if (isJumping) {
+          if (isJumping()) {
             // if jumpdir is true, means we are jumping forwards,
             // otherwise, we
             // are jumping backwards
@@ -739,7 +732,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
             input = 13;
           }
 
-          if (spfzrect.y > ground) {
+          if (spfzRect.y > ground) {
             weight = "H";
           }
           else {
@@ -748,7 +741,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
         }
       }
       else {
-        if (special && spfzrect.y == ground) {
+        if (special && spfzRect.y == ground) {
           spfzanimation.currentAnimation = "projectile";
           if (!projact && special) {
             spwnPrj();
@@ -766,9 +759,9 @@ public class SPFZPlayer implements IScript, BufferandInput {
       }
     }
     else {
-      if (!special || spfzrect.y > ground) {
+      if (!special || spfzRect.y > ground) {
 
-        if (spfzrect.y == ground) {
+        if (spfzRect.y == ground) {
           if (isLeft) {
             input = 8;
             weight = "H";
@@ -794,10 +787,10 @@ public class SPFZPlayer implements IScript, BufferandInput {
           }
         }
         else {
-          // if isJumping is true, means we are jumping either
+          // if isJumping() is true, means we are jumping either
           // forwards or
           // backwards.
-          if (isJumping) {
+          if (isJumping()) {
             // if jumpdir is true, means we are jumping backwards,
             // otherwise, we
             // are jumping forwards
@@ -811,7 +804,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
           else {
             input = 13;
           }
-          if (spfzrect.y > ground) {
+          if (spfzRect.y > ground) {
             weight = "H";
             createbox = true;
           }
@@ -819,7 +812,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
       }
       else {
-        if (special && spfzrect.y == ground) {
+        if (special && spfzRect.y == ground) {
           move = -1;
           spfzanimation.currentAnimation = "projectile";
           if (!projact && special) {
@@ -835,7 +828,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
       }
     }
 
-    attacking = true;
+    setAttackingStatus();
     // if the move is not null technically
     //move = characterAttributes.moveset.indexOf(stage.normals[input]);
     if (move != -1) {
@@ -850,8 +843,8 @@ public class SPFZPlayer implements IScript, BufferandInput {
   public void setneutral() {
 
     stateTime = 0;
-    attacking = false;
-    attacked = false;
+    setNeutralStatus();
+    //attacked = false;
     spfzanimation.currentAnimation = "IDLE";
     if (isDown) {
       spfzanimation.currentAnimation = "CRCH";
@@ -868,11 +861,11 @@ public class SPFZPlayer implements IScript, BufferandInput {
 
     nc = ComponentRetriever.get(spfzentity, NodeComponent.class);
     spfzaction = ComponentRetriever.get(spfzentity, ActionComponent.class);
-    spfzattribute = ComponentRetriever.get(spfzentity, TransformComponent.class);
-    spfzattribute.x = stage.centerOfStage() - 200f; // value may be initial start
-    spfzattribute.y = charGROUND();
+    spfzAttribute = ComponentRetriever.get(spfzentity, TransformComponent.class);
+    spfzAttribute.x = stage.centerOfStage() - 200f; // value may be initial start
+    spfzAttribute.y = charGROUND();
 
-    spfzdim = ComponentRetriever.get(spfzentity, DimensionsComponent.class);
+    spfzDim = ComponentRetriever.get(spfzentity, DimensionsComponent.class);
     spfzanimation = ComponentRetriever.get(nc.children.get(0), SpriteAnimationComponent.class);
     spfzanimationstate = ComponentRetriever.get(nc.children.get(0), SpriteAnimationStateComponent.class);
     List<String> keys;
@@ -881,12 +874,12 @@ public class SPFZPlayer implements IScript, BufferandInput {
     keys = new ArrayList<>(animations.get(slotIndex).keySet());
 
     // create frame ranges for all animations listed for each character
-
+    //TODO change if check here
     if (characterFrameData.size() < 3) {
-      for (int i = 0; i < characterAttributes.getAnimations().size(); i++)
+      for (int i = 0; i < characterAttributes.getAllAnimations().size(); i++)
         spfzanimation.frameRangeMap.put(keys.get(i), new FrameRange(keys.get(i),
-          characterAttributes.animations.get(slotIndex).get(keys.get(i))[0],
-          characterAttributes.getAnimations().get(keys.get(i))[1]));
+          characterAttributes.getAllAnimations().get(i).get(keys.get(i))[0],
+          characterAttributes.getAllAnimations().get(i).get(keys.get(i))[1]));
     }
     else {
       for (int i = 0; i < animations.get(slotIndex).size(); i++) {
@@ -905,10 +898,17 @@ public class SPFZPlayer implements IScript, BufferandInput {
     combocount = comboint;
   }
 
-  public Rectangle sethitbox() {
-    spfzhitrect.set(posofhitbox.x, posofhitbox.y, hitboxsize.x, hitboxsize.y);
-    return spfzhitrect;
+  public ShapeRenderer renderHitBox() {
+    if (spfzhitrect.x != posofhitbox.x || posofhitbox.y != posofhitbox.y ||
+      hitboxsize.x != hitboxsize.x || hitboxsize.y != hitboxsize.y) {
+      spfzhitrect.set(posofhitbox.x, posofhitbox.y, hitboxsize.x, hitboxsize.y);
+      spfzHitbox.rect(posofhitbox.x, posofhitbox.y, hitboxsize.x, hitboxsize.y);
+    }
+
+    return spfzHitbox;
   }
+
+  public Rectangle hitBox() { return spfzhitrect; }
 
   public void setPos() {
 
@@ -921,22 +921,22 @@ public class SPFZPlayer implements IScript, BufferandInput {
   }
 
   public Rectangle setrect() {
-    if (spfzattribute.scaleX > 0) {
-      spfzrect.x = spfzattribute.x + adjustX;
+    if (spfzAttribute.scaleX > 0) {
+      spfzRect.x = spfzAttribute.x + adjustX;
     }
     else {
-      spfzrect.x = (spfzattribute.x - adjustX) - spfzrect.width;
+      spfzRect.x = (spfzAttribute.x - adjustX) - spfzRect.width;
     }
-    spfzrect.y = spfzattribute.y + adjustY;
+    spfzRect.y = spfzAttribute.y + adjustY;
 
-    return spfzrect;
+    return spfzRect;
   }
 
   public Rectangle setcross() {
-    float box = spfzrect.width * .5f;
-    crossrect.set(spfzrect.x + (box * .5f),
-      spfzrect.y, spfzrect.width * .5f,
-      spfzrect.height);
+    float box = spfzRect.width * .5f;
+    crossrect.set(spfzRect.x + (box * .5f),
+      spfzRect.y, spfzRect.width * .5f,
+      spfzRect.height);
 
     return crossrect;
   }
@@ -976,7 +976,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
         if (isRight)
         {
           jumpdir = true;
-          isJumping = true;
+          isJumping() = true;
 
           if (walljump && spfzattribute.scaleX > 0)
           {
@@ -987,7 +987,7 @@ public class SPFZPlayer implements IScript, BufferandInput {
         else if (isLeft)
         {
           jumpdir = false;
-          isJumping = true;
+          isJumping() = true;
 
           if (walljump && spfzattribute.scaleX < 0)
           {
@@ -1018,22 +1018,23 @@ public class SPFZPlayer implements IScript, BufferandInput {
     return spfzanimationstate.currentAnimation.getKeyFrames().length;
   }
 
-  public Rectangle setcharbox() {
-    spfzcharrect = spfzrect;
-    return spfzcharrect;
+  public Rectangle hurtBox() {
+    if (spfzCharRect != spfzRect)
+      spfzCharRect = spfzRect;
+
+    return spfzCharRect;
   }
 
   public Rectangle dimrectangle() {
-    if (spfzattribute.scaleX > 0) {
-      dimrect.set(spfzattribute.x, spfzattribute.y, spfzdim.width, spfzdim.height);
-    }
-    else {
-      dimrect.set(spfzattribute.x - spfzdim.width, spfzattribute.y, spfzdim.width, spfzdim.height);
-    }
-    return dimrect;
+    if (spfzAttribute.scaleX > 0)
+      dimRect.set(spfzAttribute.x, spfzAttribute.y, spfzDim.width, spfzDim.height);
+    else
+      dimRect.set(spfzAttribute.x - spfzDim.width, spfzAttribute.y, spfzDim.width, spfzDim.height);
+
+    return dimRect;
   }
 
-  public ShapeRenderer drawcharbox() { return spfzcharbox; }
+  public ShapeRenderer drawcharbox() { return spfzCharBox; }
 
   public Rectangle setrflbox() { return null; }
 
@@ -1045,6 +1046,20 @@ public class SPFZPlayer implements IScript, BufferandInput {
     return new boolean[] {isLeft, isRight, isUp, isDown,
       (isLeft && isUp), (isRight && isUp), (isRight && isDown), (isLeft && isDown),
       (!isLeft && !isDown && !isRight && !isUp)};
+  }
+
+  public boolean isFacingLeft() { return spfzAttribute.scaleX < 0; }
+
+  public boolean isFacingRight() { return spfzAttribute.scaleX > 0; }
+
+  public SPFZFyterAnimation animation() { return spfzFyterAnimation; }
+
+  public String currentAnimation() { return animation().animationComponent().currentAnimation; }
+
+  public TransformComponent transformAttributes() { return spfzAttribute; }
+
+  public void setNewTransformAttributes(TransformComponent transformAttributes) {
+    spfzAttribute = transformAttributes;
   }
 
   public void setOpponent(SPFZPlayer opponent) { this.opponent = opponent; }
@@ -1066,4 +1081,46 @@ public class SPFZPlayer implements IScript, BufferandInput {
   public CharacterAttributes getCharacterAttributes() { return characterAttributes; }
 
   public int getSlotIndex() { return slotIndex; }
+
+  // Player Status methods
+
+  public PlayerStatus getPlayerStatus() { return playerStatus; }
+
+  public boolean isAttacked() { return playerStatus == PlayerStatus.ATTACKED; }
+
+  public boolean isAttacking() { return playerStatus == PlayerStatus.ATTACKING; }
+
+  public boolean isBlocking() { return playerStatus == PlayerStatus.BLOCKING; }
+
+  public boolean isDashing() { return playerStatus == PlayerStatus.DASHING; }
+
+  public boolean isJumping() { return playerStatus == PlayerStatus.JUMPING; }
+
+  public boolean isInair() { return playerStatus == PlayerStatus.INAIR; }
+
+  public boolean isNeutral() { return playerStatus == PlayerStatus.NEUTRAL; }
+
+  public boolean isWalking() { return playerStatus == PlayerStatus.WALKING; }
+
+  public void setAttackedStatus() { playerStatus = PlayerStatus.ATTACKED; }
+
+  public void setAttackingStatus() { playerStatus = PlayerStatus.ATTACKING; }
+
+  public void setBlockingStatus() { playerStatus = PlayerStatus.BLOCKING; }
+
+  public void setDashingStatus() { playerStatus = PlayerStatus.DASHING; }
+
+  public void setJumpingStatus() { playerStatus = PlayerStatus.JUMPING; }
+
+  public void setInairStatus() { playerStatus = PlayerStatus.INAIR; }
+
+  public void setNeutralStatus() { playerStatus = PlayerStatus.NEUTRAL; }
+
+  public void setWalkingStatus() { playerStatus = PlayerStatus.WALKING; }
+
+  public void setProjectionMatrix() {
+    spfzCharBox.setProjectionMatrix(stage.camera().combined);
+  }
+
+  public SPFZResourceManager getResource() { return resManager; }
 }

@@ -168,9 +168,26 @@ public class SPFZDBOperations implements java.sql.Driver {
     return temporaryCharacterAttributes;
   }
 
+  public HashMap<String, int[]> retrieveAnimations(HashMap<String, int[]> animations) { return animations; }
+
+  public ArrayList<Integer> retrieveAnimationsFPS(ArrayList<Integer> animationFPS) { return animationFPS; }
+
+  public ArrayList<String> retrieveAnimationCodes(ArrayList<String> animationCodes) { return animationCodes; }
+
+  public ArrayList<int[]> retrieveInputs(ArrayList<int[]> inputs) { return inputs; }
+
+  public ArrayList<String> retrieveAttacks(ArrayList<String> attacksList) {
+    return attacksList;
+  }
+
   //parses the data within the file to represent data into arrays
   public List<ArrayList<Double>> retrieveAttacksAndAnimationsData(Connection c, String chr) {
     List<ArrayList<Double>> tempCharacterData = new ArrayList<>();
+    ArrayList<String> attacksList = new ArrayList<>();
+    HashMap<String, int[]> animations = new HashMap<>();
+    ArrayList<Integer> animFPS = new ArrayList<>();
+    ArrayList<String> animationCodes = new ArrayList<>();
+    ArrayList<int[]> inputs = new ArrayList<>();
 
     //Animation table
     ArrayList<Double> tempSTA = new ArrayList<Double>();
@@ -391,12 +408,14 @@ public class SPFZDBOperations implements java.sql.Driver {
           posY.add(set.getDouble(proj_posy));
         }
 
-        moveset.add(set.getString(atk_atk));
+        attacksList.add(set.getString(atk_atk));
       }
       //Set the values coming from the animations table.
       //startup anim frame
       pst.close();
       set.close();
+
+      retrieveAttacks(attacksList);
       System.out.println("Values for " + charcode + " have been populated.");
 
       //Step 2 set all animations within the animations array
@@ -410,6 +429,7 @@ public class SPFZDBOperations implements java.sql.Driver {
 
       set = pst.executeQuery();
 
+
       while (set.next()) {
         int actstart = set.getInt(anim_strtfrm);
         int actend = set.getInt(anim_endfrm);
@@ -418,7 +438,7 @@ public class SPFZDBOperations implements java.sql.Driver {
 
         animations.put(set.getString(anim_acode),
           new int[] {actstart, actend});
-        anims.add(set.getString(anim_acode));
+        animationCodes.add(set.getString(anim_acode));
         animFPS.add(set.getInt(anim_speed));
       }
 
@@ -492,6 +512,12 @@ public class SPFZDBOperations implements java.sql.Driver {
       tempCharacterData.add(posX); //32
       tempCharacterData.add(posY); //33
     }
+
+    retrieveAttacks(attacksList);
+    retrieveAnimationsFPS(animFPS);
+    retrieveAnimations(animations);
+    retrieveInputs(inputs);
+    retrieveAnimationCodes(animationCodes);
 
     return tempCharacterData;
   }

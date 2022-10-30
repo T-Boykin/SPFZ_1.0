@@ -77,9 +77,7 @@ class SPFZBuffer {
     return null;
   }
 
-  public void setCommandInputs(ArrayList<int[]> commandInputs) {
-    this.commandInputs = commandInputs;
-  }
+  public void setCommandInputs(ArrayList<int[]> commandInputs) { this.commandInputs = commandInputs; }
 
   public boolean dash() { return command == commandInputs.get(0) || command == commandInputs.get(1); }
 

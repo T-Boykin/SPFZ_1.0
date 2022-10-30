@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Scaling;
@@ -483,12 +484,15 @@ public class SPFZSceneLoader
     return shader;
   }
 
-  public Batch getBatch()
-  {
+  public Batch getBatch() {
     return renderer.getBatch();
   }
 
   public SPFZResourceManager getMainRM() {
     return resManager;
+  }
+
+  public void renderBox(ShapeRenderer rect, ShapeRenderer.ShapeType shape, Color color) {
+    renderer.renderBox(rect, shape, color);
   }
 }

@@ -27,8 +27,7 @@ import com.uwsoft.editor.renderer.utils.ComponentRetriever;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SPFZP2Movement implements IScript, Attribs, BufferandInput
-{
+public class SPFZP2Movement implements IScript, BufferandInput {
 
   boolean isRight, isLeft, isUp, isDown, isPunch, isKick, special, hit, blk, dblk, left, pushed, right, isJumping,
     jumpdir, attacking, attacked, blocking, ownatk, projhit, projact, confirm, walljump, kickstuck, punchstuck,
@@ -885,8 +884,7 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
     return invul;
   }
 
-  public TransformComponent getspfzattribute()
-  {
+  public TransformComponent transformAttributes() {
     return spfzattribute;
   }
 
@@ -1396,11 +1394,10 @@ public class SPFZP2Movement implements IScript, Attribs, BufferandInput
     List<String> keys = new ArrayList<String>(spfzp2vals.animations.keySet());
 
     // create frame ranges for all animations listed for each character
-    for (int i = 0; i < spfzp2vals.getAnimations().size(); i++)
-    {
+    for (int i = 0; i < spfzp2vals.getAllAnimations().size(); i++) {
 
       spfzanimation.frameRangeMap.put(keys.get(i), new FrameRange(keys.get(i),
-        spfzp2vals.animations.get(keys.get(i))[0], spfzp2vals.getAnimations().get(keys.get(i))[1]));
+        spfzp2vals.animations.get(keys.get(i))[0], spfzp2vals.getAllAnimations().get(keys.get(i))[1]));
     }
     spfzanimation.currentAnimation = "IDLE";
     spfzanimationstate.set(spfzanimation.frameRangeMap.get("IDLE"), 60, Animation.PlayMode.LOOP);

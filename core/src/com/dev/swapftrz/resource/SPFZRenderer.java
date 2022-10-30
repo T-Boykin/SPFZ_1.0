@@ -6,11 +6,13 @@ import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Array;
@@ -421,13 +423,17 @@ public class SPFZRenderer extends IteratingSystem
 	// setPhysicsOn has been moved in PhysicsSystem class
 	// Physics is now totally decoupled from rendering
 	@Deprecated
-	public void setPhysicsOn(boolean isPhysicsOn)
-	{
+	public void setPhysicsOn(boolean isPhysicsOn) {
 		// empty
 	}
 
-	public Batch getBatch()
-	{
+	public Batch getBatch() {
 		return batch;
+	}
+
+	public void renderBox(ShapeRenderer rect, ShapeRenderer.ShapeType shape, Color color) {
+		rect.begin(shape);
+		rect.setColor(color);
+		rect.end();
 	}
 }
