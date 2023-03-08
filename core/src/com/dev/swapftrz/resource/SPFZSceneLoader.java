@@ -124,18 +124,17 @@ public class SPFZSceneLoader
       PhysicsBodyLoader.getInstance().mul = 1;
     }
     //may not need this code.
-    if (rayHandler == null)
+    /*if (rayHandler == null)
     {
       RayHandler.setGammaCorrection(true);
       RayHandler.useDiffuseLight(true);
-
       rayHandler = new RayHandler(world);
       rayHandler.setAmbientLight(1f, 1f, 1f, 1f);
       rayHandler.setCulling(true);
       rayHandler.setBlur(true);
       rayHandler.setBlurNum(3);
       rayHandler.setShadows(true);
-    }
+    }*/
 
     addSystems();
     entityFactory = new SPFZEntityFactory(rayHandler, world, rm);

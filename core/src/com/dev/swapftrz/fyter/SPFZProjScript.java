@@ -266,7 +266,7 @@ public class SPFZProjScript implements IScript {
     reflected = false;
 
 //		}
-//		spfzattribute.y = stage.GROUND;
+//		spfzattribute.y = stage.ground();
 
     spfzdim = ComponentRetriever.get(spfzprojectile, DimensionsComponent.class);
     spfzanimation = ComponentRetriever.get(nc.children.get(0), SpriteAnimationComponent.class);

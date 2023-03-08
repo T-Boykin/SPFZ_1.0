@@ -24,6 +24,7 @@ public class SPFZStage extends Stage
   private ItemWrapper stageWrapper;
   private float[] cameraBoundaries = { }, stageBoundaries = { };
   private final float GROUND, WALLJUMPBOUNDARY, CHARACTER_SPACING;
+  private static final float fps = 60f;
   private final SPFZPlayer spfzPlayer1, spfzPlayer2;
 
   public SPFZStage(SPFZMenu spfzMenu, List<String> characters, SPFZResourceManager resManager) {
@@ -129,4 +130,6 @@ public class SPFZStage extends Stage
   public boolean roundStarted() { return stageStatus.isRoundStart(); }
 
   public boolean endOfRound() { return stageStatus.isEndOfRound(); }
+
+  public float framesPerSecond() { return fps; }
 }

@@ -2,9 +2,6 @@ package com.dev.swapftrz.stage;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -72,7 +69,7 @@ public class SPFZStageCamera extends Camera
       movecamera.set(camX, camY, 0);
     }
 
-    if (!p1charzoom && !p2charzoom)
+    /*if (!p1charzoom && !p2charzoom)
     {
       if (((OrthographicCamera) stageCamera()).zoom != 1f) {
         zoom(1f, .3f, movecamera.x, movecamera.y);
@@ -180,11 +177,11 @@ public class SPFZStageCamera extends Camera
       {
         stageCamera().position.lerp(movecamera, 1f);
       }
-    }
+    }*/
   }
 
   public void zoom(float targetzoom, float duration, float movex, float movey) {
-    // set current vals to process interpolation smoothly
+    /*// set current vals to process interpolation smoothly
     zoompoint = ((OrthographicCamera) stageCamera()).zoom;
     endzoom = targetzoom;
     targetduration = startingduration = duration;
@@ -216,7 +213,7 @@ public class SPFZStageCamera extends Camera
         stageCamera().position.y = Interpolation.pow5Out.apply(stageCamera().position.y, movey,
           progress);
       }
-    }
+    }*/
 
   }
 
