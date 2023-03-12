@@ -1,9 +1,7 @@
 package com.dev.swapftrz.menu;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -65,7 +63,7 @@ public class SPFZMenuCamera extends Camera
    * method performs action when the user swipes up or down
    */
   public void swipecheck() {
-    if (!optionsup)
+    /*if (!optionsup)
     {
       if (flingup)
       {
@@ -90,11 +88,11 @@ public class SPFZMenuCamera extends Camera
           ((OrthographicCamera) this).zoom = ZOOMCOUT;
         }
       }
-    }
+    }*/
   }
 
   public void creditprocessing() {
-    if (flingup && ((OrthographicCamera) this).position.y >= credits.y - 1)
+    /*if (flingup && ((OrthographicCamera) this).position.y >= credits.y - 1)
     {
       flingup = false;
       flingdown = false;
@@ -140,7 +138,7 @@ public class SPFZMenuCamera extends Camera
       {
         processback();
       }
-    }
+    }*/
   }
 
 }

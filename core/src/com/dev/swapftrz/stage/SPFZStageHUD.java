@@ -5,12 +5,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.utils.Timer;
-import com.dev.swapftrz.resource.LifeSystem;
-import com.dev.swapftrz.resource.LifeTextureComponent;
 import com.dev.swapftrz.resource.SPFZO2DMethods;
 import com.dev.swapftrz.resource.SPFZResourceManager;
-import com.dev.swapftrz.resource.SpecialSystem;
-import com.dev.swapftrz.resource.SpecialTexComponent;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TintComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
@@ -165,36 +161,6 @@ class SPFZStageHUD extends SPFZO2DMethods
      preFightFadeRunnable.run();
    }
 
-  public void totalhealth() {
-    LifeSystem lifesystem = new LifeSystem(stage.getBatch(), stage.getCamera(),
-      stage);
-    SpecialSystem Specsystem = new SpecialSystem(stage.getBatch(), stage.getCamera(),
-      stage);
-
-    //total health calculation here
-    //set p1 and p2 total health
-
-    stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity()
-      .add(new LifeTextureComponent(stage, true, stage.player1().getHealth(),
-        stageWrapper.getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
-        stageWrapper.getChild("ctrlandhud").getChild("healthout1").getEntity(), true));
-
-    stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity()
-      .add(new LifeTextureComponent(stage, false, stage.player2().getHealth(),
-        stageWrapper.getChild("ctrlandhud").getChild("healthcheck2").getEntity(),
-        stageWrapper.getChild("ctrlandhud").getChild("healthout2").getEntity(), false));
-
-    stageWrapper.getChild("ctrlandhud").getChild("supbarone").getEntity()
-      .add(new SpecialTexComponent(stage, true, stage.player1().getMeter()));
-
-    stageWrapper.getChild("ctrlandhud").getChild("supbartwo").getEntity()
-      .add(new SpecialTexComponent(stage, false, stage.player2().getMeter()));
-
-    stage.stageSSL().engine.addSystem(lifesystem);
-    lifesystem.priority = 50;
-    stage.stageSSL().engine.addSystem(Specsystem);
-    Specsystem.priority = 51;
-  }
 
   private void roundtextset() {
     Entity roundtext = stageWrapper.getChild(stage_o2d.controllerHUD()).getChild(stage_o2d.roundtext()).getEntity();

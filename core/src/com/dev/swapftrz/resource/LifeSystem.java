@@ -15,20 +15,20 @@ import com.dev.swapftrz.stage.SPFZStage;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.utils.ItemWrapper;
 
-public class LifeSystem extends EntitySystem
-{
+public class LifeSystem extends EntitySystem {
   private ImmutableArray<Entity> entities;
 
   Batch batch;
   boolean init;
-  Camera camera;
-  Engine engine;
-  ItemWrapper root;
+  private Camera camera;
+  private Engine engine;
+  ItemWrapper wrapper;
   private ComponentMapper<LifeTextureComponent> ltc = ComponentMapper.getFor(LifeTextureComponent.class);
   private ComponentMapper<TransformComponent> tc = ComponentMapper.getFor(TransformComponent.class);
 
 
-  float width, height, owidth, oheight, rootx, rooty, x, y, ox, oy, p1health;
+  float width, height, owidth, oheight, rootx, rooty, x, y, ox, oy, p1health,
+    p1HPpercent, p2HPpercent;
 
   static final float ADJUSTMENTX = 22f;
   //static final float ADJUSTMENTY = 18f;
@@ -46,19 +46,39 @@ public class LifeSystem extends EntitySystem
   Texture healthoutline;
   int count = 0;
 
-  public LifeSystem(Batch batch, Camera camera, SPFZStage stage)
-  {
+  public LifeSystem(Batch batch, Camera camera, SPFZStage stage) {
     this.batch = batch;
     this.camera = camera;
-    this.root = stage.access.root;
     this.stage = stage;
+    wrapper = stage.stageWrapper();
 
 
     init = true;
   }
 
-  public void addedToEngine(Engine engine)
-  {
+  public void totalhealth() {
+
+    //total health calculation here
+    //set p1 and p2 total health
+
+    stage.stageWrapper().getChild("ctrlandhud").getChild("healthcheck1").getEntity()
+      .add(new LifeTextureComponent(stage, true, stage.player1().getHealth(),
+        stage.stageWrapper().getChild("ctrlandhud").getChild("healthcheck1").getEntity(),
+        stage.stageWrapper().getChild("ctrlandhud").getChild("healthout1").getEntity(), true));
+
+    stage.stageWrapper().getChild("ctrlandhud").getChild("healthcheck2").getEntity()
+      .add(new LifeTextureComponent(stage, false, stage.player2().getHealth(),
+        stage.stageWrapper().getChild("ctrlandhud").getChild("healthcheck2").getEntity(),
+        stage.stageWrapper().getChild("ctrlandhud").getChild("healthout2").getEntity(), false));
+
+    stage.stageWrapper().getChild("ctrlandhud").getChild("supbarone").getEntity()
+      .add(new SpecialTexComponent(stage, true, stage.player1().getMeter()));
+
+    stage.stageWrapper().getChild("ctrlandhud").getChild("supbartwo").getEntity()
+      .add(new SpecialTexComponent(stage, false, stage.player2().getMeter()));
+  }
+
+  public void addedToEngine(Engine engine) {
     this.engine = engine;
     entities = engine.getEntitiesFor(Family.all(LifeTextureComponent.class, TransformComponent.class).get());
 
@@ -70,17 +90,12 @@ public class LifeSystem extends EntitySystem
   {
     //0 = Player 1
     //1 = Player 2
-    for (int i = 0; i < entities.size(); ++i)
-    {
+    for (int i = 0; i < entities.size(); ++i) {
       if (i == 0)
-      {
-        percentage = stage.p1HPpercent;
-
-      }
+        percentage = p1HPpercent;
       else
-      {
-        percentage = stage.p2HPpercent;
-      }
+        percentage = p2HPpercent;
+
 
       Entity entity = entities.get(i);
 
@@ -93,8 +108,8 @@ public class LifeSystem extends EntitySystem
       owidth = ltc.get(entity).outwidth;
       oheight = ltc.get(entity).outheight;
 
-      rootx = root.getChild("ctrlandhud").getComponent(TransformComponent.class).x;
-      rooty = root.getChild("ctrlandhud").getComponent(TransformComponent.class).y;
+      rootx = wrapper.getChild("ctrlandhud").getComponent(TransformComponent.class).x;
+      rooty = wrapper.getChild("ctrlandhud").getComponent(TransformComponent.class).y;
       x = tc.get(entity).x;
       y = tc.get(entity).y;
       ox = ltc.get(entity).outX;
@@ -103,17 +118,11 @@ public class LifeSystem extends EntitySystem
       //p1health = healthtexture.getWidth() / 2;
 
       drawhealth(i);
-      if (i == 0)
-      {
-        stage.healthtex1 = healthtexture;
-
-      }
-      else
-      {
-        stage.healthtex2 = healthtexture;
-
-      }
-
+      //setting current health texture to process
+      //if (i == 0)
+      //stage.healthtex1 = healthtexture;
+      //else
+      //stage.healthtex2 = healthtexture;
     }
   }
 
@@ -177,7 +186,7 @@ public class LifeSystem extends EntitySystem
     helsprite = null;
     //batch.dispose();
     camera = null;
-    root = null;
+    wrapper = null;
     //stage.dispose();
 
   }

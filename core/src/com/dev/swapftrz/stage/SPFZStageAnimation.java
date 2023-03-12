@@ -1,10 +1,8 @@
 package com.dev.swapftrz.stage;
 
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.math.Vector3;
 import com.uwsoft.editor.renderer.components.DimensionsComponent;
 import com.uwsoft.editor.renderer.components.TransformComponent;
 import com.uwsoft.editor.renderer.components.label.LabelComponent;
@@ -52,26 +50,12 @@ class SPFZStageAnimation
 
    }
 
-   public void timer() {
-      Entity tenths = stage.stageWrapper().getChild("ctrlandhud").getChild("timeranim").getChild("tenths").getEntity();
-      Entity ones = stage.stageWrapper().getChild("ctrlandhud").getChild("timeranim").getChild("ones").getEntity();
+  //TODO rewrite timer animation, keep component names?
+  public void timer() {
+    Entity tenths = stage.stageWrapper().getChild("ctrlandhud").getChild("timeranim").getChild("tenths").getEntity();
+    Entity ones = stage.stageWrapper().getChild("ctrlandhud").getChild("timeranim").getChild("ones").getEntity();
 
-      int tempten = (timeleft % 100) / 10;
-      int tempone = timeleft % 10;
-      double tedbl;
-
-      if (timeleft > 0 && !pausetime && !standby)
-      {
-         setneut = false;
-         timeElapsed = (System.currentTimeMillis() - time) / 1000;
-         timeleft = (int) (stage.roundTime() - timeElapsed);
-
-         // Double time is correct. Need to figure out way to translate it into the
-         // timer
-         tedbl = ((System.currentTimeMillis() - (long) time) / 1000.0);
-         timeleftdbl = (double) stage.roundTime() - tedbl;
-
-         tenths.getComponent(SpriteAnimationStateComponent.class).paused = false;
+         /*tenths.getComponent(SpriteAnimationStateComponent.class).paused = false;
          ones.getComponent(SpriteAnimationStateComponent.class).paused = false;
 
          tenths.getComponent(SpriteAnimationStateComponent.class)
@@ -80,25 +64,8 @@ class SPFZStageAnimation
            .set(new FrameRange("ones" + timeleft + "", timeleft % 10, timeleft % 10), 1, Animation.PlayMode.NORMAL);
 
          ones.getComponent(SpriteAnimationStateComponent.class).paused = true;
-         tenths.getComponent(SpriteAnimationStateComponent.class).paused = true;
-
-         if (((timeleft % 100) / 10) != tempten)
-         {
-            animatenum(tenths);
-         }
-         if ((timeleft % 10) != tempone)
-         {
-            animatenum(ones);
-         }
-      }
-      if (timeleft == 0)
-      {
-         if (!standby)
-         {
-            eoround = true;
-         }
-      }
-   }
+         tenths.getComponent(SpriteAnimationStateComponent.class).paused = true;*/
+  }
 
    public void updateclock() {
       Entity fader, p1round1, p1round2, p2round1, p2round2, roundtext;
@@ -157,101 +124,21 @@ class SPFZStageAnimation
 
    public void roundover() {
 
-      // standby = true;
-
-      if (!standby)
-      {
-         rdcount++;
-         animateround(rdcount);
-         standby = true;
-      }
-      // set characters back to neutral animation when round is over
-      if (!setneut)
-      {
-         anim = "IDLE";
-         setneut = true;
-      }
-
-      if (finishedrd && !gameover)
-      {
-         Vector3 CENTER = new Vector3(320, 200, 0);
-         Entity fader;
-         // LabelComponent timer;
-         // fader =
-         // stageItemWrapper.getChild("ctrlandhud").getChild("transition").getEntity();
-         fader = stage.stageWrapper().getChild("fader").getEntity();
-         // timer =
-         // stageItemWrapper.getChild("ctrlandhud").getChild("time").getEntity().getComponent(LabelComponent.class);
-
-         eoround = false;
-         resettimer();
-         standby = true;
-         finishedrd = false;
-
-         // reset clock back to the round time then trigger the timer for the
-         // next round
-         timeleft = stage.roundTime();
-         time = System.currentTimeMillis();
-         // timer.setText(Integer.toString(timeleft));
-         Actions.addAction(fader, Actions.run(new Runnable()
-         {
-
-            @Override
-            public void run() {
-
-               if (!gameover)
-               {
-                  if (p1health != startp1)
-                  {
-                     p1health = startp1;
-                     // p1spec = 0;
-
-                     p1HPpercent = health1.getWidth();// healthp1.getTexture().getWidth();
-                  }
-
-                  if (p2health != startp2)
-                  {
-                     p2health = startp2;
-                     // p2spec = 0;
-
-                     p2HPpercent = health2.getWidth();// healthp2.getTexture().getWidth();
-                  }
-
-                  timeElapsed = 0;
-                  timeleft = 99;
-                  time = System.currentTimeMillis();
-
-                  finishedrd = true;
-
-               }
-
-            }
-         }));
+     //animateround(rdcount);
          stage.stageWrapper().getChild("ctrlandhud").getChild("pausebutton").getEntity()
            .getComponent(TransformComponent.class).scaleX = 1f;
          stage.stageWrapper().getChild("ctrlandhud").getChild("pausebutton").getEntity()
            .getComponent(TransformComponent.class).scaleY = 0f;
-
-         roundtextset();
-         prefighttimer();
-
          // center stage and characters
 
 
-         stage.camera().position.set(CENTER);
+        /* stage.camera().position.set(CENTER);
          stage.camera().update();
 
          if (stage.camera().position.idt(CENTER)) {
             stage.player1().setPos();
             spfzp2move.setPos();
-         }
-
-      }
-      else if (finishedrd && gameover)
-      {
-         roundtextset();
-      }
-
+         }*/
    }
 
    public void animateround(int roundcount) {
@@ -260,7 +147,7 @@ class SPFZStageAnimation
       switch (roundcount)
       {
          case 1:
-            if (p1HPpercent > p2HPpercent)
+            /*if (p1HPpercent > p2HPpercent)
             {
                p1round1();
                p1rdcount++;
@@ -280,7 +167,7 @@ class SPFZStageAnimation
                p1rdcount++;
                p2rdcount++;
                roundcount++;
-            }
+            }*/
             roundcount++;
             if (roundcount == 2)
             {
@@ -293,7 +180,7 @@ class SPFZStageAnimation
             }
             break;
          case 2:
-            if (p1HPpercent > p2HPpercent)
+            /*if (p1HPpercent > p2HPpercent)
             {
                if (p1rdcount == 0)
                {
@@ -343,13 +230,13 @@ class SPFZStageAnimation
 
                p1rdcount++;
                p2rdcount++;
-            }
+            }*/
 
             roundtext.getComponent(LabelComponent.class).setText("FINAL ROUND");
             break;
 
          case 3:
-            if (p1HPpercent > p2HPpercent)
+            /*if (p1HPpercent > p2HPpercent)
             {
                p1round2();
                p1rdcount++;
@@ -367,7 +254,7 @@ class SPFZStageAnimation
                p2rdcount++;
             }
 
-            gameover = true;
+            gameover = true;*/
 
             break;
          default:
@@ -386,7 +273,7 @@ class SPFZStageAnimation
       // if the player one percentage is greater than player 2's. Increment
       // Player 1's round count. else, opposite.
 
-      Actions.addAction(p1round1,
+     /* Actions.addAction(p1round1,
         Actions.sequence(Actions.parallel(Actions.rotateBy(720, 1f),
           Actions.sequence(Actions.scaleBy(-.6f, -.6f, .5f), Actions.scaleBy(.6f, .6f, .5f)),
           Actions.color(Color.BLUE, 1f)), Actions.run(new Runnable()
@@ -416,10 +303,10 @@ class SPFZStageAnimation
 
            }
         })));
-
+*/
    }
 
-   public void p2round1() {
+   /*public void p2round1() {
       Entity p2round1;
 
       p2round1 = stage.stageWrapper().getChild("ctrlandhud").getChild("roundonep2").getEntity();
@@ -492,10 +379,10 @@ class SPFZStageAnimation
            }
         })));
 
-   }
+   }*/
 
    public void lifeandround() {
-      if (initcheck)
+      /*if (initcheck)
       {
          initcheck = false;
       }
@@ -570,7 +457,7 @@ class SPFZStageAnimation
         .getComponent(TransformComponent.class).x = viewportland.getCamera().position.x - (HALF_WORLDW);
 
       root.getChild("ctrlandhud").getEntity()
-        .getComponent(TransformComponent.class).y = viewportland.getCamera().position.y - (HALF_WORLDH);
+        .getComponent(TransformComponent.class).y = viewportland.getCamera().position.y - (HALF_WORLDH);*/
 
    }
 }

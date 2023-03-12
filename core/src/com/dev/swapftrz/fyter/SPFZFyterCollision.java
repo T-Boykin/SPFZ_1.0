@@ -18,12 +18,12 @@ class SPFZFyterCollision {
   private SPFZPlayer spfzPlayer, opponent;
   private List<ArrayList<Double>> characterData;
   private int[] activeframes;
-  final int ACTSTARTBOX = 4;
-  final int ACTENDBOX = 5;
-  final int BOXX = 6;
-  final int BOXY = 7;
-  final int BOXWIDTH = 8;
-  final int BOXHEIGHT = 9;
+  private final int ACTSTARTBOX = 4;
+  private final int ACTENDBOX = 5;
+  private final int BOXX = 6;
+  private final int BOXY = 7;
+  private final int BOXWIDTH = 8;
+  private final int BOXHEIGHT = 9;
 
   private boolean showCollisionBoxes;
 
@@ -360,4 +360,16 @@ class SPFZFyterCollision {
   public void toggleShowCollisionBoxes(boolean show) {
     showCollisionBoxes = show;
   }
+
+  public int activeHitboxStartIndex() { return ACTSTARTBOX; }
+
+  public int activeHitboxEndIndex() { return ACTENDBOX; }
+
+  public int activeHitboxXIndex() { return BOXX; }
+
+  public int activeHitboxYIndex() { return BOXY; }
+
+  public int activeHitboxWidthIndex() { return BOXWIDTH; }
+
+  public int activeHitboxHeightIndex() { return BOXHEIGHT; }
 }

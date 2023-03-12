@@ -23,7 +23,7 @@ public class SpecialSystem extends EntitySystem
   boolean init;
   Camera camera;
   Engine engine;
-  ItemWrapper root;
+  ItemWrapper wrapper;
   private ComponentMapper<SpecialTexComponent> ltc = ComponentMapper.getFor(SpecialTexComponent.class);
   private ComponentMapper<TransformComponent> tc = ComponentMapper.getFor(TransformComponent.class);
 
@@ -35,6 +35,7 @@ public class SpecialSystem extends EntitySystem
   float x;
   float y;
   float p1meter;
+  private float p1SPpercent, p2SPpercent;
 
   static final float ADJUSTMENTX = -60;
   static final float ADJUSTMENTY = -10;
@@ -61,7 +62,7 @@ public class SpecialSystem extends EntitySystem
   {
     this.batch = batch;
     this.camera = camera;
-    this.root = stage.access.root;
+    this.wrapper = stage.stageWrapper();
     this.stage = stage;
 
 
@@ -85,13 +86,9 @@ public class SpecialSystem extends EntitySystem
     {
       //if (i == 0)
       if (entities.get(i).getComponent(MainItemComponent.class).itemIdentifier.equals("supbarone"))
-      {
-        percentage = stage.p1SPpercent;
-      }
+        percentage = p1SPpercent;
       else
-      {
-        percentage = stage.p2SPpercent;
-      }
+        percentage = p2SPpercent;
 
       Entity entity = entities.get(i);
 
@@ -103,8 +100,8 @@ public class SpecialSystem extends EntitySystem
       width = ltc.get(entity).width;
 
       height = ltc.get(entity).height;
-      rootx = root.getChild("ctrlandhud").getComponent(TransformComponent.class).x;
-      rooty = root.getChild("ctrlandhud").getComponent(TransformComponent.class).y;
+      rootx = wrapper.getChild("ctrlandhud").getComponent(TransformComponent.class).x;
+      rooty = wrapper.getChild("ctrlandhud").getComponent(TransformComponent.class).y;
       x = tc.get(entity).x;
       y = tc.get(entity).y;
 
@@ -125,21 +122,18 @@ public class SpecialSystem extends EntitySystem
 
         for (int j = 0; j < exvals.length; j++)
         {
-          if (percentage >= exvals[j] || stage.sigp1lock)
-          {
-            if (j == ltc.get(entity).excount && !stage.sigp1lock)
-            {
+          if (percentage >= exvals[j]) {
+            if (j == ltc.get(entity).excount) {
               ltc.get(entity).excount++;
               ltc.get(entity).lock = false;
 
             }
-            if (j < ltc.get(entity).excount && percentage < exvals[j])
-            {
+            if (j < ltc.get(entity).excount && percentage < exvals[j]) {
               ltc.get(entity).excount = j;
               ltc.get(entity).lock = false;
 
             }
-            if (!ltc.get(entity).lock)
+           /* if (!ltc.get(entity).lock)
             {
               ltc.get(entity).lock = true;
 
@@ -164,7 +158,7 @@ public class SpecialSystem extends EntitySystem
               }
 
 
-            }
+            }*/
           }
 
         }
